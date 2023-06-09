@@ -4,3 +4,6 @@
 [submodule "lib/aave-helpers"]
 	path = lib/aave-helpers
 	url = https://github.com/marsfoundation/aave-helpers
+[submodule "lib/aave-address-book"]
+	path = lib/aave-address-book
+	url = https://github.com/bgd-labs/aave-address-book
