@@ -12,3 +12,7 @@ docs/
 
 # Dotenv file
 .env
+
+# repo specific artifacts
+reports/*
+!reports/.empty

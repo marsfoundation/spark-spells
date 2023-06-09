@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.10;
 
 import 'forge-std/Test.sol';
@@ -21,7 +21,7 @@ import { DataTypes }            from "aave-v3-core/contracts/protocol/libraries/
 
 import { DefaultReserveInterestRateStrategy } from "aave-v3-core/contracts/protocol/pool/DefaultReserveInterestRateStrategy.sol";
 
-import { DaiInterestRateStrategy }                              from '../../DaiInterestRateStrategy.sol';
+import { IDaiInterestRateStrategy }                             from '../../IDaiInterestRateStrategy.sol';
 import { SparkTestBase, InterestStrategyValues, ReserveConfig } from '../../SparkTestBase.sol';
 
 import { PotAbstract } from 'dss-interfaces/Interfaces.sol';
@@ -217,7 +217,7 @@ contract SparkGoerli_20230525Test is SparkTestBase, TestWithExecutor {
 
         assertEq(data.interestRateStrategyAddress, OLD_DAI_INTEREST_RATE_STRATEGY);
 
-        DaiInterestRateStrategy daiStrategy = DaiInterestRateStrategy(data.interestRateStrategyAddress);
+        IDaiInterestRateStrategy daiStrategy = IDaiInterestRateStrategy(data.interestRateStrategyAddress);
 
         assertEq(daiStrategy.vat(), MCD_VAT);
         assertEq(daiStrategy.pot(), MCD_POT);
@@ -350,7 +350,7 @@ contract SparkGoerli_20230525Test is SparkTestBase, TestWithExecutor {
 
         assertEq(data.interestRateStrategyAddress, NEW_DAI_INTEREST_RATE_STRATEGY);
 
-        daiStrategy = DaiInterestRateStrategy(data.interestRateStrategyAddress);
+        daiStrategy = IDaiInterestRateStrategy(data.interestRateStrategyAddress);
 
         assertEq(daiStrategy.vat(), MCD_VAT);
         assertEq(daiStrategy.pot(), MCD_POT);

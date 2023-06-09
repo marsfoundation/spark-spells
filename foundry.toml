@@ -9,6 +9,7 @@ remappings = [
 fs_permissions = [
     { access = "write", path = "./reports" }
 ]
+solc = "0.8.10"
 optimizer = true
 ffi = true
 

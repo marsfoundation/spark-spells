@@ -1,9 +1,9 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.0;
 
 import 'aave-helpers/ProtocolV3TestBase.sol';
 
-import { DaiInterestRateStrategy } from "./DaiInterestRateStrategy.sol";
+import { IDaiInterestRateStrategy } from "./IDaiInterestRateStrategy.sol";
 
 contract SparkTestBase is ProtocolV3_0_1TestBase {
 
@@ -26,7 +26,7 @@ contract SparkTestBase is ProtocolV3_0_1TestBase {
             // DAI IRS
             string memory key = vm.toString(_strategy);
 
-            DaiInterestRateStrategy strategy = DaiInterestRateStrategy(_strategy);
+            IDaiInterestRateStrategy strategy = IDaiInterestRateStrategy(_strategy);
 
             vm.serializeUint(key, 'baseRateConversion', strategy.baseRateConversion());
             vm.serializeUint(key, 'borrowSpread',       strategy.borrowSpread());
@@ -44,7 +44,7 @@ contract SparkTestBase is ProtocolV3_0_1TestBase {
         address expectedStrategy,
         DaiInterestStrategyValues memory expectedStrategyValues
     ) internal view {
-        DaiInterestRateStrategy strategy = DaiInterestRateStrategy(
+        IDaiInterestRateStrategy strategy = IDaiInterestRateStrategy(
             interestRateStrategyAddress
         );
 

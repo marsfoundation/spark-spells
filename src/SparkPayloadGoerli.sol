@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.0;
 
 import 'aave-helpers/v3-config-engine/AaveV3PayloadBase.sol';
