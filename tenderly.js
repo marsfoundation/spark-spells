@@ -47,12 +47,37 @@ const runSpell = async () => {
 
   // -------- This code doesn't work -----------
 
-  // const ownerAddress = '0xdc6bdc37b2714ee601734cf55a05625c9e512461';
+  const ownerAddress = '0xdc6bdc37b2714ee601734cf55a05625c9e512461';
 
-  // await pauseProxySigner.sendTransaction({
-  //   from: PAUSE_PROXY,
-  //   // to: EXECUTOR,
-  //   to: "0x6b175474e89094c44da98b954eedeac495271d0f",
+  await pauseProxySigner.sendTransaction({
+    from: PAUSE_PROXY,
+    // to: EXECUTOR,
+    to: "0x6b175474e89094c44da98b954eedeac495271d0f",
+    data: DaiAbi.encodeFunctionData('mint', [
+      ethers.utils.hexZeroPad(ownerAddress.toLowerCase(), 20),
+      ethers.utils.parseEther('1.0'),
+    ]),
+    gasLimit: 800000,
+  });
+
+  // -------- This code doesn't work -----------
+
+  // -------- This code works -----------
+
+  // // This is from the example code and works
+  // const [minterAddress, ownerAddress, spenderAddress, receiverAddress] =
+  //   await forkProvider.listAccounts();
+
+  // const [minterSigner, ownerSigner, spenderSigner] = [
+  //   forkProvider.getSigner(minterAddress),
+  //   forkProvider.getSigner(ownerAddress),
+  //   forkProvider.getSigner(spenderAddress),
+  //   forkProvider.getSigner(receiverAddress),
+  // ];
+
+  // await minterSigner.sendTransaction({
+  //   from: minterAddress,
+  //   to: '0x6b175474e89094c44da98b954eedeac495271d0f',
   //   data: DaiAbi.encodeFunctionData('mint', [
   //     ethers.utils.hexZeroPad(ownerAddress.toLowerCase(), 20),
   //     ethers.utils.parseEther('1.0'),
@@ -60,28 +85,7 @@ const runSpell = async () => {
   //   gasLimit: 800000,
   // });
 
-  // -------- This code doesn't work -----------
-
-  // This is from the example code and works
-  const [minterAddress, ownerAddress, spenderAddress, receiverAddress] =
-    await forkProvider.listAccounts();
-
-  const [minterSigner, ownerSigner, spenderSigner] = [
-    forkProvider.getSigner(minterAddress),
-    forkProvider.getSigner(ownerAddress),
-    forkProvider.getSigner(spenderAddress),
-    forkProvider.getSigner(receiverAddress),
-  ];
-
-  await minterSigner.sendTransaction({
-    from: minterAddress,
-    to: '0x6b175474e89094c44da98b954eedeac495271d0f',
-    data: DaiAbi.encodeFunctionData('mint', [
-      ethers.utils.hexZeroPad(ownerAddress.toLowerCase(), 20),
-      ethers.utils.parseEther('1.0'),
-    ]),
-    gasLimit: 800000,
-  });
+  // -------- This code works -----------
 };
 
 const DaiAbi = new ethers.utils.Interface([
