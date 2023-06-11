@@ -62,7 +62,7 @@ const runSpell = async () => {
 
   // -------- This code doesn't work -----------
 
-  // -------- This code works -----------
+  // -------- This code works (from example in docs) -----------
 
   // // This is from the example code and works
   // const [minterAddress, ownerAddress, spenderAddress, receiverAddress] =
