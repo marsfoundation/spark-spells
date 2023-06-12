@@ -1,6 +1,7 @@
-name: test
+name: Forge Test
 
 on: workflow_dispatch
+
 
 env:
   FOUNDRY_PROFILE: ci
