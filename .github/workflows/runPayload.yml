@@ -32,5 +32,7 @@ jobs:
           TENDERLY_ACCESS_KEY: ${{secrets.TENDERLY_ACCESS_KEY}}
           TENDERLY_PROJECT: ${{secrets.TENDERLY_PROJECT}}
           TENDERLY_USER: ${{secrets.TENDERLY_USER}}
-      run: node tenderly.js
+      run: |
+        npm install
+        node tenderly.js
 
