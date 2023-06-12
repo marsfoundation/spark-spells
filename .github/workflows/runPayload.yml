@@ -34,5 +34,5 @@ jobs:
           TENDERLY_USER: ${{secrets.TENDERLY_USER}}
       run: |
         npm install
-        node tenderly.js
+        echo RPC URL = $(node tenderly.js)
 

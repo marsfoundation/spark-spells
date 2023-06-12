@@ -35,8 +35,6 @@ const runSpell = async () => {
   const forkId = fork.data.simulation_fork.id;
   const rpcUrl = `https://rpc.tenderly.co/fork/${forkId}`;
 
-  console.log('Fork URL\n\t' + rpcUrl);
-
   const forkProvider = new ethers.providers.JsonRpcProvider(rpcUrl);
 
   const EXECUTOR    = "0x3300f198988e4C9C63F75dF86De36421f06af8c4";
@@ -60,6 +58,8 @@ const runSpell = async () => {
       PayloadAbi.encodeFunctionData('execute', [])
     ]),
   });
+
+  console.log(rpcUrl)
 };
 
 const ExecutorAbi = new ethers.utils.Interface([
