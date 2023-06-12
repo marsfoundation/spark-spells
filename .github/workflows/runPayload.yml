@@ -15,7 +15,7 @@ on:
         default: 'Default value'
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
