@@ -1,6 +1,7 @@
 name: Forge Test
 
-push:
+on:
+  push:
     branches:
       - master
   pull_request:
