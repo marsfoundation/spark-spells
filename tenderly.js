@@ -18,7 +18,7 @@ async function mainnetFork() {
         chain_id: 11,
         shanghai_time: 1677557088,
       },
-      name: "Mainnet Fork" + Date.now(),
+      alias: "Mainnet Fork " + new Date().toLocaleString(),
     },
     {
       headers: {
@@ -59,7 +59,7 @@ const runSpell = async () => {
     ]),
   });
 
-  console.log(rpcUrl)
+  console.log(fork)
 };
 
 const ExecutorAbi = new ethers.utils.Interface([
