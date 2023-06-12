@@ -1,6 +1,12 @@
 name: Run Payload on Tenderly
 
 on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - '*'
   workflow_dispatch:
     inputs:
       parameter_name:
