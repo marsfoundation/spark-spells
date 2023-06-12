@@ -15,7 +15,7 @@ async function mainnetFork() {
         chain_id: 11,
         shanghai_time: 1677557088,
       },
-      alias: "Spark Governance Spell Fork " + new Date().toLocaleString(),
+      alias: "Spark Governance Spell " + new Date().toLocaleString(),
     },
     {
       headers: {
