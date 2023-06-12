@@ -4,9 +4,6 @@ const ethers = require('ethers');
 
 dotenv.config();
 
-// assuming environment variables TENDERLY_USER, TENDERLY_PROJECT and TENDERLY_ACCESS_KEY are set
-// https://docs.tenderly.co/other/platform-access/how-to-find-the-project-slug-username-and-organization-name
-// https://docs.tenderly.co/other/platform-access/how-to-generate-api-access-tokens
 const { TENDERLY_USER, TENDERLY_PROJECT, TENDERLY_ACCESS_KEY } = process.env;
 
 async function mainnetFork() {
@@ -18,7 +15,7 @@ async function mainnetFork() {
         chain_id: 11,
         shanghai_time: 1677557088,
       },
-      alias: "Mainnet Fork " + new Date().toLocaleString(),
+      alias: "Spark Governance Spell Fork " + new Date().toLocaleString(),
     },
     {
       headers: {
@@ -58,8 +55,6 @@ const runSpell = async () => {
       PayloadAbi.encodeFunctionData('execute', [])
     ]),
   });
-
-  console.log(fork)
 };
 
 const ExecutorAbi = new ethers.utils.Interface([
