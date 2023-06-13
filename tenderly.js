@@ -53,6 +53,7 @@ const runSpell = async () => {
 
   const pauseProxySigner = forkProvider.getSigner(PAUSE_PROXY);
 
+  // TODO: This can be removed after the next spell
   await pauseProxySigner.sendTransaction({
     from: PAUSE_PROXY,
     to: ACL_MANAGER,
