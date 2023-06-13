@@ -6,12 +6,38 @@ dotenv.config();
 
 const { ETHERSCAN_API_KEY, TENDERLY_USER, TENDERLY_PROJECT, TENDERLY_ACCESS_KEY } = process.env;
 
-const PAYLOAD = "0x41D7c79aE5Ecba7428283F66998DedFD84451e0e";  // Fill in with newest payload address
+// Get the command-line arguments
+const args = process.argv.slice(2);
 
-const getContractName = async () => {
+// Function to process the flagged parameters
+function processFlags() {
+  const flags = {};
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg.startsWith('--')) {
+      // Remove the leading '--' from the flag name
+      const flag = arg.slice(2);
+
+      // Check if the flag has a value
+      if (i + 1 < args.length && !args[i + 1].startsWith('--')) {
+        // Assign the value to the flag
+        flags[flag] = args[i + 1];
+        i++; // Skip the next argument
+      } else {
+        // Flag is present without a value
+        flags[flag] = true;
+      }
+    }
+  }
+
+  return flags;
+}
+
+const getContractName = async (payload) => {
   try {
     const response = await axios.get(
-      `https://api.etherscan.io/api?module=contract&action=getsourcecode&address=${PAYLOAD}&apikey=${ETHERSCAN_API_KEY}`
+      `https://api.etherscan.io/api?module=contract&action=getsourcecode&address=${payload}&apikey=${ETHERSCAN_API_KEY}`
     );
 
     return response.data.result[0].ContractName;
@@ -20,7 +46,7 @@ const getContractName = async () => {
   }
 }
 
-async function mainnetFork() {
+async function mainnetFork(payload) {
   return await axios.post(
     `https://api.tenderly.co/api/v1/account/${TENDERLY_USER}/project/${TENDERLY_PROJECT}/fork`,
     {
@@ -29,7 +55,7 @@ async function mainnetFork() {
         chain_id: 11,
         shanghai_time: 1677557088,
       },
-      alias: await getContractName(),
+      alias: await getContractName(payload),
     },
     {
       headers: {
@@ -39,32 +65,34 @@ async function mainnetFork() {
   );
 }
 
-const runSpell = async () => {
-  const fork = await mainnetFork();
+const runSpell = async (flaggedParams) => {
+  const { aclManager, executor, payload, pauseProxy } = flaggedParams;
+
+  const fork = await mainnetFork(payload);
 
   const forkId = fork.data.simulation_fork.id;
   const rpcUrl = `https://rpc.tenderly.co/fork/${forkId}`;
 
+  const forkUrl = `https://dashboard.tenderly.co/${TENDERLY_USER}/${TENDERLY_PROJECT}/fork/${forkId}`
+
+  console.log("Fork URL:", forkUrl);
+
   const forkProvider = new ethers.providers.JsonRpcProvider(rpcUrl);
 
-  const EXECUTOR    = "0x3300f198988e4C9C63F75dF86De36421f06af8c4";
-  const ACL_MANAGER = "0xdA135Cd78A086025BcdC87B038a1C462032b510C"
-  const PAUSE_PROXY = "0xBE8E3e3618f7474F8cB1d074A26afFef007E98FB";
-
-  const pauseProxySigner = forkProvider.getSigner(PAUSE_PROXY);
+  const pauseProxySigner = forkProvider.getSigner(pauseProxy);
 
   // TODO: This can be removed after the next spell
   await pauseProxySigner.sendTransaction({
-    from: PAUSE_PROXY,
-    to: ACL_MANAGER,
-    data: AclManagerAbi.encodeFunctionData('addPoolAdmin', [EXECUTOR]),
+    from: pauseProxy,
+    to: aclManager,
+    data: AclManagerAbi.encodeFunctionData('addPoolAdmin', [executor]),
   });
 
   await pauseProxySigner.sendTransaction({
-    from: PAUSE_PROXY,
-    to: EXECUTOR,
+    from: pauseProxy,
+    to: executor,
     data: ExecutorAbi.encodeFunctionData('exec', [
-      ethers.utils.hexZeroPad(PAYLOAD.toLowerCase(), 20),
+      ethers.utils.hexZeroPad(payload.toLowerCase(), 20),
       PayloadAbi.encodeFunctionData('execute', [])
     ]),
   });
@@ -78,4 +106,4 @@ const PayloadAbi = new ethers.utils.Interface(["function execute()"]);
 
 const AclManagerAbi = new ethers.utils.Interface(["function addPoolAdmin(address admin)"]);
 
-runSpell();
+runSpell(processFlags());
