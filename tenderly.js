@@ -4,7 +4,21 @@ const ethers = require('ethers');
 
 dotenv.config();
 
-const { TENDERLY_USER, TENDERLY_PROJECT, TENDERLY_ACCESS_KEY } = process.env;
+const { ETHERSCAN_API_KEY, TENDERLY_USER, TENDERLY_PROJECT, TENDERLY_ACCESS_KEY } = process.env;
+
+const PAYLOAD = "0x41D7c79aE5Ecba7428283F66998DedFD84451e0e";  // Fill in with newest payload address
+
+const getContractName = async () => {
+  try {
+    const response = await axios.get(
+      `https://api.etherscan.io/api?module=contract&action=getsourcecode&address=${PAYLOAD}&apikey=${ETHERSCAN_API_KEY}`
+    );
+
+    return response.data.result[0].ContractName;
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
 
 async function mainnetFork() {
   return await axios.post(
@@ -15,7 +29,7 @@ async function mainnetFork() {
         chain_id: 11,
         shanghai_time: 1677557088,
       },
-      alias: "Spark Governance Spell " + new Date().toLocaleString(),
+      alias: await getContractName(),
     },
     {
       headers: {
@@ -24,7 +38,6 @@ async function mainnetFork() {
     }
   );
 }
-
 
 const runSpell = async () => {
   const fork = await mainnetFork();
@@ -37,7 +50,6 @@ const runSpell = async () => {
   const EXECUTOR    = "0x3300f198988e4C9C63F75dF86De36421f06af8c4";
   const ACL_MANAGER = "0xdA135Cd78A086025BcdC87B038a1C462032b510C"
   const PAUSE_PROXY = "0xBE8E3e3618f7474F8cB1d074A26afFef007E98FB";
-  const PAYLOAD     = "0x41D7c79aE5Ecba7428283F66998DedFD84451e0e";  // TODO: Maybe Deploy as part of this script
 
   const pauseProxySigner = forkProvider.getSigner(PAUSE_PROXY);
 
