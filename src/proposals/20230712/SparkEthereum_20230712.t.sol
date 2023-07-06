@@ -19,11 +19,11 @@ contract SparkEthereum_20230712Test is SparkTestBase, TestWithExecutor {
     address internal constant SDAI     = 0x83F20F44975D03b1b09e64809B757c47f942BEeA;
 
     function setUp() public {
-        vm.createSelectFork(getChain('mainnet').rpcUrl);
+        vm.createSelectFork(getChain('mainnet').rpcUrl, 17635859);
 
         _selectPayloadExecutor(EXECUTOR);
 
-        payload = new SparkEthereum_20230712();
+        payload = SparkEthereum_20230712(0x843A0539Ca7466Abcb769f1c1d30C8423e13A297);
     }
 
     function testSpellExecution() public {

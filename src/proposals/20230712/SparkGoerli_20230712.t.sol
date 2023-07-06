@@ -19,11 +19,11 @@ contract SparkGoerli_20230712Test is SparkTestBase, TestWithExecutor {
     address internal constant SDAI     = 0xD8134205b0328F5676aaeFb3B2a0DC15f4029d8C;
 
     function setUp() public {
-        vm.createSelectFork(getChain('goerli').rpcUrl);
+        vm.createSelectFork(getChain('goerli').rpcUrl, 9300769);
 
         _selectPayloadExecutor(EXECUTOR);
 
-        payload = new SparkGoerli_20230712();
+        payload = SparkGoerli_20230712(0x2Ad00613A66D71Ff2B0607fB3C4632C47a50DADe);
     }
 
     function testSpellExecution() public {
