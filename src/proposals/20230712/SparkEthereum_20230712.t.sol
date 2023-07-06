@@ -5,6 +5,7 @@ import 'forge-std/Test.sol';
 
 import { TestWithExecutor } from 'aave-helpers/GovHelpers.sol';
 import { IPool } from "aave-v3-core/contracts/interfaces/IPool.sol";
+import { IERC20WithPermit } from "aave-v3-core/contracts/interfaces/IERC20WithPermit.sol";
 
 import { SparkTestBase, ReserveConfig } from '../../SparkTestBase.sol';
 import { SparkEthereum_20230712 } from './SparkEthereum_20230712.sol';
@@ -46,6 +47,15 @@ contract SparkEthereum_20230712Test is SparkTestBase, TestWithExecutor {
             'pre-Spark-Ethereum-sDAI-Freeze',
             'post-Spark-Ethereum-sDAI-Freeze'
         );
+    }
+
+    function testCantSupply() public {
+        _executePayload(address(payload));
+
+        deal(SDAI, address(this), 1 ether);
+        IERC20WithPermit(SDAI).approve(address(POOL), 1 ether);
+        vm.expectRevert(bytes('28'));      // Frozen
+        POOL.supply(SDAI, 1 ether, address(this), 0);
     }
 
 }

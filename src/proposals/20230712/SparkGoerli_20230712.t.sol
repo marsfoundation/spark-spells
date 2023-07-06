@@ -5,6 +5,7 @@ import 'forge-std/Test.sol';
 
 import { TestWithExecutor } from 'aave-helpers/GovHelpers.sol';
 import { IPool } from "aave-v3-core/contracts/interfaces/IPool.sol";
+import { IERC20WithPermit } from "aave-v3-core/contracts/interfaces/IERC20WithPermit.sol";
 
 import { SparkTestBase, ReserveConfig } from '../../SparkTestBase.sol';
 import { SparkGoerli_20230712 } from './SparkGoerli_20230712.sol';
@@ -41,6 +42,15 @@ contract SparkGoerli_20230712Test is SparkTestBase, TestWithExecutor {
             configsAfter,
             SDAI
         );
+    }
+
+    function testCantSupply() public {
+        _executePayload(address(payload));
+
+        deal(SDAI, address(this), 1 ether);
+        IERC20WithPermit(SDAI).approve(address(POOL), 1 ether);
+        vm.expectRevert(bytes('28'));      // Frozen
+        POOL.supply(SDAI, 1 ether, address(this), 0);
     }
 
 }
