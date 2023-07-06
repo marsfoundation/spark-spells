@@ -58,4 +58,16 @@ contract SparkEthereum_20230712Test is SparkTestBase, TestWithExecutor {
         POOL.supply(SDAI, 1 ether, address(this), 0);
     }
 
+    function testCanWithdraw() public {
+        deal(SDAI, address(this), 1 ether);
+        IERC20WithPermit(SDAI).approve(address(POOL), 1 ether);
+        POOL.supply(SDAI, 1 ether, address(this), 0);
+        assertEq(IERC20WithPermit(SDAI).balanceOf(address(this)), 0 ether);
+
+        _executePayload(address(payload));
+
+        POOL.withdraw(SDAI, 1 ether, address(this));
+        assertEq(IERC20WithPermit(SDAI).balanceOf(address(this)), 1 ether);
+    }
+
 }
