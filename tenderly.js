@@ -2,6 +2,7 @@ const axios = require('axios');
 const dotenv = require('dotenv');
 const ethers = require('ethers');
 
+dotenv.config({ path: `.env` });
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
 const {
