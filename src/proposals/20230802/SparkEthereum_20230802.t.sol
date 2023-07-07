@@ -7,7 +7,7 @@ import { DataTypes }            from "aave-v3-core/contracts/protocol/libraries/
 
 import { TestWithExecutor } from 'aave-helpers/GovHelpers.sol';
 
-import { SparkTestBase  } from '../../SparkTestBase.sol';
+import { SparkTestBase } from '../../SparkTestBase.sol';
 
 import { SparkEthereum_20230802 } from './SparkEthereum_20230802.sol';
 
