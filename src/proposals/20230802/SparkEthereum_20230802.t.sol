@@ -15,20 +15,34 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
+  address internal constant EXECUTOR = 0x3300f198988e4C9C63F75dF86De36421f06af8c4;
+
   IPool internal constant POOL = IPool(0xC13e21B648A5Ee794902342038FF3aDAB66BE987);
 
   SparkEthereum_20230802 public payload;
 
   function setUp() public {
     vm.createSelectFork(getChain('mainnet').rpcUrl, 17_642_000);
+
+    _selectPayloadExecutor(EXECUTOR);
+
     payload = new SparkEthereum_20230802();
   }
 
   function test_proposalExecution() public {
     createConfigurationSnapshot(
-      'pre-Spark-Ethereum-EMode-20230802',
-      POOL
-  );
+		'pre-Spark-Ethereum-EMode-20230802',
+		POOL
+    );
+
+	_executePayload(address(payload));
+
+	createConfigurationSnapshot('post-Spark-Ethereum-EMode-20230802', POOL);
+
+	diffReports(
+		'pre-Spark-Ethereum-EMode-20230802',
+		'post-Spark-Ethereum-EMode-20230802'
+	);
 
     // GovHelpers.executePayload(vm, address(payload), AaveGovernanceV2.OPTIMISM_BRIDGE_EXECUTOR);
 
