@@ -16,7 +16,6 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 
 	using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
-	address public constant RETH   = 0xae78736Cd615f374D3085123A210448E74Fc6393;
 	address public constant SDAI   = 0x83F20F44975D03b1b09e64809B757c47f942BEeA;
 	address public constant WETH   = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 	address public constant WSTETH = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0;
@@ -53,17 +52,14 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 			'post-Spark-Ethereum-EMode-20230802'
 		);
 
-		ReserveConfig memory reth   = _findReserveConfig(allConfigsBefore, RETH);
 		ReserveConfig memory sdai   = _findReserveConfig(allConfigsBefore, SDAI);
 		ReserveConfig memory weth   = _findReserveConfig(allConfigsBefore, WETH);
 		ReserveConfig memory wsteth = _findReserveConfig(allConfigsBefore, WSTETH);
 
-		reth.eModeCategory   = payload.EMODE_CATEGORY_ID();
-		sdai.eModeCategory   = payload.EMODE_CATEGORY_ID();
-		weth.eModeCategory   = payload.EMODE_CATEGORY_ID();
-		wsteth.eModeCategory = payload.EMODE_CATEGORY_ID();
+		sdai.eModeCategory   = payload.EMODE_CATEGORY_ID_WETH();
+		weth.eModeCategory   = payload.EMODE_CATEGORY_ID_WETH();
+		wsteth.eModeCategory = payload.EMODE_CATEGORY_ID_WSTETH();
 
-		_validateReserveConfig(reth,   allConfigsAfter);
 		_validateReserveConfig(sdai,   allConfigsAfter);
 		_validateReserveConfig(weth,   allConfigsAfter);
 		_validateReserveConfig(wsteth, allConfigsAfter);
