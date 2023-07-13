@@ -3,13 +3,25 @@ pragma solidity ^0.8.0;
 
 import 'aave-helpers/ProtocolV3TestBase.sol';
 
-import { IDaiInterestRateStrategy } from "./IDaiInterestRateStrategy.sol";
+import { IDaiInterestRateStrategy }    from "./IDaiInterestRateStrategy.sol";
+import { IDaiJugInterestRateStrategy } from "./IDaiJugInterestRateStrategy.sol";
 
 contract SparkTestBase is ProtocolV3_0_1TestBase {
 
     struct DaiInterestStrategyValues {
         address vat;
         address pot;
+        bytes32 ilk;
+        uint256 baseRateConversion;
+        uint256 borrowSpread;
+        uint256 supplySpread;
+        uint256 maxRate;
+        uint256 performanceBonus;
+    }
+
+    struct DaiJugInterestStrategyValues {
+        address vat;
+        address jug;
         bytes32 ilk;
         uint256 baseRateConversion;
         uint256 borrowSpread;
@@ -60,6 +72,54 @@ contract SparkTestBase is ProtocolV3_0_1TestBase {
         require(
             strategy.pot() == expectedStrategyValues.pot,
             '_validateDaiInterestRateStrategy() : INVALID_POT'
+        );
+        require(
+            strategy.ilk() == expectedStrategyValues.ilk,
+            '_validateDaiInterestRateStrategy() : INVALID_ILK'
+        );
+        require(
+            strategy.baseRateConversion() == expectedStrategyValues.baseRateConversion,
+            '_validateDaiInterestRateStrategy() : INVALID_BASE_RATE_CONVERSION'
+        );
+        require(
+            strategy.borrowSpread() == expectedStrategyValues.borrowSpread,
+            '_validateDaiInterestRateStrategy() : INVALID_BORROW_SPREAD'
+        );
+        require(
+            strategy.supplySpread() == expectedStrategyValues.supplySpread,
+            '_validateDaiInterestRateStrategy() : INVALID_SUPPLY_SPREAD'
+        );
+        require(
+            strategy.maxRate() == expectedStrategyValues.maxRate,
+            '_validateDaiInterestRateStrategy() : INVALID_MAX_RATE'
+        );
+        require(
+            strategy.performanceBonus() == expectedStrategyValues.performanceBonus,
+            '_validateDaiInterestRateStrategy() : INVALID_PERFORMANCE_BONUS'
+        );
+    }
+
+    function _validateDaiJugInterestRateStrategy(
+        address interestRateStrategyAddress,
+        address expectedStrategy,
+        DaiJugInterestStrategyValues memory expectedStrategyValues
+    ) internal view {
+        IDaiJugInterestRateStrategy strategy = IDaiJugInterestRateStrategy(
+            interestRateStrategyAddress
+        );
+
+        require(
+            address(strategy) == expectedStrategy,
+            '_validateDaiInterestRateStrategy() : INVALID_STRATEGY_ADDRESS'
+        );
+
+        require(
+            strategy.vat() == expectedStrategyValues.vat,
+            '_validateDaiInterestRateStrategy() : INVALID_VAT'
+        );
+        require(
+            strategy.jug() == expectedStrategyValues.jug,
+            '_validateDaiInterestRateStrategy() : INVALID_JUG'
         );
         require(
             strategy.ilk() == expectedStrategyValues.ilk,
