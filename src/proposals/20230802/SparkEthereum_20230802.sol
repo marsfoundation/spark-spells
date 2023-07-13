@@ -20,6 +20,43 @@ contract SparkEthereum_20230802 is SparkPayloadEthereum {
 
 	address public constant DAI_INTEREST_RATE_STRATEGY = 0x191E97623B1733369290ee5d018d0B068bc0400D;
 
+    function rateStrategiesUpdates()
+        public view override returns (IEngine.RateStrategyUpdate[] memory)
+    {
+        IEngine.RateStrategyUpdate[] memory ratesUpdate = new IEngine.RateStrategyUpdate[](1);
+
+        Rates.RateStrategyParams memory weth = LISTING_ENGINE
+			.RATE_STRATEGIES_FACTORY()
+			.getStrategyDataOfAsset(WETH);
+
+		weth.variableRateSlope1 = _bpsToRay(4_00);
+
+		ratesUpdate[0] = IEngine.RateStrategyUpdate({
+			asset:  WETH,
+			params: weth
+        });
+
+        return ratesUpdate;
+    }
+
+	function borrowsUpdates()
+        public pure override returns (IEngine.BorrowUpdate[] memory)
+	{
+		IEngine.BorrowUpdate[] memory borrowsUpdate = new IEngine.BorrowUpdate[](1);
+
+		borrowsUpdate[0] = IEngine.BorrowUpdate({
+			asset:                 WETH,
+			reserveFactor:         5_00,
+			enabledToBorrow:       EngineFlags.KEEP_CURRENT,
+			flashloanable:         EngineFlags.KEEP_CURRENT,
+			stableRateModeEnabled: EngineFlags.KEEP_CURRENT,
+			borrowableInIsolation: EngineFlags.KEEP_CURRENT,
+			withSiloedBorrowing:   EngineFlags.KEEP_CURRENT
+		});
+
+		return borrowsUpdate;
+	}
+
     function _postExecute() internal override {
 		LISTING_ENGINE.POOL_CONFIGURATOR().setReserveInterestRateStrategyAddress(
             DAI,
