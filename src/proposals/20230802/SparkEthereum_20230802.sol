@@ -20,25 +20,6 @@ contract SparkEthereum_20230802 is SparkPayloadEthereum {
 
 	address public constant DAI_INTEREST_RATE_STRATEGY = 0x191E97623B1733369290ee5d018d0B068bc0400D;
 
-    function rateStrategiesUpdates()
-        public view override returns (IEngine.RateStrategyUpdate[] memory)
-    {
-        IEngine.RateStrategyUpdate[] memory ratesUpdate = new IEngine.RateStrategyUpdate[](1);
-
-        Rates.RateStrategyParams memory weth = LISTING_ENGINE
-			.RATE_STRATEGIES_FACTORY()
-			.getStrategyDataOfAsset(WETH);
-
-		weth.variableRateSlope1 = _bpsToRay(4_00);
-
-		ratesUpdate[0] = IEngine.RateStrategyUpdate({
-			asset:  WETH,
-			params: weth
-        });
-
-        return ratesUpdate;
-    }
-
 	function borrowsUpdates()
         public pure override returns (IEngine.BorrowUpdate[] memory)
 	{
@@ -56,6 +37,43 @@ contract SparkEthereum_20230802 is SparkPayloadEthereum {
 
 		return borrowsUpdate;
 	}
+
+	function collateralsUpdates()
+		public pure override returns (IEngine.CollateralUpdate[] memory)
+	{
+		IEngine.CollateralUpdate[] memory collateralUpdate = new IEngine.CollateralUpdate[](1);
+
+		collateralUpdate[0] = IEngine.CollateralUpdate({
+			asset:          DAI,
+			ltv:            0,
+			liqThreshold:   0,
+			liqBonus:       0,
+			debtCeiling:    0,
+			liqProtocolFee: 0,
+			eModeCategory:  EngineFlags.KEEP_CURRENT
+		});
+
+		return collateralUpdate;
+	}
+
+	function rateStrategiesUpdates()
+        public view override returns (IEngine.RateStrategyUpdate[] memory)
+    {
+        IEngine.RateStrategyUpdate[] memory ratesUpdate = new IEngine.RateStrategyUpdate[](1);
+
+        Rates.RateStrategyParams memory weth = LISTING_ENGINE
+			.RATE_STRATEGIES_FACTORY()
+			.getStrategyDataOfAsset(WETH);
+
+		weth.variableRateSlope1 = _bpsToRay(4_00);
+
+		ratesUpdate[0] = IEngine.RateStrategyUpdate({
+			asset:  WETH,
+			params: weth
+        });
+
+        return ratesUpdate;
+    }
 
     function _postExecute() internal override {
 		LISTING_ENGINE.POOL_CONFIGURATOR().setReserveInterestRateStrategyAddress(
