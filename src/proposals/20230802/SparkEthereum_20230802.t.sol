@@ -10,7 +10,7 @@ import { DataTypes }            from "aave-v3-core/contracts/protocol/libraries/
 import { ReserveConfig }    from 'aave-helpers/ProtocolV3TestBase.sol';
 import { TestWithExecutor } from 'aave-helpers/GovHelpers.sol';
 
-import { SparkTestBase } from '../../SparkTestBase.sol';
+import { InterestStrategyValues, SparkTestBase } from '../../SparkTestBase.sol';
 
 import { IDaiInterestRateStrategy } from '../../IDaiInterestRateStrategy.sol';
 
@@ -26,9 +26,12 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 
 	using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
+	address public constant DAI    = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
 	address public constant SDAI   = 0x83F20F44975D03b1b09e64809B757c47f942BEeA;
 	address public constant WETH   = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 	address public constant WSTETH = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0;
+
+	address public constant POOL_ADDRESSES_PROVIDER = 0x02C3eA4e34C0cBd694D2adFa2c690EECbC1793eE;
 
 	address public constant DAI_INTEREST_RATE_STRATEGY_OLD
 		= 0x9f9782880dd952F067Cad97B8503b0A3ac0fb21d;
@@ -69,6 +72,10 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 			'pre-Spark-Ethereum-20230802',
 			POOL
 		);
+
+		/********************************************/
+		/*** Dai Strategy Before State Assertions ***/
+		/********************************************/
 
 		_validateDaiInterestRateStrategy(
             _findReserveConfigBySymbol(allConfigsBefore, 'DAI').interestRateStrategy,
@@ -121,6 +128,10 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 
 		assertEq(daiStrategy.getBaseRate(), startingAnnualizedDsr);  // Back to 3.43%
 
+		/*****************/
+		/*** Execution ***/
+		/*****************/
+
 		_executePayload(address(payload));
 
 		ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot(
@@ -128,10 +139,10 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 			POOL
 		);
 
-		// diffReports(
-		// 	'pre-Spark-Ethereum-20230802',
-		// 	'post-Spark-Ethereum-20230802'
-		// );
+		diffReports(
+			'pre-Spark-Ethereum-20230802',
+			'post-Spark-Ethereum-20230802'
+		);
 
 		_validateDaiJugInterestRateStrategy(
             _findReserveConfigBySymbol(allConfigsAfter, 'DAI').interestRateStrategy,
@@ -168,6 +179,48 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 		assertEq(IPotLike(MCD_POT).dsr(),   updatedDsr);             // DSR is 5% annualized
 		assertEq(daiStrategy.getBaseRate(), stabilityFee);           // Still 3.43%
 		assertEq(daiStrategy.getBaseRate(), startingAnnualizedDsr);  // Still 3.43%
+
+		/***************************************/
+		/*** DAI Collateral State Assertions ***/
+		/***************************************/
+
+		ReserveConfig memory DAI_EXPECTED_CONFIG = _findReserveConfig(allConfigsAfter, DAI);
+
+		DAI_EXPECTED_CONFIG.liquidationThreshold = 1;
+		DAI_EXPECTED_CONFIG.ltv                  = 1;
+
+		// DAI is still technically enabled as collateral, just with a 0.01% liquidation threshold
+		// This is because DAI is being supplied by Maker, and AAVE prevents liquidation threshold
+		// being set to zero with active suppliers.
+		DAI_EXPECTED_CONFIG.usageAsCollateralEnabled = true;
+
+		_validateReserveConfig(DAI_EXPECTED_CONFIG, allConfigsAfter);
+
+		/****************************************/
+		/*** WETH Collateral State Assertions ***/
+		/****************************************/
+
+		ReserveConfig memory WETH_EXPECTED_CONFIG = _findReserveConfig(allConfigsAfter, WETH);
+
+		WETH_EXPECTED_CONFIG.reserveFactor = 5_00;
+
+		_validateReserveConfig(WETH_EXPECTED_CONFIG, allConfigsAfter);
+
+		_validateInterestRateStrategy(
+			WETH_EXPECTED_CONFIG.interestRateStrategy,
+			WETH_EXPECTED_CONFIG.interestRateStrategy,
+			InterestStrategyValues({
+				addressesProvider:             POOL_ADDRESSES_PROVIDER,
+				optimalUsageRatio:             0.80e27,
+				optimalStableToTotalDebtRatio: 0,
+				baseStableBorrowRate:          0.04e27,  // Only value changing
+				stableRateSlope1:              0,
+				stableRateSlope2:              0,
+				baseVariableBorrowRate:        0.01e27,
+				variableRateSlope1:            0.04e27,
+				variableRateSlope2:            0.80e27
+			})
+		);
 	}
 
 	function _getAnnualizedDsr(uint256 dsr) internal pure returns (uint256) {
