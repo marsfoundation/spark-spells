@@ -128,10 +128,10 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 			POOL
 		);
 
-		diffReports(
-			'pre-Spark-Ethereum-20230802',
-			'post-Spark-Ethereum-20230802'
-		);
+		// diffReports(
+		// 	'pre-Spark-Ethereum-20230802',
+		// 	'post-Spark-Ethereum-20230802'
+		// );
 
 		_validateDaiJugInterestRateStrategy(
             _findReserveConfigBySymbol(allConfigsAfter, 'DAI').interestRateStrategy,
