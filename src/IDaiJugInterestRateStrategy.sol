@@ -3,9 +3,9 @@ pragma solidity ^0.8.0;
 
 import { DataTypes } from 'aave-v3-core/contracts/protocol/libraries/types/DataTypes.sol';
 
-interface IDaiInterestRateStrategy {
+interface IDaiJugInterestRateStrategy {
     function vat() external view returns (address);
-    function pot() external view returns (address);
+    function jug() external view returns (address);
     function ilk() external view returns (bytes32);
     function baseRateConversion() external view returns (uint256);
     function borrowSpread() external view returns (uint256);
