@@ -38,24 +38,6 @@ contract SparkEthereum_20230802 is SparkPayloadEthereum {
 		return borrowsUpdate;
 	}
 
-	function collateralsUpdates()
-		public pure override returns (IEngine.CollateralUpdate[] memory)
-	{
-		IEngine.CollateralUpdate[] memory collateralUpdate = new IEngine.CollateralUpdate[](1);
-
-		collateralUpdate[0] = IEngine.CollateralUpdate({
-			asset:          DAI,
-			ltv:            0,
-			liqThreshold:   0,
-			liqBonus:       0,
-			debtCeiling:    0,
-			liqProtocolFee: 0,
-			eModeCategory:  EngineFlags.KEEP_CURRENT
-		});
-
-		return collateralUpdate;
-	}
-
 	function rateStrategiesUpdates()
         public view override returns (IEngine.RateStrategyUpdate[] memory)
     {
@@ -76,6 +58,8 @@ contract SparkEthereum_20230802 is SparkPayloadEthereum {
     }
 
     function _postExecute() internal override {
+		LISTING_ENGINE.POOL_CONFIGURATOR().configureReserveAsCollateral(DAI, 1, 1, 104_50);
+
 		LISTING_ENGINE.POOL_CONFIGURATOR().setReserveInterestRateStrategyAddress(
             DAI,
             DAI_INTEREST_RATE_STRATEGY
