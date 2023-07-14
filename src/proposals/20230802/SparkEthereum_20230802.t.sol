@@ -221,6 +221,12 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 				variableRateSlope2:            0.80e27
 			})
 		);
+
+		/**********************************/
+		/*** E2E Tests for WETH and DAI ***/
+		/**********************************/
+
+		sparkE2eTest(POOL, makeAddr("newUser"));
 	}
 
 	function _getAnnualizedDsr(uint256 dsr) internal pure returns (uint256) {
