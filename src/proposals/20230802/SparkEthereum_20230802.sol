@@ -44,7 +44,7 @@ contract SparkEthereum_20230802 is SparkPayloadEthereum {
 			.RATE_STRATEGIES_FACTORY()
 			.getStrategyDataOfAsset(WETH);
 
-		weth.variableRateSlope1 = _bpsToRay(4_00);
+		weth.variableRateSlope1 = _bpsToRay(3_00);
 
 		ratesUpdate[0] = IEngine.RateStrategyUpdate({
 			asset:  WETH,
