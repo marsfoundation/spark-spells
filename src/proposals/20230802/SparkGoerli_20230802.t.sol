@@ -14,7 +14,7 @@ import { InterestStrategyValues, SparkTestBase } from '../../SparkTestBase.sol';
 
 import { IDaiInterestRateStrategy } from '../../IDaiInterestRateStrategy.sol';
 
-import { SparkEthereum_20230802 } from './SparkEthereum_20230802.sol';
+import { SparkGoerli_20230802 } from './SparkGoerli_20230802.sol';
 
 interface IPotLike {
 	function drip() external returns (uint256);
@@ -22,34 +22,34 @@ interface IPotLike {
 	function file(bytes32, uint256) external;
 }
 
-contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
+contract SparkGoerli_20230802Test is SparkTestBase, TestWithExecutor {
 
 	using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
-	address public constant DAI    = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
-	address public constant WETH   = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+	address public constant DAI    = 0x11fE4B6AE13d2a6055C8D9cF65c55bac32B5d844;
+	address public constant WETH   = 0x7D5afF7ab67b431cDFA6A94d50d3124cC4AB2611;
 
-	address public constant POOL_ADDRESSES_PROVIDER = 0x02C3eA4e34C0cBd694D2adFa2c690EECbC1793eE;
+	address public constant POOL_ADDRESSES_PROVIDER = 0x026a5B6114431d8F3eF2fA0E1B2EDdDccA9c540E;
 
 	address public constant DAI_INTEREST_RATE_STRATEGY_OLD
-		= 0x9f9782880dd952F067Cad97B8503b0A3ac0fb21d;
+		= 0x70659BcA22A2a8BB324A526a8BB919185d3ecEBC;
 
 	address public constant DAI_INTEREST_RATE_STRATEGY_NEW
-		= 0x191E97623B1733369290ee5d018d0B068bc0400D;
+		= 0x7f44e1c1dE70059D7cc483378BEFeE2a030CE247;
 
-	address public constant PAUSE_PROXY = 0xBE8E3e3618f7474F8cB1d074A26afFef007E98FB;
+	address public constant PAUSE_PROXY = 0x5DCdbD3cCF9B09EAAD03bc5f50fA2B3d3ACA0121;
 
-    address public constant MCD_VAT = 0x35D1b3F3D7966A1DFe207aa4514C12a259A0492B;
-    address public constant MCD_JUG = 0x19c0976f590D67707E62397C87829d896Dc0f1F1;
-	address public constant MCD_POT = 0x197E90f9FAD81970bA7976f33CbD77088E5D7cf7;
+    address public constant MCD_VAT = 0xB966002DDAa2Baf48369f5015329750019736031;
+    address public constant MCD_JUG = 0xC90C99FE9B5d5207A03b9F28A6E8A19C0e558916;
+	address public constant MCD_POT = 0x50672F0a14B40051B65958818a7AcA3D54Bd81Af;
 
-	address public constant EXECUTOR = 0x3300f198988e4C9C63F75dF86De36421f06af8c4;
+	address public constant EXECUTOR = 0x4e847915D8a9f2Ab0cDf2FC2FD0A30428F25665d;
 
 	bytes32 public constant SPARK_ILK = "DIRECT-SPARK-DAI";
 
 	uint256 internal constant RAY = 1e27;
 
-	IPool public constant POOL = IPool(0xC13e21B648A5Ee794902342038FF3aDAB66BE987);
+	IPool public constant POOL = IPool(0x26ca51Af4506DE7a6f0785D20CD776081a05fF6d);
 
 	DataTypes.CalculateInterestRatesParams public rateParams =
 		DataTypes.CalculateInterestRatesParams(
@@ -64,14 +64,14 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 			address(0)
 		);
 
-	SparkEthereum_20230802 public payload;
+	SparkGoerli_20230802 public payload;
 
 	function setUp() public {
-		vm.createSelectFork(getChain('mainnet').rpcUrl, 17_677_900);
+		vm.createSelectFork(getChain('goerli').rpcUrl, 9_343_000);
 
 		_selectPayloadExecutor(EXECUTOR);
 
-		payload = new SparkEthereum_20230802();
+		payload = new SparkGoerli_20230802();
 	}
 
 	function testSpellExecution() public {
@@ -80,13 +80,16 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 		);
 
 		ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot(
-			'pre-Spark-Ethereum-20230802',
+			'pre-Spark-Goerli-20230802',
 			POOL
 		);
 
 		/********************************************/
 		/*** Dai Strategy Before State Assertions ***/
 		/********************************************/
+
+		console.log("Strat", _findReserveConfigBySymbol(allConfigsBefore, 'DAI').interestRateStrategy);
+		console.log("Strat", DAI_INTEREST_RATE_STRATEGY_OLD);
 
 		_validateDaiInterestRateStrategy(
             _findReserveConfigBySymbol(allConfigsBefore, 'DAI').interestRateStrategy,
@@ -108,12 +111,12 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 		uint256 startingDsr           = IPotLike(MCD_POT).dsr();
 		uint256 startingAnnualizedDsr = _getAnnualizedDsr(startingDsr);
 
-		// ETH-C rate at ~3.43% (currently equals annualized DSR)
-		uint256 stabilityFee = 0.034304803710648653896272000e27;
+		// ETH-C rate at ~3.14% (currently equals annualized DSR)
+		uint256 stabilityFee = 0.031401763155165655148976000e27;
 
 		( ,, uint256 borrowRate ) = daiStrategy.calculateInterestRates(rateParams);
 
-		assertEq(startingDsr,               1.000000001087798189708544327e27);
+		assertEq(startingDsr,               1.000000000995743377573746041e27);
 		assertEq(daiStrategy.getBaseRate(), stabilityFee);
 		assertEq(daiStrategy.getBaseRate(), startingAnnualizedDsr);
 		assertEq(borrowRate,                startingAnnualizedDsr);
@@ -156,13 +159,8 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 		_executePayload(address(payload));
 
 		ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot(
-			'post-Spark-Ethereum-20230802',
+			'post-Spark-Goerli-20230802',
 			POOL
-		);
-
-		diffReports(
-			'pre-Spark-Ethereum-20230802',
-			'post-Spark-Ethereum-20230802'
 		);
 
 		_validateDaiJugInterestRateStrategy(
