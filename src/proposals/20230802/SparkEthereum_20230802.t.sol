@@ -238,11 +238,11 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 				addressesProvider:             POOL_ADDRESSES_PROVIDER,
 				optimalUsageRatio:             0.80e27,
 				optimalStableToTotalDebtRatio: 0,
-				baseStableBorrowRate:          0.04e27,
+				baseStableBorrowRate:          0.03e27,
 				stableRateSlope1:              0,
 				stableRateSlope2:              0,
 				baseVariableBorrowRate:        0.01e27,
-				variableRateSlope1:            0.04e27,
+				variableRateSlope1:            0.03e27,
 				variableRateSlope2:            0.80e27
 			})
 		);
