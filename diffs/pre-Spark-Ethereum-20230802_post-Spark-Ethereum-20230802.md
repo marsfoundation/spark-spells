@@ -24,9 +24,9 @@
 | --- | --- | --- |
 | reserveFactor | 15 % | 5 % |
 | interestRateStrategy | [0x764b4AB9bCA18eB633d92368F725765Ebb8f047C](https://etherscan.io/address/0x764b4AB9bCA18eB633d92368F725765Ebb8f047C) | [0x36e9A9e26713fb45EB957609Ebb0fa37d9114d28](https://etherscan.io/address/0x36e9A9e26713fb45EB957609Ebb0fa37d9114d28) |
-| variableRateSlope1 | 3.8 % | 4 % |
-| baseStableBorrowRate | 3.8 % | 4 % |
-| interestRate | ![before](/.assets/6747e3b5adc7a63d169daf26756fbbc8cc8e1802.svg) | ![after](/.assets/939b8b736db42cc5a1ecb3f1c1bc54abe66f9f67.svg) |
+| variableRateSlope1 | 3.8 % | 3.75 % |
+| baseStableBorrowRate | 3.8 % | 3.75 % |
+| interestRate | ![before](/.assets/6747e3b5adc7a63d169daf26756fbbc8cc8e1802.svg) | ![after](/.assets/65e99464e7ea3ca69adb0e48bbdf5f112e01b9a1.svg) |
 
 ## Raw diff
 
@@ -78,7 +78,7 @@
     "0x36e9A9e26713fb45EB957609Ebb0fa37d9114d28": {
       "from": null,
       "to": {
-        "baseStableBorrowRate": "40000000000000000000000000",
+        "baseStableBorrowRate": "37500000000000000000000000",
         "baseVariableBorrowRate": "10000000000000000000000000",
         "maxExcessStableToTotalDebtRatio": "1000000000000000000000000000",
         "maxExcessUsageRatio": "200000000000000000000000000",
@@ -86,7 +86,7 @@
         "optimalUsageRatio": "800000000000000000000000000",
         "stableRateSlope1": 0,
         "stableRateSlope2": 0,
-        "variableRateSlope1": "40000000000000000000000000",
+        "variableRateSlope1": "37500000000000000000000000",
         "variableRateSlope2": "800000000000000000000000000"
       }
     }
