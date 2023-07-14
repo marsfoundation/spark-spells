@@ -147,4 +147,59 @@ contract SparkTestBase is ProtocolV3_0_1TestBase {
         );
     }
 
+
+    function _variableBorrowFlowAllCollaterals(
+        ReserveConfig[] memory configs,
+        IPool pool,
+        address user
+    )
+        internal
+    {
+        for (uint256 i = 0; i < configs.length; i++) {
+            ReserveConfig memory collateral = configs[i];
+
+            if (
+                !collateral.usageAsCollateralEnabled ||
+                collateral.stableBorrowRateEnabled ||
+                collateral.isFrozen
+            ) {
+                console.log('SKIP: COLLATERAL_DISABLED_OR_STABLE %s', collateral.symbol);
+                continue;
+            }
+
+            uint256 HUNDRED_MIL = 100_000_000 * 10 ** collateral.decimals;
+
+            uint256 supplyCap
+                = collateral.supplyCap == 0 ? type(uint256).max : collateral.supplyCap;
+
+            uint256 depositAmount = HUNDRED_MIL > supplyCap ? supplyCap : HUNDRED_MIL;
+
+            _deposit(collateral, pool, user, depositAmount);
+
+            for (uint256 j = 0; j < configs.length; j++) {
+                ReserveConfig memory borrow = configs[j];
+
+                if (!borrow.borrowingEnabled || borrow.isFrozen) {
+                    console.log('SKIP: BORROWING_DISABLED %s', borrow.symbol);
+                    continue;
+                }
+
+                uint256 amount = 10 ** borrow.decimals;
+
+                _deposit(borrow, pool, EOA, amount * 2);  // Add some supply for user to borrow
+                this._borrow(borrow, pool, user, amount, false);
+            }
+        }
+    }
+
+    function sparkE2eTest(IPool pool, address user) public {
+        ReserveConfig[] memory configs = _getReservesConfigs(pool);
+        deal(user, 1000 ether);
+        uint256 snapshot = vm.snapshot();
+        _supplyWithdrawFlow(configs, pool, user);
+        vm.revertTo(snapshot);
+        _variableBorrowFlowAllCollaterals(configs, pool, user);
+        vm.revertTo(snapshot);
+    }
+
 }
