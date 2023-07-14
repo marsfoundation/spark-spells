@@ -27,9 +27,7 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 	using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
 	address public constant DAI    = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
-	address public constant SDAI   = 0x83F20F44975D03b1b09e64809B757c47f942BEeA;
 	address public constant WETH   = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-	address public constant WSTETH = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0;
 
 	address public constant POOL_ADDRESSES_PROVIDER = 0x02C3eA4e34C0cBd694D2adFa2c690EECbC1793eE;
 
@@ -49,9 +47,22 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 
 	bytes32 public constant SPARK_ILK = "DIRECT-SPARK-DAI";
 
-	uint256 internal constant RAY  = 1e27;
+	uint256 internal constant RAY = 1e27;
 
 	IPool public constant POOL = IPool(0xC13e21B648A5Ee794902342038FF3aDAB66BE987);
+
+	DataTypes.CalculateInterestRatesParams public rateParams =
+		DataTypes.CalculateInterestRatesParams(
+			0,
+			0,
+			0,
+			0,
+			1_000_000_000e18,
+			0,
+			0,
+			DAI,
+			address(0)
+		);
 
 	SparkEthereum_20230802 public payload;
 
@@ -97,12 +108,15 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 		uint256 startingDsr           = IPotLike(MCD_POT).dsr();
 		uint256 startingAnnualizedDsr = _getAnnualizedDsr(startingDsr);
 
-		// ETH-C rate at 3.43% (currently equals annualized DSR)
-		uint256 stabilityFee  = 0.034304803710648653896272000e27;
+		// ETH-C rate at ~3.43% (currently equals annualized DSR)
+		uint256 stabilityFee = 0.034304803710648653896272000e27;
+
+		( ,, uint256 borrowRate ) = daiStrategy.calculateInterestRates(rateParams);
 
 		assertEq(startingDsr,               1.000000001087798189708544327e27);
 		assertEq(daiStrategy.getBaseRate(), stabilityFee);
 		assertEq(daiStrategy.getBaseRate(), startingAnnualizedDsr);
+		assertEq(borrowRate,                startingAnnualizedDsr);
 
 		uint256 updatedDsr = 1.000000001585489599188229325e27;  // ~5% annualized
 
@@ -114,10 +128,14 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 
 		uint256 updatedAnnualizedDsr = _getAnnualizedDsr(updatedDsr);
 
+		( ,, borrowRate ) = daiStrategy.calculateInterestRates(rateParams);
+
 		// Demonstrate that old strategy is directly affected by DSR change
 		assertEq(IPotLike(MCD_POT).dsr(),   updatedDsr);
 		assertEq(daiStrategy.getBaseRate(), 0.049999999999999999993200000e27);  // ~5%
 		assertEq(daiStrategy.getBaseRate(), updatedAnnualizedDsr);
+		assertEq(borrowRate,                updatedAnnualizedDsr);
+
 
 		// Go back to starting state before execution
 		IPotLike(MCD_POT).drip();
@@ -126,7 +144,10 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 
 		daiStrategy.recompute();
 
+		( ,, borrowRate ) = daiStrategy.calculateInterestRates(rateParams);
+
 		assertEq(daiStrategy.getBaseRate(), startingAnnualizedDsr);  // Back to 3.43%
+		assertEq(borrowRate,                startingAnnualizedDsr);
 
 		/*****************/
 		/*** Execution ***/
@@ -163,10 +184,13 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 
 		daiStrategy.recompute();
 
+		( ,, borrowRate ) = daiStrategy.calculateInterestRates(rateParams);
+
 		// Starting state is in line with DSR since ETH-C SFBR matches DSR
 		assertEq(IPotLike(MCD_POT).dsr(),   startingDsr);
 		assertEq(daiStrategy.getBaseRate(), stabilityFee);
 		assertEq(daiStrategy.getBaseRate(), startingAnnualizedDsr);
+		assertEq(borrowRate,                stabilityFee);
 
 		// Change DSR to ~5% annualized
 		IPotLike(MCD_POT).drip();
@@ -179,6 +203,7 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 		assertEq(IPotLike(MCD_POT).dsr(),   updatedDsr);             // DSR is 5% annualized
 		assertEq(daiStrategy.getBaseRate(), stabilityFee);           // Still 3.43%
 		assertEq(daiStrategy.getBaseRate(), startingAnnualizedDsr);  // Still 3.43%
+		assertEq(borrowRate,                stabilityFee);           // Still 3.43%
 
 		/***************************************/
 		/*** DAI Collateral State Assertions ***/
@@ -222,9 +247,9 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 			})
 		);
 
-		/**********************************/
-		/*** E2E Tests for WETH and DAI ***/
-		/**********************************/
+		/*****************/
+		/*** E2E Tests ***/
+		/*****************/
 
 		sparkE2eTest(POOL, makeAddr("newUser"));
 	}
