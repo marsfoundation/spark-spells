@@ -2,6 +2,7 @@ const axios = require('axios');
 const dotenv = require('dotenv');
 const ethers = require('ethers');
 
+dotenv.config({ path: `.env` });
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
 const {
@@ -10,7 +11,6 @@ const {
   TENDERLY_PROJECT,
   TENDERLY_ACCESS_KEY,
   EXECUTOR,
-  ACL_MANAGER,
   PAUSE_PROXY,
 } = process.env;
 
@@ -61,13 +61,6 @@ const runSpell = async () => {
 
   const pauseProxySigner = forkProvider.getSigner(PAUSE_PROXY);
 
-  // TODO: This can be removed after the next spell
-  await pauseProxySigner.sendTransaction({
-    from: PAUSE_PROXY,
-    to: ACL_MANAGER,
-    data: AclManagerAbi.encodeFunctionData('addPoolAdmin', [EXECUTOR]),
-  });
-
   await pauseProxySigner.sendTransaction({
     from: PAUSE_PROXY,
     to: EXECUTOR,
@@ -83,7 +76,5 @@ const ExecutorAbi = new ethers.utils.Interface([
 ]);
 
 const PayloadAbi = new ethers.utils.Interface(["function execute()"]);
-
-const AclManagerAbi = new ethers.utils.Interface(["function addPoolAdmin(address admin)"]);
 
 runSpell();
