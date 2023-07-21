@@ -3,6 +3,8 @@ pragma solidity ^0.8.10;
 
 import { SparkPayloadEthereum, IEngine, Rates, EngineFlags } from '../../SparkPayloadEthereum.sol';
 
+import { console2 as console } from "forge-std/console2.sol";
+
 /**
  * @title  August 2, 2023 Spark Ethereum Proposal - Remove DAI Collateral and update WETH params.
  * @author Phoenix Labs
@@ -43,6 +45,10 @@ contract SparkEthereum_20230802 is SparkPayloadEthereum {
         Rates.RateStrategyParams memory weth = LISTING_ENGINE
 			.RATE_STRATEGIES_FACTORY()
 			.getStrategyDataOfAsset(WETH);
+
+		console.log("weth.variableRateSlope1: %s", weth.variableRateSlope1);
+		console.log("weth.variableRateSlope2: %s", weth.variableRateSlope2);
+		console.log("weth.optimalUsageRatio:  %s", weth.optimalUsageRatio);
 
 		weth.variableRateSlope1 = _bpsToRay(3_00);
 

@@ -4,6 +4,9 @@ pragma solidity ^0.8.10;
 import { IPool }     from "aave-v3-core/contracts/interfaces/IPool.sol";
 import { DataTypes } from "aave-v3-core/contracts/protocol/libraries/types/DataTypes.sol";
 
+import { DefaultReserveInterestRateStrategy }
+	from "aave-v3-core/contracts/protocol/pool/DefaultReserveInterestRateStrategy.sol";
+
 import { ReserveConfiguration }
 	from "aave-v3-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol";
 
@@ -50,17 +53,18 @@ contract SparkGoerli_20230802Test is SparkTestBase, TestWithExecutor {
 	IPool public constant POOL = IPool(0x26ca51Af4506DE7a6f0785D20CD776081a05fF6d);
 
 	DataTypes.CalculateInterestRatesParams public rateParams =
-		DataTypes.CalculateInterestRatesParams(
-			0,
-			0,
-			0,
-			0,
-			1_000_000_000e18,
-			0,
-			0,
-			DAI,
-			address(0)
-		);
+		DataTypes.CalculateInterestRatesParams({
+			unbacked:                0,
+			liquidityAdded:          200_000e18,  // 200k + 800k = 1m total liquidity
+			liquidityTaken:          0,
+			totalStableDebt:         0,
+			totalVariableDebt:       800_000e18,
+			averageStableBorrowRate: 0,
+			reserveFactor:           0,
+			reserve:                 DAI,
+			aToken:                  makeAddr("mock-aToken")
+		});
+
 
 	SparkGoerli_20230802 public payload;
 
@@ -239,6 +243,27 @@ contract SparkGoerli_20230802Test is SparkTestBase, TestWithExecutor {
 				variableRateSlope2:            0.80e27
 			})
 		);
+
+		DefaultReserveInterestRateStrategy wethStrategy = DefaultReserveInterestRateStrategy(
+			WETH_EXPECTED_CONFIG.interestRateStrategy
+		);
+
+		// NOTE: This is not actually necessary since balance isn't used, added for clarity.
+		rateParams.reserve = WETH;
+
+		( ,, borrowRate ) = wethStrategy.calculateInterestRates(rateParams);
+
+		// 80% utilization
+		assertEq(borrowRate, 0.04e27);
+
+		// Update to 90% utilization
+		rateParams.liquidityAdded    = 100_000e18;
+		rateParams.totalVariableDebt = 900_000e18;
+
+		( ,, borrowRate ) = wethStrategy.calculateInterestRates(rateParams);
+
+		// 90% utilization - 50% excess * 80% variable rate slope 2 = 40% + existing 4%
+		assertEq(borrowRate, 0.44e27);
 
 		/*****************/
 		/*** E2E Tests ***/

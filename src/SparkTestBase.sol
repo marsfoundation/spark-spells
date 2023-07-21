@@ -147,7 +147,6 @@ contract SparkTestBase is ProtocolV3_0_1TestBase {
         );
     }
 
-
     function _variableBorrowFlowAllCollaterals(
         ReserveConfig[] memory configs,
         IPool pool,
@@ -160,7 +159,7 @@ contract SparkTestBase is ProtocolV3_0_1TestBase {
 
             if (
                 !collateral.usageAsCollateralEnabled ||
-                collateral.stableBorrowRateEnabled ||
+                collateral.stableBorrowRateEnabled   ||
                 collateral.isFrozen
             ) {
                 console.log("\n\n\n");
@@ -180,6 +179,7 @@ contract SparkTestBase is ProtocolV3_0_1TestBase {
             uint256 supplyCap
                 = collateral.supplyCap == 0 ? type(uint256).max : collateral.supplyCap;
 
+            // If supply cap is 0, deposit 100M, else limit to supply cap
             uint256 depositAmount = HUNDRED_MIL > supplyCap ? supplyCap : HUNDRED_MIL;
 
             _deposit(collateral, pool, user, depositAmount);
@@ -196,7 +196,10 @@ contract SparkTestBase is ProtocolV3_0_1TestBase {
 
                 uint256 amount = 10 ** borrow.decimals;
 
-                _deposit(borrow, pool, EOA, amount * 2);  // Add some supply for user to borrow
+                // Add some supply for user to borrow
+                _deposit(borrow, pool, EOA, amount * 2);
+
+                // Borrow one unit of borrow token
                 this._borrow(borrow, pool, user, amount, false);
             }
         }
