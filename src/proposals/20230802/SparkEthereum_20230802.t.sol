@@ -25,8 +25,15 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 
 	using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
-	address public constant DAI    = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
-	address public constant WETH   = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+	address public constant DAI  = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
+	address public constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+
+	address public constant MCD_VAT = 0x35D1b3F3D7966A1DFe207aa4514C12a259A0492B;
+    address public constant MCD_JUG = 0x19c0976f590D67707E62397C87829d896Dc0f1F1;
+	address public constant MCD_POT = 0x197E90f9FAD81970bA7976f33CbD77088E5D7cf7;
+
+	address public constant EXECUTOR    = 0x3300f198988e4C9C63F75dF86De36421f06af8c4;
+	address public constant PAUSE_PROXY = 0xBE8E3e3618f7474F8cB1d074A26afFef007E98FB;
 
 	address public constant POOL_ADDRESSES_PROVIDER = 0x02C3eA4e34C0cBd694D2adFa2c690EECbC1793eE;
 
@@ -35,14 +42,6 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 
 	address public constant DAI_INTEREST_RATE_STRATEGY_NEW
 		= 0x191E97623B1733369290ee5d018d0B068bc0400D;
-
-	address public constant PAUSE_PROXY = 0xBE8E3e3618f7474F8cB1d074A26afFef007E98FB;
-
-    address public constant MCD_VAT = 0x35D1b3F3D7966A1DFe207aa4514C12a259A0492B;
-    address public constant MCD_JUG = 0x19c0976f590D67707E62397C87829d896Dc0f1F1;
-	address public constant MCD_POT = 0x197E90f9FAD81970bA7976f33CbD77088E5D7cf7;
-
-	address public constant EXECUTOR = 0x3300f198988e4C9C63F75dF86De36421f06af8c4;
 
 	bytes32 public constant SPARK_ILK = "DIRECT-SPARK-DAI";
 

@@ -25,8 +25,12 @@ contract SparkGoerli_20230802Test is SparkTestBase, TestWithExecutor {
 
 	using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
-	address public constant DAI    = 0x11fE4B6AE13d2a6055C8D9cF65c55bac32B5d844;
-	address public constant WETH   = 0x7D5afF7ab67b431cDFA6A94d50d3124cC4AB2611;
+	address public constant DAI  = 0x11fE4B6AE13d2a6055C8D9cF65c55bac32B5d844;
+	address public constant WETH = 0x7D5afF7ab67b431cDFA6A94d50d3124cC4AB2611;
+
+	address public constant MCD_VAT = 0xB966002DDAa2Baf48369f5015329750019736031;
+    address public constant MCD_JUG = 0xC90C99FE9B5d5207A03b9F28A6E8A19C0e558916;
+	address public constant MCD_POT = 0x50672F0a14B40051B65958818a7AcA3D54Bd81Af;
 
 	address public constant POOL_ADDRESSES_PROVIDER = 0x026a5B6114431d8F3eF2fA0E1B2EDdDccA9c540E;
 
@@ -36,13 +40,8 @@ contract SparkGoerli_20230802Test is SparkTestBase, TestWithExecutor {
 	address public constant DAI_INTEREST_RATE_STRATEGY_NEW
 		= 0x7f44e1c1dE70059D7cc483378BEFeE2a030CE247;
 
+	address public constant EXECUTOR    = 0x4e847915D8a9f2Ab0cDf2FC2FD0A30428F25665d;
 	address public constant PAUSE_PROXY = 0x5DCdbD3cCF9B09EAAD03bc5f50fA2B3d3ACA0121;
-
-    address public constant MCD_VAT = 0xB966002DDAa2Baf48369f5015329750019736031;
-    address public constant MCD_JUG = 0xC90C99FE9B5d5207A03b9F28A6E8A19C0e558916;
-	address public constant MCD_POT = 0x50672F0a14B40051B65958818a7AcA3D54Bd81Af;
-
-	address public constant EXECUTOR = 0x4e847915D8a9f2Ab0cDf2FC2FD0A30428F25665d;
 
 	bytes32 public constant SPARK_ILK = "DIRECT-SPARK-DAI";
 
