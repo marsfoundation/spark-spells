@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.10;
 
-import { console2 as console } from "../../../lib/forge-std/src/console2.sol";
+import { IPool }     from "aave-v3-core/contracts/interfaces/IPool.sol";
+import { DataTypes } from "aave-v3-core/contracts/protocol/libraries/types/DataTypes.sol";
 
-import { IPool }                from "aave-v3-core/contracts/interfaces/IPool.sol";
-import { ReserveConfiguration } from "aave-v3-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol";
-import { DataTypes }            from "aave-v3-core/contracts/protocol/libraries/types/DataTypes.sol";
+import { ReserveConfiguration }
+	from "aave-v3-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol";
 
 import { ReserveConfig }    from 'aave-helpers/ProtocolV3TestBase.sol';
 import { TestWithExecutor } from 'aave-helpers/GovHelpers.sol';
