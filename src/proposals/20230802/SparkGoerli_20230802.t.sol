@@ -67,7 +67,7 @@ contract SparkGoerli_20230802Test is SparkTestBase, TestWithExecutor {
 	SparkGoerli_20230802 public payload;
 
 	function setUp() public {
-		vm.createSelectFork(getChain('goerli').rpcUrl, 9_343_000);
+		vm.createSelectFork(getChain('goerli').rpcUrl, 9_381_500);
 
 		_selectPayloadExecutor(EXECUTOR);
 
@@ -149,7 +149,7 @@ contract SparkGoerli_20230802Test is SparkTestBase, TestWithExecutor {
 
 		( ,, borrowRate ) = daiStrategy.calculateInterestRates(rateParams);
 
-		assertEq(daiStrategy.getBaseRate(), startingAnnualizedDsr);  // Back to 3.43%
+		assertEq(daiStrategy.getBaseRate(), startingAnnualizedDsr);  // Back to 3.14%
 		assertEq(borrowRate,                startingAnnualizedDsr);
 
 		/*****************/
@@ -199,9 +199,9 @@ contract SparkGoerli_20230802Test is SparkTestBase, TestWithExecutor {
 
 		// Demonstrate that new strategy is NOT affected by DSR change
 		assertEq(IPotLike(MCD_POT).dsr(),   updatedDsr);             // DSR is 5% annualized
-		assertEq(daiStrategy.getBaseRate(), stabilityFee);           // Still 3.43%
-		assertEq(daiStrategy.getBaseRate(), startingAnnualizedDsr);  // Still 3.43%
-		assertEq(borrowRate,                stabilityFee);           // Still 3.43%
+		assertEq(daiStrategy.getBaseRate(), stabilityFee);           // Still 3.14%
+		assertEq(daiStrategy.getBaseRate(), startingAnnualizedDsr);  // Still 3.14%
+		assertEq(borrowRate,                stabilityFee);           // Still 3.14%
 
 		/***************************************/
 		/*** DAI Collateral State Assertions ***/

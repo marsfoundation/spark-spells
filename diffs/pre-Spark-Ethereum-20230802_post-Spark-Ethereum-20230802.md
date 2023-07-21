@@ -15,7 +15,7 @@
 
 | description | value before | value after |
 | --- | --- | --- |
-| oracleLatestAnswer | 102,556,385 | 102,557,375 |
+| oracleLatestAnswer | 102,687,937 | 102,688,656 |
 
 
 #### WETH ([0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2](https://etherscan.io/address/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2))
@@ -49,8 +49,8 @@
     },
     "0x83F20F44975D03b1b09e64809B757c47f942BEeA": {
       "oracleLatestAnswer": {
-        "from": 102556385,
-        "to": 102557375
+        "from": 102687937,
+        "to": 102688656
       }
     },
     "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2": {

@@ -163,9 +163,17 @@ contract SparkTestBase is ProtocolV3_0_1TestBase {
                 collateral.stableBorrowRateEnabled ||
                 collateral.isFrozen
             ) {
+                console.log("\n\n\n");
+                console.log("--------");
                 console.log('SKIP: COLLATERAL_DISABLED_OR_STABLE %s', collateral.symbol);
+                console.log("--------");
                 continue;
             }
+
+            console.log("\n\n\n");
+            console.log("--------");
+            console.log("COLLATERAL %s", collateral.symbol);
+            console.log("--------");
 
             uint256 HUNDRED_MIL = 100_000_000 * 10 ** collateral.decimals;
 
@@ -180,9 +188,11 @@ contract SparkTestBase is ProtocolV3_0_1TestBase {
                 ReserveConfig memory borrow = configs[j];
 
                 if (!borrow.borrowingEnabled || borrow.isFrozen) {
-                    console.log('SKIP: BORROWING_DISABLED %s', borrow.symbol);
+                    console.log('\nSKIP: BORROWING_DISABLED %s', borrow.symbol);
                     continue;
                 }
+
+                console.log("\nBORROW", borrow.symbol);
 
                 uint256 amount = 10 ** borrow.decimals;
 

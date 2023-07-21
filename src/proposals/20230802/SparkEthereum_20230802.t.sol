@@ -67,7 +67,7 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 	SparkEthereum_20230802 public payload;
 
 	function setUp() public {
-		vm.createSelectFork(getChain('mainnet').rpcUrl, 17_677_900);
+		vm.createSelectFork(getChain('mainnet').rpcUrl, 17_740_300);
 
 		_selectPayloadExecutor(EXECUTOR);
 
@@ -108,12 +108,12 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 		uint256 startingDsr           = IPotLike(MCD_POT).dsr();
 		uint256 startingAnnualizedDsr = _getAnnualizedDsr(startingDsr);
 
-		// ETH-C rate at ~3.43% (currently equals annualized DSR)
-		uint256 stabilityFee = 0.034304803710648653896272000e27;
+		// ETH-C rate at ~3.14% (currently equals annualized DSR)
+		uint256 stabilityFee = 0.031401763155165655148976000e27;
 
 		( ,, uint256 borrowRate ) = daiStrategy.calculateInterestRates(rateParams);
 
-		assertEq(startingDsr,               1.000000001087798189708544327e27);
+		assertEq(startingDsr,               1.000000000995743377573746041e27);
 		assertEq(daiStrategy.getBaseRate(), stabilityFee);
 		assertEq(daiStrategy.getBaseRate(), startingAnnualizedDsr);
 		assertEq(borrowRate,                startingAnnualizedDsr);
@@ -146,7 +146,7 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 
 		( ,, borrowRate ) = daiStrategy.calculateInterestRates(rateParams);
 
-		assertEq(daiStrategy.getBaseRate(), startingAnnualizedDsr);  // Back to 3.43%
+		assertEq(daiStrategy.getBaseRate(), startingAnnualizedDsr);  // Back to 3.14%
 		assertEq(borrowRate,                startingAnnualizedDsr);
 
 		/*****************/
@@ -201,9 +201,9 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 
 		// Demonstrate that new strategy is NOT affected by DSR change
 		assertEq(IPotLike(MCD_POT).dsr(),   updatedDsr);             // DSR is 5% annualized
-		assertEq(daiStrategy.getBaseRate(), stabilityFee);           // Still 3.43%
-		assertEq(daiStrategy.getBaseRate(), startingAnnualizedDsr);  // Still 3.43%
-		assertEq(borrowRate,                stabilityFee);           // Still 3.43%
+		assertEq(daiStrategy.getBaseRate(), stabilityFee);           // Still 3.14%
+		assertEq(daiStrategy.getBaseRate(), startingAnnualizedDsr);  // Still 3.14%
+		assertEq(borrowRate,                stabilityFee);           // Still 3.14%
 
 		/***************************************/
 		/*** DAI Collateral State Assertions ***/
