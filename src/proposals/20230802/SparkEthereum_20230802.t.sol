@@ -11,8 +11,7 @@ import { ReserveConfig }    from 'aave-helpers/ProtocolV3TestBase.sol';
 import { TestWithExecutor } from 'aave-helpers/GovHelpers.sol';
 
 import { InterestStrategyValues, SparkTestBase } from '../../SparkTestBase.sol';
-
-import { IDaiInterestRateStrategy } from '../../IDaiInterestRateStrategy.sol';
+import { IDaiInterestRateStrategy }              from '../../IDaiInterestRateStrategy.sol';
 
 import { SparkEthereum_20230802 } from './SparkEthereum_20230802.sol';
 
@@ -257,4 +256,5 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 	function _getAnnualizedDsr(uint256 dsr) internal pure returns (uint256) {
 		return (dsr - RAY) * 365 days;
 	}
+
 }
