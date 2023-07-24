@@ -11,13 +11,6 @@
 | interestRateStrategy | [0x9f9782880dd952F067Cad97B8503b0A3ac0fb21d](https://etherscan.io/address/0x9f9782880dd952F067Cad97B8503b0A3ac0fb21d) | [0x191E97623B1733369290ee5d018d0B068bc0400D](https://etherscan.io/address/0x191E97623B1733369290ee5d018d0B068bc0400D) |
 | interestRate | ![before](/.assets/bc11e5b92e27947ebc500895e90540b95b2b66a2.svg) | ![after](/.assets/bc11e5b92e27947ebc500895e90540b95b2b66a2.svg) |
 
-#### sDAI ([0x83F20F44975D03b1b09e64809B757c47f942BEeA](https://etherscan.io/address/0x83F20F44975D03b1b09e64809B757c47f942BEeA))
-
-| description | value before | value after |
-| --- | --- | --- |
-| oracleLatestAnswer | 102,687,937 | 102,688,656 |
-
-
 #### WETH ([0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2](https://etherscan.io/address/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2))
 
 | description | value before | value after |
@@ -45,12 +38,6 @@
       "ltv": {
         "from": 7400,
         "to": 1
-      }
-    },
-    "0x83F20F44975D03b1b09e64809B757c47f942BEeA": {
-      "oracleLatestAnswer": {
-        "from": 102687937,
-        "to": 102688656
       }
     },
     "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2": {

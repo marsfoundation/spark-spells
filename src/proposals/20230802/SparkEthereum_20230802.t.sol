@@ -78,17 +78,13 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 	}
 
 	function testSpellExecution() public {
-		IDaiInterestRateStrategy daiStrategy = IDaiInterestRateStrategy(
-			DAI_INTEREST_RATE_STRATEGY_OLD
-		);
-
 		ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot(
 			'pre-Spark-Ethereum-20230802',
 			POOL
 		);
 
 		/********************************************/
-		/*** Dai Strategy Before State Assertions ***/
+		/*** DAI Strategy Before State Assertions ***/
 		/********************************************/
 
 		_validateDaiInterestRateStrategy(
@@ -106,55 +102,9 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
             })
         );
 
-		daiStrategy.recompute();
-
-		uint256 startingDsr           = IPotLike(MCD_POT).dsr();
-		uint256 startingAnnualizedDsr = _getAnnualizedDsr(startingDsr);
-
-		// ETH-C rate at ~3.14% (currently equals annualized DSR)
-		uint256 stabilityFee = 0.031401763155165655148976000e27;
-
-		( ,, uint256 borrowRate ) = daiStrategy.calculateInterestRates(rateParams);
-
-		assertEq(startingDsr,               1.000000000995743377573746041e27);
-		assertEq(daiStrategy.getBaseRate(), stabilityFee);
-		assertEq(daiStrategy.getBaseRate(), startingAnnualizedDsr);
-		assertEq(borrowRate,                startingAnnualizedDsr);
-
-		uint256 updatedDsr = 1.000000001585489599188229325e27;  // ~5% annualized
-
-		IPotLike(MCD_POT).drip();
-		vm.prank(PAUSE_PROXY);
-		IPotLike(MCD_POT).file('dsr', updatedDsr);
-
-		daiStrategy.recompute();
-
-		uint256 updatedAnnualizedDsr = _getAnnualizedDsr(updatedDsr);
-
-		( ,, borrowRate ) = daiStrategy.calculateInterestRates(rateParams);
-
-		// Demonstrate that old strategy is directly affected by DSR change
-		assertEq(IPotLike(MCD_POT).dsr(),   updatedDsr);
-		assertEq(daiStrategy.getBaseRate(), 0.049999999999999999993200000e27);  // ~5%
-		assertEq(daiStrategy.getBaseRate(), updatedAnnualizedDsr);
-		assertEq(borrowRate,                updatedAnnualizedDsr);
-
-
-		// Go back to starting state before execution
-		IPotLike(MCD_POT).drip();
-		vm.prank(PAUSE_PROXY);
-		IPotLike(MCD_POT).file('dsr', startingDsr);
-
-		daiStrategy.recompute();
-
-		( ,, borrowRate ) = daiStrategy.calculateInterestRates(rateParams);
-
-		assertEq(daiStrategy.getBaseRate(), startingAnnualizedDsr);  // Back to 3.14%
-		assertEq(borrowRate,                startingAnnualizedDsr);
-
-		/*****************/
-		/*** Execution ***/
-		/*****************/
+		/****************************************/
+		/*** Execute Payload and Diff Reports ***/
+		/****************************************/
 
 		_executePayload(address(payload));
 
@@ -167,6 +117,10 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 			'pre-Spark-Ethereum-20230802',
 			'post-Spark-Ethereum-20230802'
 		);
+
+		/*******************************************/
+		/*** DAI Strategy After State Assertions ***/
+		/*******************************************/
 
 		_validateDaiJugInterestRateStrategy(
             _findReserveConfigBySymbol(allConfigsAfter, 'DAI').interestRateStrategy,
@@ -182,31 +136,6 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
                 performanceBonus:   0
             })
         );
-
-		daiStrategy = IDaiInterestRateStrategy(DAI_INTEREST_RATE_STRATEGY_NEW);
-
-		daiStrategy.recompute();
-
-		( ,, borrowRate ) = daiStrategy.calculateInterestRates(rateParams);
-
-		// Starting state is in line with DSR since ETH-C SFBR matches DSR
-		assertEq(IPotLike(MCD_POT).dsr(),   startingDsr);
-		assertEq(daiStrategy.getBaseRate(), stabilityFee);
-		assertEq(daiStrategy.getBaseRate(), startingAnnualizedDsr);
-		assertEq(borrowRate,                stabilityFee);
-
-		// Change DSR to ~5% annualized
-		IPotLike(MCD_POT).drip();
-		vm.prank(PAUSE_PROXY);
-		IPotLike(MCD_POT).file('dsr', updatedDsr);
-
-		daiStrategy.recompute();
-
-		// Demonstrate that new strategy is NOT affected by DSR change
-		assertEq(IPotLike(MCD_POT).dsr(),   updatedDsr);             // DSR is 5% annualized
-		assertEq(daiStrategy.getBaseRate(), stabilityFee);           // Still 3.14%
-		assertEq(daiStrategy.getBaseRate(), startingAnnualizedDsr);  // Still 3.14%
-		assertEq(borrowRate,                stabilityFee);           // Still 3.14%
 
 		/***************************************/
 		/*** DAI Collateral State Assertions ***/
@@ -249,9 +178,105 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 				variableRateSlope2:            0.80e27
 			})
 		);
+	}
+
+	function testSpellExecution_manualAssertions() public {
+		IDaiInterestRateStrategy daiStrategy = IDaiInterestRateStrategy(
+			DAI_INTEREST_RATE_STRATEGY_OLD
+		);
+
+		/********************************************/
+		/*** DAI Strategy Before State Assertions ***/
+		/********************************************/
+
+		daiStrategy.recompute();
+
+		uint256 startingDsr           = IPotLike(MCD_POT).dsr();
+		uint256 startingAnnualizedDsr = _getAnnualizedDsr(startingDsr);
+
+		// ETH-C rate at ~3.14% (currently equals annualized DSR)
+		uint256 stabilityFee = 0.031401763155165655148976000e27;
+
+		( ,, uint256 borrowRate ) = daiStrategy.calculateInterestRates(rateParams);
+
+		assertEq(startingDsr,               1.000000000995743377573746041e27);
+		assertEq(daiStrategy.getBaseRate(), stabilityFee);
+		assertEq(daiStrategy.getBaseRate(), startingAnnualizedDsr);
+		assertEq(borrowRate,                startingAnnualizedDsr);
+
+		uint256 updatedDsr = 1.000000001585489599188229325e27;  // ~5% annualized
+
+		IPotLike(MCD_POT).drip();
+		vm.prank(PAUSE_PROXY);
+		IPotLike(MCD_POT).file('dsr', updatedDsr);
+
+		daiStrategy.recompute();
+
+		uint256 updatedAnnualizedDsr = _getAnnualizedDsr(updatedDsr);
+
+		( ,, borrowRate ) = daiStrategy.calculateInterestRates(rateParams);
+
+		// Demonstrate that old strategy is directly affected by DSR change
+		assertEq(IPotLike(MCD_POT).dsr(),   updatedDsr);
+		assertEq(daiStrategy.getBaseRate(), 0.049999999999999999993200000e27);  // ~5%
+		assertEq(daiStrategy.getBaseRate(), updatedAnnualizedDsr);
+		assertEq(borrowRate,                updatedAnnualizedDsr);
+
+		// Go back to starting state before execution
+		IPotLike(MCD_POT).drip();
+		vm.prank(PAUSE_PROXY);
+		IPotLike(MCD_POT).file('dsr', startingDsr);
+
+		daiStrategy.recompute();
+
+		( ,, borrowRate ) = daiStrategy.calculateInterestRates(rateParams);
+
+		assertEq(daiStrategy.getBaseRate(), startingAnnualizedDsr);  // Back to 3.14%
+		assertEq(borrowRate,                startingAnnualizedDsr);
+
+		/*****************/
+		/*** Execution ***/
+		/*****************/
+
+		_executePayload(address(payload));
+
+		/*******************************************/
+		/*** DAI Strategy After State Assertions ***/
+		/*******************************************/
+
+		daiStrategy = IDaiInterestRateStrategy(DAI_INTEREST_RATE_STRATEGY_NEW);
+
+		daiStrategy.recompute();
+
+		( ,, borrowRate ) = daiStrategy.calculateInterestRates(rateParams);
+
+		// Starting state is in line with DSR since ETH-C SFBR matches DSR
+		assertEq(IPotLike(MCD_POT).dsr(),   startingDsr);
+		assertEq(daiStrategy.getBaseRate(), stabilityFee);
+		assertEq(daiStrategy.getBaseRate(), startingAnnualizedDsr);
+		assertEq(borrowRate,                stabilityFee);
+
+		// Change DSR to ~5% annualized
+		IPotLike(MCD_POT).drip();
+		vm.prank(PAUSE_PROXY);
+		IPotLike(MCD_POT).file('dsr', updatedDsr);
+
+		daiStrategy.recompute();
+
+		// Demonstrate that new strategy is NOT affected by DSR change
+		assertEq(IPotLike(MCD_POT).dsr(),   updatedDsr);             // DSR is 5% annualized
+		assertEq(daiStrategy.getBaseRate(), stabilityFee);           // Still 3.14%
+		assertEq(daiStrategy.getBaseRate(), startingAnnualizedDsr);  // Still 3.14%
+		assertEq(borrowRate,                stabilityFee);           // Still 3.14%
+
+		/****************************************/
+		/*** WETH Collateral State Assertions ***/
+		/****************************************/
+
+		ReserveConfig[] memory configs = createConfigurationSnapshot('', POOL);
 
 		DefaultReserveInterestRateStrategy wethStrategy = DefaultReserveInterestRateStrategy(
-			WETH_EXPECTED_CONFIG.interestRateStrategy
+			_findReserveConfig(configs, WETH).interestRateStrategy
 		);
 
 		// NOTE: This is not actually necessary since balance isn't used, added for clarity.
