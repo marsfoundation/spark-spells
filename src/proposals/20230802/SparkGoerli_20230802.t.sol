@@ -14,7 +14,7 @@ import { ReserveConfig }    from 'aave-helpers/ProtocolV3TestBase.sol';
 import { TestWithExecutor } from 'aave-helpers/GovHelpers.sol';
 
 import { InterestStrategyValues, SparkTestBase, IERC20 } from '../../SparkTestBase.sol';
-import { IDaiInterestRateStrategy }              from '../../IDaiInterestRateStrategy.sol';
+import { IDaiInterestRateStrategy }                      from '../../IDaiInterestRateStrategy.sol';
 
 import { SparkGoerli_20230802 } from './SparkGoerli_20230802.sol';
 
