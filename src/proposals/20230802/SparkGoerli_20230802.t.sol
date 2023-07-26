@@ -333,12 +333,12 @@ contract SparkGoerli_20230802Test is SparkTestBase, TestWithExecutor {
         _deposit(dai, POOL, user1, 1_000_000e18);
 
         // Should only be able to borrow small amounts of ETH
-        // 1m * 1% = $10k = ~5 ETH (assume price of 2k / ETH)
-        this._borrow(weth, POOL, user1, 1e18, false);
+        // 1m * 1% = $10k = ~5.2 ETH (with price at ~1.9k / ETH)
+        this._borrow(weth, POOL, user1, 5.2e18, false);
 
-        // Cannot borrow a larger amount
+        // Cannot borrow more
         vm.expectRevert(bytes('36'));	// COLLATERAL_CANNOT_COVER_NEW_BORROW
-        this._borrow(weth, POOL, user1, 10e18, false);
+        this._borrow(weth, POOL, user1, 0.1e18, false);
 
         // --- Test 2 - Can liquidate any single position that was previously setup ---
 
@@ -348,11 +348,11 @@ contract SparkGoerli_20230802Test is SparkTestBase, TestWithExecutor {
 
         _liquidate(dai, weth, POOL, liquidator1, user2, 350e18);
 
-        // Liquidator should get about 700k DAI (depends on actual price of ETH)
-        assertApproxEqAbs(IERC20(dai.underlying).balanceOf(liquidator1), 700_000e18, 50_000e18);
+        // Liquidator should get about 700k DAI (with price at ~$1,950 / ETH)
+        assertApproxEqAbs(IERC20(dai.underlying).balanceOf(liquidator1), 682_500e18, 5_000e18);
 
         // User can keep remainder
-        assertApproxEqAbs(IERC20(dai.aToken).balanceOf(user2), 300_000e18, 50_000e18);
+        assertApproxEqAbs(IERC20(dai.aToken).balanceOf(user2), 317_500e18, 10_000e18);
 
         // --- Test 3 - Liquidate multi-collateralized position ---
 
@@ -367,7 +367,7 @@ contract SparkGoerli_20230802Test is SparkTestBase, TestWithExecutor {
         _liquidate(dai, weth, POOL, liquidator2, user3, 1_000e18);
 
         assertApproxEqAbs(IERC20(dai.underlying).balanceOf(liquidator2), 1_000_000e18, 50_000e18);
-        
+
         // Some WETH is leftover because the liquidation call was limited by the amount of DAI available
         assertApproxEqAbs(IERC20(weth.underlying).balanceOf(liquidator2), 500e18, 50e18);
         assertApproxEqAbs(IERC20(dai.aToken).balanceOf(user3),            0,      1);
