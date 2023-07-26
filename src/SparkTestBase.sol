@@ -215,4 +215,20 @@ contract SparkTestBase is ProtocolV3_0_1TestBase {
         vm.revertTo(snapshot);
     }
 
+    function _liquidate(
+        ReserveConfig memory collateral,
+        ReserveConfig memory debt,
+        IPool pool,
+        address liquidator,
+        address user,
+        uint256 amount
+    ) internal {
+        vm.startPrank(liquidator);
+		deal(debt.underlying, liquidator, amount);
+        IERC20(debt.underlying).approve(address(pool), amount);
+    	console.log('LIQUIDATION_CALL: Collateral: %s, Debt: %s, Amount: %s', collateral.symbol, debt.symbol, amount);
+        pool.liquidationCall(collateral.underlying, debt.underlying, user, amount, false);
+        vm.stopPrank();
+    }
+
 }
