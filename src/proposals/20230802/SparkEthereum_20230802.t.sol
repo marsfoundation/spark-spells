@@ -352,11 +352,11 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 
         _liquidate(dai, weth, POOL, liquidator1, user2, 350e18);
 
-        // Liquidator should get about 700k DAI (depends on actual price of ETH)
-        assertApproxEqAbs(IERC20(dai.underlying).balanceOf(liquidator1), 700_000e18, 50_000e18);
+        // Liquidator should get about 700k DAI (with price at ~$1,950 / ETH)
+        assertApproxEqAbs(IERC20(dai.underlying).balanceOf(liquidator1), 682_500e18, 5_000e18);
 
         // User can keep remainder
-        assertApproxEqAbs(IERC20(dai.aToken).balanceOf(user2), 300_000e18, 50_000e18);
+        assertApproxEqAbs(IERC20(dai.aToken).balanceOf(user2), 317_500e18, 5_000e18);
 
         // --- Test 3 - Liquidate multi-collateralized position ---
 
