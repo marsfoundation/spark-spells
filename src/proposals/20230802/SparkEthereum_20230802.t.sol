@@ -312,9 +312,9 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 
         address liquidator1 = makeAddr("liquidator1");
         address liquidator2 = makeAddr("liquidator2");
-
         ReserveConfig[] memory configs = createConfigurationSnapshot('', POOL);
-        ReserveConfig memory dai = _findReserveConfig(configs, DAI);
+
+        ReserveConfig memory dai  = _findReserveConfig(configs, DAI);
         ReserveConfig memory weth = _findReserveConfig(configs, WETH);
 
         // Ensure WETH liquidity
