@@ -13,8 +13,8 @@ import { ReserveConfiguration }
 import { ReserveConfig }    from 'aave-helpers/ProtocolV3TestBase.sol';
 import { TestWithExecutor } from 'aave-helpers/GovHelpers.sol';
 
-import { InterestStrategyValues, SparkTestBase } from '../../SparkTestBase.sol';
-import { IDaiInterestRateStrategy }              from '../../IDaiInterestRateStrategy.sol';
+import { InterestStrategyValues, SparkTestBase, IERC20 } from '../../SparkTestBase.sol';
+import { IDaiInterestRateStrategy }                      from '../../IDaiInterestRateStrategy.sol';
 
 import { SparkEthereum_20230802 } from './SparkEthereum_20230802.sol';
 
@@ -143,8 +143,8 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 
         ReserveConfig memory DAI_EXPECTED_CONFIG = _findReserveConfig(allConfigsAfter, DAI);
 
-        DAI_EXPECTED_CONFIG.liquidationThreshold = 1;
-        DAI_EXPECTED_CONFIG.ltv                  = 1;
+        DAI_EXPECTED_CONFIG.liquidationThreshold = 1_00;
+        DAI_EXPECTED_CONFIG.ltv                  = 1_00;
 
         // DAI is still technically enabled as collateral, just with a 0.01% liquidation threshold
         // This is because DAI is being supplied by Maker, and AAVE prevents liquidation threshold
@@ -301,6 +301,80 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
         /*****************/
 
         sparkE2eTest(POOL, makeAddr("newUser"));
+    }
+
+    function testSpellExecution_liquidations() public {
+        address lp = makeAddr("lp");
+
+        address user1 = makeAddr("user1");
+        address user2 = makeAddr("user2");
+        address user3 = makeAddr("user3");
+
+        address liquidator1 = makeAddr("liquidator1");
+        address liquidator2 = makeAddr("liquidator2");
+        ReserveConfig[] memory configs = createConfigurationSnapshot('', POOL);
+
+        ReserveConfig memory dai  = _findReserveConfig(configs, DAI);
+        ReserveConfig memory weth = _findReserveConfig(configs, WETH);
+
+        // Ensure WETH liquidity
+        _deposit(weth, POOL, lp, 1_000_000e18);
+
+        // Setup some positions ahead of time that can later be liquidated
+        // Position is 350 ETH so ~700k
+        _deposit(dai, POOL, user2, 1_000_000e18);
+        this._borrow(weth, POOL, user2, 350e18, false);
+
+        _deposit(dai,  POOL, user3, 1_000_000e18);
+        _deposit(weth, POOL, user3, 1_000e18);
+        this._borrow(weth, POOL, user3, 1_000e18, false);
+
+        _executePayload(address(payload));
+
+        // --- Test 1 - Cannot borrow more than small amount against DAI ---
+
+        // Deposit 1m
+        _deposit(dai, POOL, user1, 1_000_000e18);
+
+        // Should only be able to borrow small amounts of ETH
+        // 1m * 1% = $10k = ~5.2 ETH (with price at ~1.9k / ETH)
+        this._borrow(weth, POOL, user1, 5.2e18, false);
+
+        // Cannot borrow more
+        vm.expectRevert(bytes('36'));	// COLLATERAL_CANNOT_COVER_NEW_BORROW
+        this._borrow(weth, POOL, user1, 0.1e18, false);
+
+        // --- Test 2 - Can liquidate any single position that was previously setup ---
+
+        // Liquidate the position setup previously
+        assertEq(IERC20(dai.underlying).balanceOf(liquidator1), 0);
+        assertEq(IERC20(dai.aToken).balanceOf(user2),           1_000_000e18);
+
+        _liquidate(dai, weth, POOL, liquidator1, user2, 350e18);
+
+        // Liquidator should get about 700k DAI (with price at ~$1,950 / ETH)
+        assertApproxEqAbs(IERC20(dai.underlying).balanceOf(liquidator1), 682_500e18, 5_000e18);
+
+        // User can keep remainder
+        assertApproxEqAbs(IERC20(dai.aToken).balanceOf(user2), 317_500e18, 10_000e18);
+
+        // --- Test 3 - Liquidate multi-collateralized position ---
+
+        // We can fully liquidate the DAI position which now contributes almost nothing to HF
+        assertEq(IERC20(dai.underlying).balanceOf(liquidator2),  0);
+        assertEq(IERC20(weth.underlying).balanceOf(liquidator2), 0);
+        assertEq(IERC20(dai.aToken).balanceOf(user3),            1_000_000e18);
+        assertEq(IERC20(weth.aToken).balanceOf(user3),           1_000e18);
+        
+        // Can only liquidate about half the debt, but this will make the position healthy
+        // Can only do half because there is only 1m DAI collateral for 2m in debt
+        _liquidate(dai, weth, POOL, liquidator2, user3, 1_000e18);
+
+        assertApproxEqAbs(IERC20(dai.underlying).balanceOf(liquidator2), 1_000_000e18, 50_000e18);
+
+        // Some WETH is leftover because the liquidation call was limited by the amount of DAI available
+        assertApproxEqAbs(IERC20(weth.underlying).balanceOf(liquidator2), 500e18, 50e18);
+        assertApproxEqAbs(IERC20(dai.aToken).balanceOf(user3),            0,      1);
     }
 
     function _getAnnualizedDsr(uint256 dsr) internal pure returns (uint256) {
