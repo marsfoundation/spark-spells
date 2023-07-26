@@ -224,9 +224,9 @@ contract SparkTestBase is ProtocolV3_0_1TestBase {
         uint256 amount
     ) internal {
         vm.startPrank(liquidator);
-		deal(debt.underlying, liquidator, amount);
+        deal(debt.underlying, liquidator, amount);
         IERC20(debt.underlying).approve(address(pool), amount);
-    	console.log('LIQUIDATION_CALL: Collateral: %s, Debt: %s, Amount: %s', collateral.symbol, debt.symbol, amount);
+        console.log('LIQUIDATION_CALL: Collateral: %s, Debt: %s, Amount: %s', collateral.symbol, debt.symbol, amount);
         pool.liquidationCall(collateral.underlying, debt.underlying, user, amount, false);
         vm.stopPrank();
     }

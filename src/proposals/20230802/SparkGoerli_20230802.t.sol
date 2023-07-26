@@ -308,9 +308,9 @@ contract SparkGoerli_20230802Test is SparkTestBase, TestWithExecutor {
 
         address liquidator1 = makeAddr("liquidator1");
         address liquidator2 = makeAddr("liquidator2");
-
         ReserveConfig[] memory configs = createConfigurationSnapshot('', POOL);
-        ReserveConfig memory dai = _findReserveConfig(configs, DAI);
+
+        ReserveConfig memory dai  = _findReserveConfig(configs, DAI);
         ReserveConfig memory weth = _findReserveConfig(configs, WETH);
 
         // Ensure WETH liquidity
@@ -321,18 +321,13 @@ contract SparkGoerli_20230802Test is SparkTestBase, TestWithExecutor {
         _deposit(dai, POOL, user2, 1_000_000e18);
         this._borrow(weth, POOL, user2, 350e18, false);
 
-        _deposit(dai, POOL, user3, 1_000_000e18);
+        _deposit(dai,  POOL, user3, 1_000_000e18);
         _deposit(weth, POOL, user3, 1_000e18);
         this._borrow(weth, POOL, user3, 1_000e18, false);
 
         _executePayload(address(payload));
 
-        // --- Test 1 - Cannot Borrow More than small amount against DAI ---
-
-        // Refresh the configs just in case
-        configs = createConfigurationSnapshot('', POOL);
-        dai = _findReserveConfig(configs, DAI);
-        weth = _findReserveConfig(configs, WETH);
+        // --- Test 1 - Cannot borrow more than small amount against DAI ---
 
         // Deposit 1m
         _deposit(dai, POOL, user1, 1_000_000e18);
@@ -341,7 +336,7 @@ contract SparkGoerli_20230802Test is SparkTestBase, TestWithExecutor {
         // 1m * 1% = $10k = ~5 ETH (assume price of 2k / ETH)
         this._borrow(weth, POOL, user1, 1e18, false);
 
-        // Cannot borrow 10
+        // Cannot borrow a larger amount
         vm.expectRevert(bytes('36'));	// COLLATERAL_CANNOT_COVER_NEW_BORROW
         this._borrow(weth, POOL, user1, 10e18, false);
 
@@ -349,7 +344,7 @@ contract SparkGoerli_20230802Test is SparkTestBase, TestWithExecutor {
 
         // Liquidate the position setup previously
         assertEq(IERC20(dai.underlying).balanceOf(liquidator1), 0);
-        assertEq(IERC20(dai.aToken).balanceOf(user2), 1_000_000e18);
+        assertEq(IERC20(dai.aToken).balanceOf(user2),           1_000_000e18);
 
         _liquidate(dai, weth, POOL, liquidator1, user2, 350e18);
 
@@ -362,19 +357,20 @@ contract SparkGoerli_20230802Test is SparkTestBase, TestWithExecutor {
         // --- Test 3 - Liquidate multi-collateralized position ---
 
         // We can fully liquidate the DAI position which now contributes almost nothing to HF
-        assertEq(IERC20(dai.underlying).balanceOf(liquidator2), 0);
+        assertEq(IERC20(dai.underlying).balanceOf(liquidator2),  0);
         assertEq(IERC20(weth.underlying).balanceOf(liquidator2), 0);
-        assertEq(IERC20(dai.aToken).balanceOf(user3), 1_000_000e18);
-        assertEq(IERC20(weth.aToken).balanceOf(user3), 1_000e18);
+        assertEq(IERC20(dai.aToken).balanceOf(user3),            1_000_000e18);
+        assertEq(IERC20(weth.aToken).balanceOf(user3),           1_000e18);
         
         // Can only liquidate about half the debt, but this will make the position healthy
         // Can only do half because there is only 1m DAI collateral for 2m in debt
         _liquidate(dai, weth, POOL, liquidator2, user3, 1_000e18);
 
         assertApproxEqAbs(IERC20(dai.underlying).balanceOf(liquidator2), 1_000_000e18, 50_000e18);
+        
         // Some WETH is leftover because the liquidation call was limited by the amount of DAI available
         assertApproxEqAbs(IERC20(weth.underlying).balanceOf(liquidator2), 500e18, 50e18);
-        assertApproxEqAbs(IERC20(dai.aToken).balanceOf(user3), 0, 1);
+        assertApproxEqAbs(IERC20(dai.aToken).balanceOf(user3),            0,      1);
     }
 
     function _getAnnualizedDsr(uint256 dsr) internal pure returns (uint256) {
