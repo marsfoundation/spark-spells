@@ -340,7 +340,7 @@ contract SparkEthereum_20230802Test is SparkTestBase, TestWithExecutor {
 
         uint256 wethPrice = ORACLE.getAssetPrice(WETH);
 
-        assertEq(wethPrice, 1_869.21537501e8);
+        assertEq(wethPrice, 1_870.19574173e8);
 
         // 1m * 0.01% => $100, divided by WETH price to get max borrow
         uint256 maxWethBorrow = 100e18 * 1e8 / wethPrice;
