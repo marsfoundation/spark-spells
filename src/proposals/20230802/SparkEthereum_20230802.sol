@@ -8,7 +8,8 @@ import { SparkPayloadEthereum, IEngine, Rates, EngineFlags } from '../../SparkPa
  * @author Phoenix Labs
  * @dev    This proposal removes DAI as collateral and updates WETH reserve factor and
  *         interest rate strategy.
- *         TODO: Add links for forum and vote.
+ * Forum:  https://forum.makerdao.com/t/phoenix-labs-proposed-changes-for-spark/21422
+ * Vote:   https://vote.makerdao.com/polling/QmZyFH21#poll-detail
  */
 contract SparkEthereum_20230802 is SparkPayloadEthereum {
 
