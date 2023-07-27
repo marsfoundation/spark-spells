@@ -139,8 +139,8 @@ contract SparkGoerli_20230802Test is SparkTestBase, TestWithExecutor {
 
         ReserveConfig memory DAI_EXPECTED_CONFIG = _findReserveConfig(allConfigsAfter, DAI);
 
-        DAI_EXPECTED_CONFIG.liquidationThreshold = 1_00;
-        DAI_EXPECTED_CONFIG.ltv                  = 1_00;
+        DAI_EXPECTED_CONFIG.liquidationThreshold = 1;
+        DAI_EXPECTED_CONFIG.ltv                  = 1;
 
         // DAI is still technically enabled as collateral, just with a 0.01% liquidation threshold
         // This is because DAI is being supplied by Maker, and AAVE prevents liquidation threshold
@@ -333,12 +333,12 @@ contract SparkGoerli_20230802Test is SparkTestBase, TestWithExecutor {
         _deposit(dai, POOL, user1, 1_000_000e18);
 
         // Should only be able to borrow small amounts of ETH
-        // 1m * 1% = $10k = ~5.2 ETH (with price at ~1.9k / ETH)
-        this._borrow(weth, POOL, user1, 5.2e18, false);
+        // 1m * 0.01% = $100 = ~0.052 ETH (with price at ~1.9k / ETH)
+        this._borrow(weth, POOL, user1, 0.052e18, false);
 
         // Cannot borrow more
         vm.expectRevert(bytes('36'));	// COLLATERAL_CANNOT_COVER_NEW_BORROW
-        this._borrow(weth, POOL, user1, 0.1e18, false);
+        this._borrow(weth, POOL, user1, 0.001e18, false);
 
         // --- Test 2 - Can liquidate any single position that was previously setup ---
 
@@ -361,7 +361,7 @@ contract SparkGoerli_20230802Test is SparkTestBase, TestWithExecutor {
         assertEq(IERC20(weth.underlying).balanceOf(liquidator2), 0);
         assertEq(IERC20(dai.aToken).balanceOf(user3),            1_000_000e18);
         assertEq(IERC20(weth.aToken).balanceOf(user3),           1_000e18);
-        
+
         // Can only liquidate about half the debt, but this will make the position healthy
         // Can only do half because there is only 1m DAI collateral for 2m in debt
         _liquidate(dai, weth, POOL, liquidator2, user3, 1_000e18);

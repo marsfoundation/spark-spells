@@ -6,8 +6,8 @@
 
 | description | value before | value after |
 | --- | --- | --- |
-| ltv | 74 % | 1 % |
-| liquidationThreshold | 76 % | 1 % |
+| ltv | 74 % | 0.01 % |
+| liquidationThreshold | 76 % | 0.01 % |
 | interestRateStrategy | [0x9f9782880dd952F067Cad97B8503b0A3ac0fb21d](https://etherscan.io/address/0x9f9782880dd952F067Cad97B8503b0A3ac0fb21d) | [0x191E97623B1733369290ee5d018d0B068bc0400D](https://etherscan.io/address/0x191E97623B1733369290ee5d018d0B068bc0400D) |
 | interestRate | ![before](/.assets/bc11e5b92e27947ebc500895e90540b95b2b66a2.svg) | ![after](/.assets/bc11e5b92e27947ebc500895e90540b95b2b66a2.svg) |
 
@@ -33,11 +33,11 @@
       },
       "liquidationThreshold": {
         "from": 7600,
-        "to": 100
+        "to": 1
       },
       "ltv": {
         "from": 7400,
-        "to": 100
+        "to": 1
       }
     },
     "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2": {

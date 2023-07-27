@@ -55,7 +55,7 @@ contract SparkGoerli_20230802 is SparkPayloadGoerli {
     }
 
     function _postExecute() internal override {
-        LISTING_ENGINE.POOL_CONFIGURATOR().configureReserveAsCollateral(DAI, 1_00, 1_00, 104_50);
+        LISTING_ENGINE.POOL_CONFIGURATOR().configureReserveAsCollateral(DAI, 1, 1, 104_50);
 
         LISTING_ENGINE.POOL_CONFIGURATOR().setReserveInterestRateStrategyAddress(
             DAI,
