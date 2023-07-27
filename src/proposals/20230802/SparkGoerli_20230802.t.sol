@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.10;
 
-import { IPool }     from "aave-v3-core/contracts/interfaces/IPool.sol";
-import { DataTypes } from "aave-v3-core/contracts/protocol/libraries/types/DataTypes.sol";
+import { IAaveOracle } from "aave-v3-core/contracts/interfaces/IAaveOracle.sol";
+import { IPool }       from "aave-v3-core/contracts/interfaces/IPool.sol";
+import { DataTypes }   from "aave-v3-core/contracts/protocol/libraries/types/DataTypes.sol";
 
 import { DefaultReserveInterestRateStrategy }
     from "aave-v3-core/contracts/protocol/pool/DefaultReserveInterestRateStrategy.sol";
@@ -48,9 +49,10 @@ contract SparkGoerli_20230802Test is SparkTestBase, TestWithExecutor {
 
     bytes32 public constant SPARK_ILK = "DIRECT-SPARK-DAI";
 
-    uint256 internal constant RAY = 1e27;
+    uint256 public constant RAY = 1e27;
 
-    IPool public constant POOL = IPool(0x26ca51Af4506DE7a6f0785D20CD776081a05fF6d);
+    IAaveOracle public constant ORACLE = IAaveOracle(0x5Cd822d9a4421be687930498ec4B498EB972ad29);
+    IPool       public constant POOL   = IPool(0x26ca51Af4506DE7a6f0785D20CD776081a05fF6d);
 
     // 80% utilization = Optimal usage ratio for WETH
     // NOTE: Using mock address for aToken so balance is not used in calculation
@@ -71,11 +73,11 @@ contract SparkGoerli_20230802Test is SparkTestBase, TestWithExecutor {
     SparkGoerli_20230802 public payload;
 
     function setUp() public {
-        vm.createSelectFork(getChain('goerli').rpcUrl, 9_381_500);
+        vm.createSelectFork(getChain('goerli').rpcUrl, 9_417_670);
 
         _selectPayloadExecutor(EXECUTOR);
 
-        payload = new SparkGoerli_20230802();
+        payload = SparkGoerli_20230802(0xEd3BF79737d3A469A29a7114cA1084e8340a2f20);
     }
 
     function testSpellExecution() public {
@@ -332,13 +334,21 @@ contract SparkGoerli_20230802Test is SparkTestBase, TestWithExecutor {
         // Deposit 1m
         _deposit(dai, POOL, user1, 1_000_000e18);
 
+        uint256 wethPrice = ORACLE.getAssetPrice(WETH);
+
+        assertEq(wethPrice, 1_869.21537501e8);
+
+        // 1m * 0.01% => $100, divided by WETH price to get max borrow
+        uint256 maxWethBorrow = 100e18 * 1e8 / wethPrice;
+
+        assertApproxEqAbs(maxWethBorrow, 0.054e18, 0.002e18);
+
         // Should only be able to borrow small amounts of ETH
-        // 1m * 0.01% = $100 = ~0.052 ETH (with price at ~1.9k / ETH)
-        this._borrow(weth, POOL, user1, 0.052e18, false);
+        this._borrow(weth, POOL, user1, maxWethBorrow - 0.00001e18, false);
 
         // Cannot borrow more
         vm.expectRevert(bytes('36'));	// COLLATERAL_CANNOT_COVER_NEW_BORROW
-        this._borrow(weth, POOL, user1, 0.001e18, false);
+        this._borrow(weth, POOL, user1, 0.00001e18, false);
 
         // --- Test 2 - Can liquidate any single position that was previously setup ---
 
@@ -348,11 +358,11 @@ contract SparkGoerli_20230802Test is SparkTestBase, TestWithExecutor {
 
         _liquidate(dai, weth, POOL, liquidator1, user2, 350e18);
 
-        // Liquidator should get about 700k DAI (with price at ~$1,950 / ETH)
-        assertApproxEqAbs(IERC20(dai.underlying).balanceOf(liquidator1), 682_500e18, 5_000e18);
+        // Liquidator should get about 650,000 DAI (350 ETH with price at ~$1,870 / ETH)
+        assertApproxEqAbs(IERC20(dai.underlying).balanceOf(liquidator1), 650_000e18, 30_000e18);
 
         // User can keep remainder
-        assertApproxEqAbs(IERC20(dai.aToken).balanceOf(user2), 317_500e18, 10_000e18);
+        assertApproxEqAbs(IERC20(dai.aToken).balanceOf(user2), 350_000e18, 40_000e18);
 
         // --- Test 3 - Liquidate multi-collateralized position ---
 
