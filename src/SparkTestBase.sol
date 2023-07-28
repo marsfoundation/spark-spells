@@ -56,7 +56,7 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
                 pool
             );
 
-            diffReports(
+            diffReportsFixed(
                 string(abi.encodePacked(prefix, '-', vm.toString(address(pool)), '-pre')),
                 string(abi.encodePacked(prefix, '-', vm.toString(address(pool)), '-post'))
             );
@@ -260,6 +260,24 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
         console.log('LIQUIDATION_CALL: Collateral: %s, Debt: %s, Amount: %s', collateral.symbol, debt.symbol, amount);
         pool.liquidationCall(collateral.underlying, debt.underlying, user, amount, false);
         vm.stopPrank();
+    }
+
+    function diffReportsFixed(string memory reportBefore, string memory reportAfter) internal {
+        string memory outPath = string(
+            abi.encodePacked('./diffs/', reportBefore, '_', reportAfter, '.md')
+        );
+        string memory beforePath = string(abi.encodePacked('./reports/', reportBefore, '.json'));
+        string memory afterPath = string(abi.encodePacked('./reports/', reportAfter, '.json'));
+
+        string[] memory inputs = new string[](7);
+        inputs[0] = 'npx';
+        inputs[1] = '@bgd-labs/aave-cli';   // This reference is broken in the original code
+        inputs[2] = 'diff-snapshots';
+        inputs[3] = beforePath;
+        inputs[4] = afterPath;
+        inputs[5] = '-o';
+        inputs[6] = outPath;
+        vm.ffi(inputs);
     }
 
 }
