@@ -3,10 +3,61 @@ pragma solidity ^0.8.0;
 
 import 'aave-helpers/ProtocolV3TestBase.sol';
 
+import { GovHelpers } from 'aave-helpers/GovHelpers.sol';
+
+import { IPoolAddressesProviderRegistry } from 'aave-v3-core/contracts/interfaces/IPoolAddressesProviderRegistry.sol';
+import { IPoolAddressesProvider }         from 'aave-v3-core/contracts/interfaces/IPoolAddressesProvider.sol';
+import { IPool }                          from 'aave-v3-core/contracts/interfaces/IPool.sol';
+
 import { IDaiInterestRateStrategy }    from "./IDaiInterestRateStrategy.sol";
 import { IDaiJugInterestRateStrategy } from "./IDaiJugInterestRateStrategy.sol";
 
-contract SparkTestBase is ProtocolV3TestBase {
+abstract contract SparkTestBase is ProtocolV3TestBase {
+
+    address internal executor;
+    address internal payload;
+    
+    string internal domain;
+    string internal id;
+
+    IPoolAddressesProviderRegistry internal poolAddressesProviderRegistry;
+    IPoolAddressesProvider         internal poolAddressesProvider;
+    IPool                          internal pool;
+
+    function loadPoolContext(address poolProvider) internal {
+        poolAddressesProvider = IPoolAddressesProvider(poolProvider);
+        pool                  = IPool(poolAddressesProvider.getPool());
+    }
+
+    function testSpellExecution() public {
+        address[] memory poolProviders = poolAddressesProviderRegistry.getAddressesProvidersList();
+        string memory prefix = string(abi.encodePacked(id, '-', domain));
+
+        for (uint256 i = 0; i < poolProviders.length; i++) {
+            loadPoolContext(poolProviders[i]);
+
+            createConfigurationSnapshot(
+                string(abi.encodePacked(prefix, '-', vm.toString(address(pool)), '-pre')),
+                pool
+            );
+        }
+
+        GovHelpers.executePayload(vm, payload, executor);
+
+        for (uint256 i = 0; i < poolProviders.length; i++) {
+            loadPoolContext(poolProviders[i]);
+
+            createConfigurationSnapshot(
+                string(abi.encodePacked(prefix, '-', vm.toString(address(pool)), '-post')),
+                pool
+            );
+
+            diffReports(
+                string(abi.encodePacked(prefix, '-', vm.toString(address(pool)), '-pre')),
+                string(abi.encodePacked(prefix, '-', vm.toString(address(pool)), '-post'))
+            );
+        }
+    }
 
     struct DaiInterestStrategyValues {
         address vat;
@@ -150,7 +201,6 @@ contract SparkTestBase is ProtocolV3TestBase {
     function _liquidate(
         ReserveConfig memory collateral,
         ReserveConfig memory debt,
-        IPool pool,
         address liquidator,
         address user,
         uint256 amount
@@ -161,6 +211,26 @@ contract SparkTestBase is ProtocolV3TestBase {
         console.log('LIQUIDATION_CALL: Collateral: %s, Debt: %s, Amount: %s', collateral.symbol, debt.symbol, amount);
         pool.liquidationCall(collateral.underlying, debt.underlying, user, amount, false);
         vm.stopPrank();
+    }
+
+}
+
+abstract contract SparkEthereumTestBase is SparkTestBase {
+
+    constructor() {
+        executor = 0x3300f198988e4C9C63F75dF86De36421f06af8c4;
+        domain = 'Ethereum';
+        poolAddressesProviderRegistry = IPoolAddressesProviderRegistry(0x03cFa0C4622FF84E50E75062683F44c9587e6Cc1);
+    }
+
+}
+
+abstract contract SparkGoerliTestBase is SparkTestBase {
+
+    constructor() {
+        executor = 0x4e847915D8a9f2Ab0cDf2FC2FD0A30428F25665d;
+        domain = 'Goerli';
+        poolAddressesProviderRegistry = IPoolAddressesProviderRegistry(0x1ad570fDEA255a3c1d8Cf56ec76ebA2b7bFDFfea);
     }
 
 }
