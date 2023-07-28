@@ -29,7 +29,11 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
         pool                  = IPool(poolAddressesProvider.getPool());
     }
 
-    function testSpellExecution() public {
+    function deployPayload() internal returns (address) {
+        return deployCode(string(abi.encodePacked('Spark', domain, '_', id, '.sol')));
+    }
+
+    function testSpellExecutionDiff() public {
         address[] memory poolProviders = poolAddressesProviderRegistry.getAddressesProvidersList();
         string memory prefix = string(abi.encodePacked(id, '-', domain));
 
@@ -56,6 +60,51 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
                 string(abi.encodePacked(prefix, '-', vm.toString(address(pool)), '-pre')),
                 string(abi.encodePacked(prefix, '-', vm.toString(address(pool)), '-post'))
             );
+        }
+    }
+
+    function testBytecodeMatches() public {
+        address expectedPayload = deployPayload();
+        address actualPayload = payload;
+        uint256 expectedBytecodeSize = expectedPayload.code.length;
+        uint256 actualBytecodeSize = actualPayload.code.length;
+
+        uint256 metadataLength = _getBytecodeMetadataLength(expectedPayload);
+        assertTrue(metadataLength <= expectedBytecodeSize);
+        expectedBytecodeSize -= metadataLength;
+
+        metadataLength = _getBytecodeMetadataLength(actualPayload);
+        assertTrue(metadataLength <= actualBytecodeSize);
+        actualBytecodeSize -= metadataLength;
+
+        assertEq(actualBytecodeSize, expectedBytecodeSize);
+        uint256 size = actualBytecodeSize;
+        uint256 expectedHash;
+        uint256 actualHash;
+        assembly {
+            let ptr := mload(0x40)
+
+            extcodecopy(expectedPayload, ptr, 0, size)
+            expectedHash := keccak256(ptr, size)
+
+            extcodecopy(actualPayload, ptr, 0, size)
+            actualHash := keccak256(ptr, size)
+        }
+        assertEq(actualHash, expectedHash);
+    }
+
+    function _getBytecodeMetadataLength(address a) internal view returns (uint256 length) {
+        // The Solidity compiler encodes the metadata length in the last two bytes of the contract bytecode.
+        assembly {
+            let ptr  := mload(0x40)
+            let size := extcodesize(a)
+            if iszero(lt(size, 2)) {
+                extcodecopy(a, ptr, sub(size, 2), 2)
+                length := mload(ptr)
+                length := shr(240, length)
+                length := add(length, 2)  // the two bytes used to specify the length are not counted in the length
+            }
+            // We'll return zero if the bytecode is shorter than two bytes.
         }
     }
 
