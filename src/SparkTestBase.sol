@@ -6,7 +6,7 @@ import 'aave-helpers/ProtocolV3TestBase.sol';
 import { IDaiInterestRateStrategy }    from "./IDaiInterestRateStrategy.sol";
 import { IDaiJugInterestRateStrategy } from "./IDaiJugInterestRateStrategy.sol";
 
-contract SparkTestBase is ProtocolV3_0_1TestBase {
+contract SparkTestBase is ProtocolV3TestBase {
 
     struct DaiInterestStrategyValues {
         address vat;
@@ -145,74 +145,6 @@ contract SparkTestBase is ProtocolV3_0_1TestBase {
             strategy.performanceBonus() == expectedStrategyValues.performanceBonus,
             '_validateDaiInterestRateStrategy() : INVALID_PERFORMANCE_BONUS'
         );
-    }
-
-    function _variableBorrowFlowAllCollaterals(
-        ReserveConfig[] memory configs,
-        IPool pool,
-        address user
-    )
-        internal
-    {
-        for (uint256 i = 0; i < configs.length; i++) {
-            ReserveConfig memory collateral = configs[i];
-
-            if (
-                !collateral.usageAsCollateralEnabled ||
-                collateral.stableBorrowRateEnabled   ||
-                collateral.isFrozen
-            ) {
-                console.log("\n\n\n");
-                console.log("--------");
-                console.log('SKIP: COLLATERAL_DISABLED_OR_STABLE %s', collateral.symbol);
-                console.log("--------");
-                continue;
-            }
-
-            console.log("\n\n\n");
-            console.log("--------");
-            console.log("COLLATERAL %s", collateral.symbol);
-            console.log("--------");
-
-            uint256 HUNDRED_MIL = 100_000_000 * 10 ** collateral.decimals;
-
-            uint256 supplyCap
-                = collateral.supplyCap == 0 ? type(uint256).max : collateral.supplyCap;
-
-            // If supply cap is 0, deposit 100M, else limit to supply cap
-            uint256 depositAmount = HUNDRED_MIL > supplyCap ? supplyCap : HUNDRED_MIL;
-
-            _deposit(collateral, pool, user, depositAmount);
-
-            for (uint256 j = 0; j < configs.length; j++) {
-                ReserveConfig memory borrow = configs[j];
-
-                if (!borrow.borrowingEnabled || borrow.isFrozen) {
-                    console.log('\nSKIP: BORROWING_DISABLED %s', borrow.symbol);
-                    continue;
-                }
-
-                console.log("\nBORROW", borrow.symbol);
-
-                uint256 amount = 10 ** borrow.decimals;
-
-                // Add some supply for user to borrow
-                _deposit(borrow, pool, EOA, amount * 2);
-
-                // Borrow one unit of borrow token
-                this._borrow(borrow, pool, user, amount, false);
-            }
-        }
-    }
-
-    function sparkE2eTest(IPool pool, address user) public {
-        ReserveConfig[] memory configs = _getReservesConfigs(pool);
-        deal(user, 1000 ether);
-        uint256 snapshot = vm.snapshot();
-        _supplyWithdrawFlow(configs, pool, user);
-        vm.revertTo(snapshot);
-        _variableBorrowFlowAllCollaterals(configs, pool, user);
-        vm.revertTo(snapshot);
     }
 
     function _liquidate(
