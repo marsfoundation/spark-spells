@@ -83,7 +83,7 @@ contract SparkEthereum_20230525Test is SparkTestBase, TestWithExecutor {
     }
 
     function testSpellExecution() public {
-        createConfigurationSnapshot('pre-Spark-Ethereum-rETH-Listing', POOL);
+        createConfigurationSnapshot('pre-Spark-Ethereum-20230525', POOL);
 
         _executePayload(address(payload));
 
@@ -155,11 +155,11 @@ contract SparkEthereum_20230525Test is SparkTestBase, TestWithExecutor {
             })
         );
 
-        createConfigurationSnapshot('post-Spark-Ethereum-rETH-Listing', POOL);
+        createConfigurationSnapshot('post-Spark-Ethereum-20230525', POOL);
 
         diffReports(
-            'pre-Spark-Ethereum-rETH-Listing',
-            'post-Spark-Ethereum-rETH-Listing'
+            'pre-Spark-Ethereum-20230525',
+            'post-Spark-Ethereum-20230525'
         );
     }
 

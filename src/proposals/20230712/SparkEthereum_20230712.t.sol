@@ -28,12 +28,12 @@ contract SparkEthereum_20230712Test is SparkTestBase, TestWithExecutor {
 
     function testSpellExecution() public {
         ReserveConfig[] memory configsBefore = _getReservesConfigs(POOL);
-        createConfigurationSnapshot('pre-Spark-Ethereum-sDAI-Freeze', POOL);
+        createConfigurationSnapshot('pre-Spark-Ethereum-20230712', POOL);
 
         _executePayload(address(payload));
 
         ReserveConfig[] memory configsAfter = _getReservesConfigs(POOL);
-        createConfigurationSnapshot('post-Spark-Ethereum-sDAI-Freeze', POOL);
+        createConfigurationSnapshot('post-Spark-Ethereum-20230712', POOL);
 
         assertEq(_findReserveConfig(configsBefore, SDAI).isFrozen, false);
         assertEq(_findReserveConfig(configsAfter, SDAI).isFrozen, true);
@@ -44,8 +44,8 @@ contract SparkEthereum_20230712Test is SparkTestBase, TestWithExecutor {
         );
 
         diffReports(
-            'pre-Spark-Ethereum-sDAI-Freeze',
-            'post-Spark-Ethereum-sDAI-Freeze'
+            'pre-Spark-Ethereum-20230712',
+            'post-Spark-Ethereum-20230712'
         );
     }
 

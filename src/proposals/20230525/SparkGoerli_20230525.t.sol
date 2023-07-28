@@ -83,7 +83,7 @@ contract SparkGoerli_20230525Test is SparkTestBase, TestWithExecutor {
 
     function testSpellExecution() public {
         createConfigurationSnapshot(
-            'pre-Spark-Goerli-rETH-Listing',
+            'pre-Spark-Goerli-20230525',
             POOL
         );
 
@@ -158,7 +158,7 @@ contract SparkGoerli_20230525Test is SparkTestBase, TestWithExecutor {
         );
 
         createConfigurationSnapshot(
-            'post-Spark-Goerli-rETH-Listing',
+            'post-Spark-Goerli-20230525',
             POOL
         );
     }
