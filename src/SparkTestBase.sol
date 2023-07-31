@@ -130,7 +130,7 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
                 length := shr(240, length)
                 length := add(length, 2)  // The two bytes used to specify the length are not counted in the length
             }
-            // We'll return zero if the bytecode is shorter than two bytes.
+            // Return zero if the bytecode is shorter than two bytes.
         }
     }
 
