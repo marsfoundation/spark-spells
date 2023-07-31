@@ -9,6 +9,8 @@ import { SparkGoerli_20230816 } from './SparkGoerli_20230816.sol';
 
 contract SparkGoerli_20230816Test is SparkGoerliTestBase {
 
+    address constant internal PAUSE_PROXY = 0x5DCdbD3cCF9B09EAAD03bc5f50fA2B3d3ACA0121;
+
     constructor() {
         id = '20230816';
     }
@@ -19,7 +21,7 @@ contract SparkGoerli_20230816Test is SparkGoerliTestBase {
 
         // This will be done in the main spell (simulate it here)
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
-        vm.prank(0x5DCdbD3cCF9B09EAAD03bc5f50fA2B3d3ACA0121);
+        vm.prank(PAUSE_PROXY);
         Ownable(address(poolAddressesProvider)).transferOwnership(address(executor));
     }
 

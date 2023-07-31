@@ -5,14 +5,36 @@ import 'aave-helpers/ProtocolV3TestBase.sol';
 
 import { GovHelpers } from 'aave-helpers/GovHelpers.sol';
 
-import { IPoolAddressesProviderRegistry } from 'aave-v3-core/contracts/interfaces/IPoolAddressesProviderRegistry.sol';
-import { IPoolAddressesProvider }         from 'aave-v3-core/contracts/interfaces/IPoolAddressesProvider.sol';
 import { IPool }                          from 'aave-v3-core/contracts/interfaces/IPool.sol';
+import { IPoolAddressesProvider }         from 'aave-v3-core/contracts/interfaces/IPoolAddressesProvider.sol';
+import { IPoolAddressesProviderRegistry } from 'aave-v3-core/contracts/interfaces/IPoolAddressesProviderRegistry.sol';
 
 import { IDaiInterestRateStrategy }    from "./IDaiInterestRateStrategy.sol";
 import { IDaiJugInterestRateStrategy } from "./IDaiJugInterestRateStrategy.sol";
 
 abstract contract SparkTestBase is ProtocolV3TestBase {
+
+    struct DaiInterestStrategyValues {
+        address vat;
+        address pot;
+        bytes32 ilk;
+        uint256 baseRateConversion;
+        uint256 borrowSpread;
+        uint256 supplySpread;
+        uint256 maxRate;
+        uint256 performanceBonus;
+    }
+
+    struct DaiJugInterestStrategyValues {
+        address vat;
+        address jug;
+        bytes32 ilk;
+        uint256 baseRateConversion;
+        uint256 borrowSpread;
+        uint256 supplySpread;
+        uint256 maxRate;
+        uint256 performanceBonus;
+    }
 
     address internal executor;
     address internal payload;
@@ -63,11 +85,12 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
         }
     }
 
-    function testBytecodeMatches() public {
+    function test_payloadBytecodeMatches() public {
         address expectedPayload = deployPayload();
-        address actualPayload = payload;
+        address actualPayload   = payload;
+
         uint256 expectedBytecodeSize = expectedPayload.code.length;
-        uint256 actualBytecodeSize = actualPayload.code.length;
+        uint256 actualBytecodeSize   = actualPayload.code.length;
 
         uint256 metadataLength = _getBytecodeMetadataLength(expectedPayload);
         assertTrue(metadataLength <= expectedBytecodeSize);
@@ -78,9 +101,11 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
         actualBytecodeSize -= metadataLength;
 
         assertEq(actualBytecodeSize, expectedBytecodeSize);
+
         uint256 size = actualBytecodeSize;
         uint256 expectedHash;
         uint256 actualHash;
+
         assembly {
             let ptr := mload(0x40)
 
@@ -90,6 +115,7 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
             extcodecopy(actualPayload, ptr, 0, size)
             actualHash := keccak256(ptr, size)
         }
+
         assertEq(actualHash, expectedHash);
     }
 
@@ -102,32 +128,10 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
                 extcodecopy(a, ptr, sub(size, 2), 2)
                 length := mload(ptr)
                 length := shr(240, length)
-                length := add(length, 2)  // the two bytes used to specify the length are not counted in the length
+                length := add(length, 2)  // The two bytes used to specify the length are not counted in the length
             }
             // We'll return zero if the bytecode is shorter than two bytes.
         }
-    }
-
-    struct DaiInterestStrategyValues {
-        address vat;
-        address pot;
-        bytes32 ilk;
-        uint256 baseRateConversion;
-        uint256 borrowSpread;
-        uint256 supplySpread;
-        uint256 maxRate;
-        uint256 performanceBonus;
-    }
-
-    struct DaiJugInterestStrategyValues {
-        address vat;
-        address jug;
-        bytes32 ilk;
-        uint256 baseRateConversion;
-        uint256 borrowSpread;
-        uint256 supplySpread;
-        uint256 maxRate;
-        uint256 performanceBonus;
     }
 
     function _writeStrategyConfig(string memory strategiesKey, address _strategy) internal override returns (string memory content) {

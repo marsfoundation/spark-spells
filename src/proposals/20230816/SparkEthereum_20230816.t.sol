@@ -9,6 +9,8 @@ import { SparkEthereum_20230816 } from './SparkEthereum_20230816.sol';
 
 contract SparkEthereum_20230816Test is SparkEthereumTestBase {
 
+    address constant internal PAUSE_PROXY = 0xBE8E3e3618f7474F8cB1d074A26afFef007E98FB;
+
     constructor() {
         id = '20230816';
     }
@@ -19,7 +21,7 @@ contract SparkEthereum_20230816Test is SparkEthereumTestBase {
 
         // This will be done in the main spell (simulate it here)
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
-        vm.prank(0xBE8E3e3618f7474F8cB1d074A26afFef007E98FB);
+        vm.prank(PAUSE_PROXY);
         Ownable(address(poolAddressesProvider)).transferOwnership(address(executor));
     }
 
