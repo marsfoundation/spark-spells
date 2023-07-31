@@ -267,7 +267,7 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
             abi.encodePacked('./diffs/', reportBefore, '_', reportAfter, '.md')
         );
         string memory beforePath = string(abi.encodePacked('./reports/', reportBefore, '.json'));
-        string memory afterPath = string(abi.encodePacked('./reports/', reportAfter, '.json'));
+        string memory afterPath  = string(abi.encodePacked('./reports/', reportAfter,  '.json'));
 
         string[] memory inputs = new string[](7);
         inputs[0] = 'npx';
