@@ -28,12 +28,12 @@ contract SparkGoerli_20230712Test is SparkTestBase, TestWithExecutor {
 
     function testSpellExecution() public {
         ReserveConfig[] memory configsBefore = _getReservesConfigs(POOL);
-        createConfigurationSnapshot('pre-Spark-Goerli-sDAI-Freeze', POOL);
+        createConfigurationSnapshot('pre-Spark-Goerli-20230712', POOL);
 
         _executePayload(address(payload));
 
         ReserveConfig[] memory configsAfter = _getReservesConfigs(POOL);
-        createConfigurationSnapshot('post-Spark-Goerli-sDAI-Freeze', POOL);
+        createConfigurationSnapshot('post-Spark-Goerli-20230712', POOL);
 
         assertEq(_findReserveConfig(configsBefore, SDAI).isFrozen, false);
         assertEq(_findReserveConfig(configsAfter, SDAI).isFrozen, true);

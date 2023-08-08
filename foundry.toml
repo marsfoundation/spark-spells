@@ -7,6 +7,7 @@ remappings = [
     'solidity-utils/=lib/aave-helpers/lib/solidity-utils/src/'
 ]
 fs_permissions = [
+    { access = "read", path = "./out" },
     { access = "write", path = "./reports" }
 ]
 solc = "0.8.10"
