@@ -80,7 +80,7 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
 
             // Goerli is broken so just disable for now
             if (block.chainid != 5) {
-                diffReportsFixed(
+                diffReports(
                     string(abi.encodePacked(prefix, '-', vm.toString(address(pool)), '-pre')),
                     string(abi.encodePacked(prefix, '-', vm.toString(address(pool)), '-post'))
                 );
@@ -268,39 +268,6 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
             strategy.performanceBonus() == expectedStrategyValues.performanceBonus,
             '_validateDaiInterestRateStrategy() : INVALID_PERFORMANCE_BONUS'
         );
-    }
-
-    function _liquidate(
-        ReserveConfig memory collateral,
-        ReserveConfig memory debt,
-        address liquidator,
-        address user,
-        uint256 amount
-    ) internal {
-        vm.startPrank(liquidator);
-        deal(debt.underlying, liquidator, amount);
-        IERC20(debt.underlying).approve(address(pool), amount);
-        console.log('LIQUIDATION_CALL: Collateral: %s, Debt: %s, Amount: %s', collateral.symbol, debt.symbol, amount);
-        pool.liquidationCall(collateral.underlying, debt.underlying, user, amount, false);
-        vm.stopPrank();
-    }
-
-    function diffReportsFixed(string memory reportBefore, string memory reportAfter) internal {
-        string memory outPath = string(
-            abi.encodePacked('./diffs/', reportBefore, '_', reportAfter, '.md')
-        );
-        string memory beforePath = string(abi.encodePacked('./reports/', reportBefore, '.json'));
-        string memory afterPath  = string(abi.encodePacked('./reports/', reportAfter,  '.json'));
-
-        string[] memory inputs = new string[](7);
-        inputs[0] = 'npx';
-        inputs[1] = '@bgd-labs/aave-cli';   // This reference is broken in the original code
-        inputs[2] = 'diff-snapshots';
-        inputs[3] = beforePath;
-        inputs[4] = afterPath;
-        inputs[5] = '-o';
-        inputs[6] = outPath;
-        vm.ffi(inputs);
     }
 
 }
