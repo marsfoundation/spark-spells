@@ -104,7 +104,7 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
         }
     }
 
-    function testPayloadBytecodeMatches() public {
+    function test_payloadBytecodeMatches() public {
         address expectedPayload = deployPayload();
         address actualPayload   = payload;
 
