@@ -10,7 +10,7 @@ import { IPoolAddressesProvider } from 'aave-v3-core/contracts/interfaces/IPoolA
  * @author Phoenix Labs
  * @dev    This proposal upgrades the pool contract implementation to Aave 3.0.2
  * Forum:  https://forum.makerdao.com/t/phoenix-labs-proposed-changes-for-spark-for-august-18th-spell/21612
- * Vote:   TODO
+ * Vote:   N/A
  */
 contract SparkGoerli_20230816 is SparkPayloadGoerli {
 
