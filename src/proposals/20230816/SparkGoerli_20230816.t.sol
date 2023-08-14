@@ -4,6 +4,7 @@ pragma solidity ^0.8.10;
 import '../../SparkTestBase.sol';
 
 import { Ownable } from 'aave-v3-core/contracts/dependencies/openzeppelin/contracts/Ownable.sol';
+import { BaseAdminUpgradeabilityProxy } from 'aave-v3-core/contracts/dependencies/openzeppelin/upgradeability/BaseAdminUpgradeabilityProxy.sol';
 
 import { SparkGoerli_20230816 } from './SparkGoerli_20230816.sol';
 
@@ -24,6 +25,9 @@ contract SparkGoerli_20230816Test is SparkGoerliTestBase {
     bytes32 public constant SPARK_ILK = "DIRECT-SPARK-DAI";
 
     IPool public constant POOL = IPool(0x26ca51Af4506DE7a6f0785D20CD776081a05fF6d);
+
+    address public constant POOL_IMPLEMENTATION_OLD = 0xF1E57711Eb5F897b415de1aEFCB64d9BAe58D312;
+    address public constant POOL_IMPLEMENTATION_NEW = 0xe7EA57b22D5F496BF9Ca50a7830547b704Ecb91F;
 
     constructor() {
         id = '20230816';
@@ -62,6 +66,8 @@ contract SparkGoerli_20230816Test is SparkGoerliTestBase {
             })
         );
         assertEq(_findReserveConfigBySymbol(configsBefore, 'sDAI').isFrozen, true);
+        vm.prank(address(poolAddressesProvider));
+        assertEq(BaseAdminUpgradeabilityProxy(payable(address(pool))).implementation(), POOL_IMPLEMENTATION_OLD);
 
         /***********************/
         /*** Execute Payload ***/
@@ -90,6 +96,8 @@ contract SparkGoerli_20230816Test is SparkGoerliTestBase {
             })
         );
         assertEq(_findReserveConfigBySymbol(configsAfter, 'sDAI').isFrozen, false);
+        vm.prank(address(poolAddressesProvider));
+        assertEq(BaseAdminUpgradeabilityProxy(payable(address(pool))).implementation(), POOL_IMPLEMENTATION_NEW);
     }
 
 }

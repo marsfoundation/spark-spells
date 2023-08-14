@@ -4,6 +4,7 @@ pragma solidity ^0.8.10;
 import '../../SparkTestBase.sol';
 
 import { Ownable } from 'aave-v3-core/contracts/dependencies/openzeppelin/contracts/Ownable.sol';
+import { BaseAdminUpgradeabilityProxy } from 'aave-v3-core/contracts/dependencies/openzeppelin/upgradeability/BaseAdminUpgradeabilityProxy.sol';
 
 import { SparkEthereum_20230816 } from './SparkEthereum_20230816.sol';
 
@@ -25,6 +26,9 @@ contract SparkEthereum_20230816Test is SparkEthereumTestBase {
 
     IPool public constant POOL = IPool(0xC13e21B648A5Ee794902342038FF3aDAB66BE987);
 
+    address public constant POOL_IMPLEMENTATION_OLD = 0x62DA45546A0F87b23941FFE5CA22f9D2A8fa7DF3;
+    address public constant POOL_IMPLEMENTATION_NEW = 0x8115366Ca7Cf280a760f0bC0F6Db3026e2437115;
+
     constructor() {
         id = '20230816';
     }
@@ -44,7 +48,7 @@ contract SparkEthereum_20230816Test is SparkEthereumTestBase {
         /*************************/
         /*** Before Assertions ***/
         /*************************/
-        
+
         ReserveConfig[] memory configsBefore = createConfigurationSnapshot('', POOL);
 
         _validateDaiJugInterestRateStrategy(
@@ -62,6 +66,8 @@ contract SparkEthereum_20230816Test is SparkEthereumTestBase {
             })
         );
         assertEq(_findReserveConfigBySymbol(configsBefore, 'sDAI').isFrozen, true);
+        vm.prank(address(poolAddressesProvider));
+        assertEq(BaseAdminUpgradeabilityProxy(payable(address(pool))).implementation(), POOL_IMPLEMENTATION_OLD);
 
         /***********************/
         /*** Execute Payload ***/
@@ -90,6 +96,8 @@ contract SparkEthereum_20230816Test is SparkEthereumTestBase {
             })
         );
         assertEq(_findReserveConfigBySymbol(configsAfter, 'sDAI').isFrozen, false);
+        vm.prank(address(poolAddressesProvider));
+        assertEq(BaseAdminUpgradeabilityProxy(payable(address(pool))).implementation(), POOL_IMPLEMENTATION_NEW);
     }
 
 }
