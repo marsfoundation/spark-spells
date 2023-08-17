@@ -14,12 +14,12 @@ import { IPoolAddressesProvider } from 'aave-v3-core/contracts/interfaces/IPoolA
  */
 contract SparkEthereum_20230830 is SparkPayloadEthereum {
 
-    address public constant WETH                         = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-    uint256 public constant NEW_WETH_OPTIMAL_USAGE_RATIO = 90_00;
-    uint256 public constant NEW_WETH_INTEREST_RATE       = 3_80;
+    address public constant WETH                           = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    uint256 public constant NEW_WETH_OPTIMAL_USAGE_RATIO   = 0.90e27;
+    uint256 public constant NEW_WETH_OPTIMAL_INTEREST_RATE = 0.038e27;
 
-    address public constant wstETH                       = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0;
-    uint256 public constant NEW_WSTETH_SUPPLY_CAP        = 400_000;
+    address public constant wstETH                         = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0;
+    uint256 public constant NEW_WSTETH_SUPPLY_CAP          = 400_000;
     
     function rateStrategiesUpdates()
         public view override returns (IEngine.RateStrategyUpdate[] memory)
@@ -30,8 +30,8 @@ contract SparkEthereum_20230830 is SparkPayloadEthereum {
             .RATE_STRATEGIES_FACTORY()
             .getStrategyDataOfAsset(WETH);
 
-        weth.optimalUsageRatio = _bpsToRay(NEW_WETH_OPTIMAL_USAGE_RATIO);
-        weth.variableRateSlope1 = _bpsToRay(NEW_WETH_INTEREST_RATE);
+        weth.optimalUsageRatio = NEW_WETH_OPTIMAL_USAGE_RATIO;
+        weth.variableRateSlope1 = NEW_WETH_OPTIMAL_INTEREST_RATE;
 
         ratesUpdate[0] = IEngine.RateStrategyUpdate({
             asset:  WETH,
