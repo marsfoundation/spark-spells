@@ -5,10 +5,7 @@ import '../../SparkTestBase.sol';
 
 import { Ownable } from 'aave-v3-core/contracts/dependencies/openzeppelin/contracts/Ownable.sol';
 
-import '../../SparkTestBase.sol';
-
 import { SparkEthereum_20230830 } from './SparkEthereum_20230830.sol';
-
 
 contract SparkEthereum_20230830Test is SparkEthereumTestBase {
 
@@ -91,7 +88,7 @@ contract SparkEthereum_20230830Test is SparkEthereumTestBase {
         
         wstETHConfigBefore.supplyCap = NEW_WSTETH_SUPPLY_CAP;
         _validateReserveConfig(wstETHConfigBefore, allConfigsAfter);
-        
+
         /****************************************************/
         /*** WETH Interest Rate Strategy After Assertions ***/
         /****************************************************/

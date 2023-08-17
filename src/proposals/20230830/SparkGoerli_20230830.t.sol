@@ -7,7 +7,6 @@ import { Ownable } from 'aave-v3-core/contracts/dependencies/openzeppelin/contra
 
 import { SparkGoerli_20230830 } from './SparkGoerli_20230830.sol';
 
-
 contract SparkGoerli_20230830Test is SparkGoerliTestBase {
 
     address internal constant PAUSE_PROXY                  = 0x5DCdbD3cCF9B09EAAD03bc5f50fA2B3d3ACA0121;
@@ -23,7 +22,6 @@ contract SparkGoerli_20230830Test is SparkGoerliTestBase {
     address public   constant wstETH                       = 0x6E4F1e8d4c5E5E6e2781FD814EE0744cc16Eb352;
     uint256 public   constant OLD_WSTETH_SUPPLY_CAP        = 200_000;
     uint256 public   constant NEW_WSTETH_SUPPLY_CAP        = 400_000;
-    
     
     constructor() {
         id = '20230830';
@@ -91,9 +89,9 @@ contract SparkGoerli_20230830Test is SparkGoerliTestBase {
         wstETHConfigBefore.supplyCap = NEW_WSTETH_SUPPLY_CAP;
         _validateReserveConfig(wstETHConfigBefore, allConfigsAfter);
         
-        /*****************************************************/
+        /****************************************************/
         /*** WETH Interest Rate Strategy After Assertions ***/
-        /*****************************************************/
+        /****************************************************/
 
         ReserveConfig memory WETHConfigAfter = _findReserveConfig(allConfigsAfter, WETH);
 
