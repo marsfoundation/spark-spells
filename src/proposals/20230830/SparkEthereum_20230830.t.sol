@@ -32,8 +32,9 @@ contract SparkEthereum_20230830Test is SparkEthereumTestBase {
         // For now deploying the payload in the test
         payload = deployPayload();
 
-        // Temporarily keeping the setup from the previous spell - will update after its execution
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
+        
+        // Temporarily keeping the setup from the previous spell - will update after its execution
         vm.prank(PAUSE_PROXY);
         Ownable(address(poolAddressesProvider)).transferOwnership(address(executor));
     }

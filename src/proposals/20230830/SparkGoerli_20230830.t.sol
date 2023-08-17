@@ -28,14 +28,11 @@ contract SparkGoerli_20230830Test is SparkGoerliTestBase {
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('goerli').rpcUrl, 9_500_235);
+        vm.createSelectFork(getChain('goerli').rpcUrl, 9_534_370);
         // For now deploying the payload in the test
         payload = deployPayload();
 
-        // Temporarily keeping the setup from the previous spell - will update after its execution
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
-        vm.prank(PAUSE_PROXY);
-        Ownable(address(poolAddressesProvider)).transferOwnership(address(executor));
     }
 
     function testSpellSpecifics() public {
