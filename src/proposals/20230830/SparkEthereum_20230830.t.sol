@@ -72,9 +72,9 @@ contract SparkEthereum_20230830Test is SparkEthereumTestBase {
         
         GovHelpers.executePayload(vm, payload, executor);
 
-        /*****************************************************/
+        /****************************************************/
         /*** WETH Interest Rate Strategy After Assertions ***/
-        /*****************************************************/
+        /****************************************************/
 
         ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('post-Spark-Goerli-20230830', POOL);
         ReserveConfig memory WETHConfigAfter = _findReserveConfig(allConfigsAfter, WETH);
