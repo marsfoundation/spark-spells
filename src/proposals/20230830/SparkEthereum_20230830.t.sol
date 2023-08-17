@@ -12,16 +12,19 @@ import { SparkEthereum_20230830 } from './SparkEthereum_20230830.sol';
 
 contract SparkEthereum_20230830Test is SparkEthereumTestBase {
 
-    address internal constant PAUSE_PROXY             = 0xBE8E3e3618f7474F8cB1d074A26afFef007E98FB;
-    address public   constant WETH                    = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-    address public   constant POOL_ADDRESSES_PROVIDER = 0x02C3eA4e34C0cBd694D2adFa2c690EECbC1793eE;
-    IPool   public   constant POOL                    = IPool(0xC13e21B648A5Ee794902342038FF3aDAB66BE987);
+    address internal constant PAUSE_PROXY                  = 0xBE8E3e3618f7474F8cB1d074A26afFef007E98FB;
+    address public   constant POOL_ADDRESSES_PROVIDER      = 0x02C3eA4e34C0cBd694D2adFa2c690EECbC1793eE;
+    IPool   public   constant POOL                         = IPool(0xC13e21B648A5Ee794902342038FF3aDAB66BE987);
 
-    uint256 public constant OLD_OPTIMAL_USAGE_RATIO = 0.80e27;
-    uint256 public constant NEW_OPTIMAL_USAGE_RATIO = 0.90e27;
-    
-    uint256 public constant OLD_INTEREST_RATE = 0.030e27;
-    uint256 public constant NEW_INTEREST_RATE = 0.038e27;
+    address public   constant WETH                         = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    uint256 public   constant OLD_WETH_OPTIMAL_USAGE_RATIO = 0.80e27;
+    uint256 public   constant NEW_WETH_OPTIMAL_USAGE_RATIO = 0.90e27;
+    uint256 public   constant OLD_WETH_INTEREST_RATE       = 0.030e27;
+    uint256 public   constant NEW_WETH_INTEREST_RATE       = 0.038e27;
+
+    address public   constant wstETH                       = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0;
+    uint256 public   constant OLD_WSTETH_SUPPLY_CAP        = 200_000;
+    uint256 public   constant NEW_WSTETH_SUPPLY_CAP        = 400_000;
 
     constructor() {
         id = '20230830';
@@ -40,11 +43,19 @@ contract SparkEthereum_20230830Test is SparkEthereumTestBase {
 
     function testSpellSpecifics() public {
         
+        ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('pre-Spark-Ethereum-20230830', POOL);
+                
+        /*******************************************/
+        /*** wstETH Supply Cap Before Assertions ***/
+        /*******************************************/
+        
+        ReserveConfig memory wstETHConfigBefore = _findReserveConfig(allConfigsBefore, wstETH);
+        assertEq(wstETHConfigBefore.supplyCap, OLD_WSTETH_SUPPLY_CAP);
+
         /*****************************************************/
         /*** WETH Interest Rate Strategy Before Assertions ***/
         /*****************************************************/
         
-        ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('pre-Spark-Goerli-20230830', POOL);
         ReserveConfig memory WETHConfigBefore = _findReserveConfig(allConfigsBefore, WETH);
         IDefaultInterestRateStrategy interestRateStrategyBefore = IDefaultInterestRateStrategy(
             WETHConfigBefore.interestRateStrategy
@@ -55,13 +66,13 @@ contract SparkEthereum_20230830Test is SparkEthereumTestBase {
             WETHConfigBefore.interestRateStrategy,
             InterestStrategyValues({
                 addressesProvider:             POOL_ADDRESSES_PROVIDER,
-                optimalUsageRatio:             OLD_OPTIMAL_USAGE_RATIO,
+                optimalUsageRatio:             OLD_WETH_OPTIMAL_USAGE_RATIO,
                 optimalStableToTotalDebtRatio: interestRateStrategyBefore.OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO(),
-                baseStableBorrowRate:          OLD_INTEREST_RATE,
+                baseStableBorrowRate:          OLD_WETH_INTEREST_RATE,
                 stableRateSlope1:              interestRateStrategyBefore.getStableRateSlope1(),
                 stableRateSlope2:              interestRateStrategyBefore.getStableRateSlope2(),
                 baseVariableBorrowRate:        interestRateStrategyBefore.getBaseVariableBorrowRate(),
-                variableRateSlope1:            OLD_INTEREST_RATE,
+                variableRateSlope1:            OLD_WETH_INTEREST_RATE,
                 variableRateSlope2:            interestRateStrategyBefore.getVariableRateSlope2()
             })
         );
@@ -72,11 +83,19 @@ contract SparkEthereum_20230830Test is SparkEthereumTestBase {
         
         GovHelpers.executePayload(vm, payload, executor);
 
+        ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('post-Spark-Ethereum-20230830', POOL);
+                
+        /******************************************/
+        /*** wstETH Supply Cap After Assertions ***/
+        /******************************************/
+        
+        wstETHConfigBefore.supplyCap = NEW_WSTETH_SUPPLY_CAP;
+        _validateReserveConfig(wstETHConfigBefore, allConfigsAfter);
+        
         /****************************************************/
         /*** WETH Interest Rate Strategy After Assertions ***/
         /****************************************************/
 
-        ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('post-Spark-Goerli-20230830', POOL);
         ReserveConfig memory WETHConfigAfter = _findReserveConfig(allConfigsAfter, WETH);
 
         _validateInterestRateStrategy(
@@ -84,13 +103,13 @@ contract SparkEthereum_20230830Test is SparkEthereumTestBase {
             WETHConfigAfter.interestRateStrategy,
             InterestStrategyValues({
                 addressesProvider:             POOL_ADDRESSES_PROVIDER,
-                optimalUsageRatio:             NEW_OPTIMAL_USAGE_RATIO,
+                optimalUsageRatio:             NEW_WETH_OPTIMAL_USAGE_RATIO,
                 optimalStableToTotalDebtRatio: interestRateStrategyBefore.OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO(),
-                baseStableBorrowRate:          NEW_INTEREST_RATE,
+                baseStableBorrowRate:          NEW_WETH_INTEREST_RATE,
                 stableRateSlope1:              interestRateStrategyBefore.getStableRateSlope1(),
                 stableRateSlope2:              interestRateStrategyBefore.getStableRateSlope2(),
                 baseVariableBorrowRate:        interestRateStrategyBefore.getBaseVariableBorrowRate(),
-                variableRateSlope1:            NEW_INTEREST_RATE,
+                variableRateSlope1:            NEW_WETH_INTEREST_RATE,
                 variableRateSlope2:            interestRateStrategyBefore.getVariableRateSlope2()
             })
         );
