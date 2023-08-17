@@ -40,7 +40,7 @@ contract SparkEthereum_20230830Test is SparkEthereumTestBase {
 
     function testSpellSpecifics() public {
         
-        ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('pre-Spark-Ethereum-20230830', POOL);
+        ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', POOL);
                 
         /*******************************************/
         /*** wstETH Supply Cap Before Assertions ***/
@@ -80,7 +80,7 @@ contract SparkEthereum_20230830Test is SparkEthereumTestBase {
         
         GovHelpers.executePayload(vm, payload, executor);
 
-        ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('post-Spark-Ethereum-20230830', POOL);
+        ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', POOL);
                 
         /******************************************/
         /*** wstETH Supply Cap After Assertions ***/

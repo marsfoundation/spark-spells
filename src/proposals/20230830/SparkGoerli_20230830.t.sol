@@ -40,7 +40,7 @@ contract SparkGoerli_20230830Test is SparkGoerliTestBase {
 
     function testSpellSpecifics() public {
 
-        ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('pre-Spark-Goerli-20230830', POOL);
+        ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', POOL);
         
         /*******************************************/
         /*** wstETH Supply Cap Before Assertions ***/
@@ -80,7 +80,7 @@ contract SparkGoerli_20230830Test is SparkGoerliTestBase {
         
         GovHelpers.executePayload(vm, payload, executor);
 
-        ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('post-Spark-Goerli-20230830', POOL);
+        ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', POOL);
         
         /******************************************/
         /*** wstETH Supply Cap After Assertions ***/
