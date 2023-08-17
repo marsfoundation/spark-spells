@@ -14,8 +14,12 @@ import { IPoolAddressesProvider } from 'aave-v3-core/contracts/interfaces/IPoolA
  */
 contract SparkGoerli_20230830 is SparkPayloadGoerli {
 
-    address public constant WETH   = 0x7D5afF7ab67b431cDFA6A94d50d3124cC4AB2611;
-    address public constant wstETH = 0x6E4F1e8d4c5E5E6e2781FD814EE0744cc16Eb352;
+    address public constant WETH                         = 0x7D5afF7ab67b431cDFA6A94d50d3124cC4AB2611;
+    uint256 public constant NEW_WETH_OPTIMAL_USAGE_RATIO = 90_00;
+    uint256 public constant NEW_WETH_INTEREST_RATE       = 3_80;
+
+    address public constant wstETH                       = 0x6E4F1e8d4c5E5E6e2781FD814EE0744cc16Eb352;
+    uint256 public constant NEW_WSTETH_SUPPLY_CAP        = 400_000;
 
     function rateStrategiesUpdates()
         public view override returns (IEngine.RateStrategyUpdate[] memory)
@@ -26,8 +30,8 @@ contract SparkGoerli_20230830 is SparkPayloadGoerli {
             .RATE_STRATEGIES_FACTORY()
             .getStrategyDataOfAsset(WETH);
 
-        weth.variableRateSlope1 = _bpsToRay(3_80);
-        weth.optimalUsageRatio = _bpsToRay(90_00);
+        weth.optimalUsageRatio = _bpsToRay(NEW_WETH_OPTIMAL_USAGE_RATIO);
+        weth.variableRateSlope1 = _bpsToRay(NEW_WETH_INTEREST_RATE);
 
         ratesUpdate[0] = IEngine.RateStrategyUpdate({
             asset:  WETH,
@@ -43,7 +47,7 @@ contract SparkGoerli_20230830 is SparkPayloadGoerli {
         IEngine.CapsUpdate[] memory capsUpdate = new IEngine.CapsUpdate[](1);
         capsUpdate[0] = IEngine.CapsUpdate({
             asset: wstETH,
-            supplyCap: 400_000,
+            supplyCap: NEW_WSTETH_SUPPLY_CAP,
             borrowCap: EngineFlags.KEEP_CURRENT 
         });
 
