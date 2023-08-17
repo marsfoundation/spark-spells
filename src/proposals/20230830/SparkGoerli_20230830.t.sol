@@ -9,10 +9,6 @@ import { SparkGoerli_20230830 } from './SparkGoerli_20230830.sol';
 
 contract SparkGoerli_20230830Test is SparkGoerliTestBase {
 
-    address internal constant PAUSE_PROXY                    = 0x5DCdbD3cCF9B09EAAD03bc5f50fA2B3d3ACA0121;
-    address public   constant POOL_ADDRESSES_PROVIDER        = 0x026a5B6114431d8F3eF2fA0E1B2EDdDccA9c540E;
-    IPool   public   constant POOL                           = IPool(0x26ca51Af4506DE7a6f0785D20CD776081a05fF6d);
-
     address public   constant WETH                           = 0x7D5afF7ab67b431cDFA6A94d50d3124cC4AB2611;
     uint256 public   constant OLD_WETH_OPTIMAL_USAGE_RATIO   = 0.80e27;
     uint256 public   constant NEW_WETH_OPTIMAL_USAGE_RATIO   = 0.90e27;
@@ -37,7 +33,7 @@ contract SparkGoerli_20230830Test is SparkGoerliTestBase {
 
     function testSpellSpecifics() public {
 
-        ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', POOL);
+        ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', pool);
         
         /*******************************************/
         /*** wstETH Supply Cap Before Assertions ***/
@@ -59,7 +55,7 @@ contract SparkGoerli_20230830Test is SparkGoerliTestBase {
             WETHConfigBefore.interestRateStrategy,
             WETHConfigBefore.interestRateStrategy,
             InterestStrategyValues({
-                addressesProvider:             POOL_ADDRESSES_PROVIDER,
+                addressesProvider:             address(poolAddressesProvider),
                 optimalUsageRatio:             OLD_WETH_OPTIMAL_USAGE_RATIO,
                 optimalStableToTotalDebtRatio: interestRateStrategyBefore.OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO(),
                 baseStableBorrowRate:          OLD_WETH_OPTIMAL_INTEREST_RATE,
@@ -77,7 +73,7 @@ contract SparkGoerli_20230830Test is SparkGoerliTestBase {
         
         GovHelpers.executePayload(vm, payload, executor);
 
-        ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', POOL);
+        ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
         
         /******************************************/
         /*** wstETH Supply Cap After Assertions ***/
@@ -96,7 +92,7 @@ contract SparkGoerli_20230830Test is SparkGoerliTestBase {
             WETHConfigAfter.interestRateStrategy,
             WETHConfigAfter.interestRateStrategy,
             InterestStrategyValues({
-                addressesProvider:             POOL_ADDRESSES_PROVIDER,
+                addressesProvider:             address(poolAddressesProvider),
                 optimalUsageRatio:             NEW_WETH_OPTIMAL_USAGE_RATIO,
                 optimalStableToTotalDebtRatio: interestRateStrategyBefore.OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO(),
                 baseStableBorrowRate:          NEW_WETH_OPTIMAL_INTEREST_RATE,
