@@ -8,8 +8,8 @@ import { IPoolAddressesProvider } from 'aave-v3-core/contracts/interfaces/IPoolA
 /**
  * @title  August 30, 2023 Spark Ethereum Proposal - Update ETH Kink, Update ETHn Kink Rate, Update wstETH Supply Cap
  * @author Phoenix Labs
- * @dev    This proposal updates ETH market kink parameters and raises wstETH supply cap
- * Forum:  *TBA*
+ * @dev    This proposal updates ETH market parameters and raises wstETH supply cap
+ * Forum:  https://forum.makerdao.com/t/phoenix-labs-proposed-changes-for-spark-for-next-upcoming-spell/21685
  * Vote:   N/A
  */
 contract SparkEthereum_20230830 is SparkPayloadEthereum {
