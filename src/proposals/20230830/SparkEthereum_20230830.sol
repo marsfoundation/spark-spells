@@ -17,6 +17,7 @@ contract SparkEthereum_20230830 is SparkPayloadEthereum {
     address public constant WETH                           = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     uint256 public constant NEW_WETH_OPTIMAL_USAGE_RATIO   = 0.90e27;
     uint256 public constant NEW_WETH_VARIABLE_RATE_SLOPE_1 = 0.028e27;
+    uint256 public constant NEW_WETH_VARIABLE_RATE_SLOPE_2 = 1.20e27;
 
     address public constant wstETH                         = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0;
     uint256 public constant NEW_WSTETH_SUPPLY_CAP          = 400_000;
@@ -32,6 +33,7 @@ contract SparkEthereum_20230830 is SparkPayloadEthereum {
 
         weth.optimalUsageRatio = NEW_WETH_OPTIMAL_USAGE_RATIO;
         weth.variableRateSlope1 = NEW_WETH_VARIABLE_RATE_SLOPE_1;
+        weth.variableRateSlope2 = NEW_WETH_VARIABLE_RATE_SLOPE_2;
 
         ratesUpdate[0] = IEngine.RateStrategyUpdate({
             asset:  WETH,

@@ -17,6 +17,7 @@ contract SparkGoerli_20230830 is SparkPayloadGoerli {
     address public constant WETH                           = 0x7D5afF7ab67b431cDFA6A94d50d3124cC4AB2611;
     uint256 public constant NEW_WETH_OPTIMAL_USAGE_RATIO   = 0.90e27;
     uint256 public constant NEW_WETH_VARIABLE_RATE_SLOPE_1 = 0.028e27;
+    uint256 public constant NEW_WETH_VARIABLE_RATE_SLOPE_2 = 1.20e27;
 
     address public constant wstETH                         = 0x6E4F1e8d4c5E5E6e2781FD814EE0744cc16Eb352;
     uint256 public constant NEW_WSTETH_SUPPLY_CAP          = 400_000;
@@ -32,6 +33,7 @@ contract SparkGoerli_20230830 is SparkPayloadGoerli {
 
         weth.optimalUsageRatio = NEW_WETH_OPTIMAL_USAGE_RATIO;
         weth.variableRateSlope1 = NEW_WETH_VARIABLE_RATE_SLOPE_1;
+        weth.variableRateSlope2 = NEW_WETH_VARIABLE_RATE_SLOPE_2;
 
         ratesUpdate[0] = IEngine.RateStrategyUpdate({
             asset:  WETH,

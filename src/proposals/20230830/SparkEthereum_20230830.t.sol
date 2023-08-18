@@ -14,6 +14,8 @@ contract SparkEthereum_20230830Test is SparkEthereumTestBase {
     uint256 public   constant NEW_WETH_OPTIMAL_USAGE_RATIO   = 0.90e27;
     uint256 public   constant OLD_WETH_VARIABLE_RATE_SLOPE_1 = 0.030e27;
     uint256 public   constant NEW_WETH_VARIABLE_RATE_SLOPE_1 = 0.028e27;
+    uint256 public   constant OLD_WETH_VARIABLE_RATE_SLOPE_2 = 0.80e27;
+    uint256 public   constant NEW_WETH_VARIABLE_RATE_SLOPE_2 = 1.20e27;
 
     address public   constant wstETH                         = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0;
     uint256 public   constant OLD_WSTETH_SUPPLY_CAP          = 200_000;
@@ -63,7 +65,7 @@ contract SparkEthereum_20230830Test is SparkEthereumTestBase {
                 stableRateSlope2:              interestRateStrategyBefore.getStableRateSlope2(),
                 baseVariableBorrowRate:        interestRateStrategyBefore.getBaseVariableBorrowRate(),
                 variableRateSlope1:            OLD_WETH_VARIABLE_RATE_SLOPE_1,
-                variableRateSlope2:            interestRateStrategyBefore.getVariableRateSlope2()
+                variableRateSlope2:            OLD_WETH_VARIABLE_RATE_SLOPE_2
             })
         );
         
@@ -100,7 +102,7 @@ contract SparkEthereum_20230830Test is SparkEthereumTestBase {
                 stableRateSlope2:              interestRateStrategyBefore.getStableRateSlope2(),
                 baseVariableBorrowRate:        interestRateStrategyBefore.getBaseVariableBorrowRate(),
                 variableRateSlope1:            NEW_WETH_VARIABLE_RATE_SLOPE_1,
-                variableRateSlope2:            interestRateStrategyBefore.getVariableRateSlope2()
+                variableRateSlope2:            NEW_WETH_VARIABLE_RATE_SLOPE_2
             })
         );
     }
