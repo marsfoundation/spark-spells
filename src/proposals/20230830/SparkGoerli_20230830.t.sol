@@ -12,8 +12,8 @@ contract SparkGoerli_20230830Test is SparkGoerliTestBase {
     address public   constant WETH                           = 0x7D5afF7ab67b431cDFA6A94d50d3124cC4AB2611;
     uint256 public   constant OLD_WETH_OPTIMAL_USAGE_RATIO   = 0.80e27;
     uint256 public   constant NEW_WETH_OPTIMAL_USAGE_RATIO   = 0.90e27;
-    uint256 public   constant OLD_WETH_OPTIMAL_INTEREST_RATE = 0.030e27;
-    uint256 public   constant NEW_WETH_OPTIMAL_INTEREST_RATE = 0.038e27;
+    uint256 public   constant OLD_WETH_VARIABLE_RATE_SLOPE_1 = 0.030e27;
+    uint256 public   constant NEW_WETH_VARIABLE_RATE_SLOPE_1 = 0.028e27;
 
     address public   constant wstETH                         = 0x6E4F1e8d4c5E5E6e2781FD814EE0744cc16Eb352;
     uint256 public   constant OLD_WSTETH_SUPPLY_CAP          = 200_000;
@@ -58,11 +58,11 @@ contract SparkGoerli_20230830Test is SparkGoerliTestBase {
                 addressesProvider:             address(poolAddressesProvider),
                 optimalUsageRatio:             OLD_WETH_OPTIMAL_USAGE_RATIO,
                 optimalStableToTotalDebtRatio: interestRateStrategyBefore.OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO(),
-                baseStableBorrowRate:          OLD_WETH_OPTIMAL_INTEREST_RATE,
+                baseStableBorrowRate:          OLD_WETH_VARIABLE_RATE_SLOPE_1,
                 stableRateSlope1:              interestRateStrategyBefore.getStableRateSlope1(),
                 stableRateSlope2:              interestRateStrategyBefore.getStableRateSlope2(),
                 baseVariableBorrowRate:        interestRateStrategyBefore.getBaseVariableBorrowRate(),
-                variableRateSlope1:            OLD_WETH_OPTIMAL_INTEREST_RATE,
+                variableRateSlope1:            OLD_WETH_VARIABLE_RATE_SLOPE_1,
                 variableRateSlope2:            interestRateStrategyBefore.getVariableRateSlope2()
             })
         );
@@ -95,11 +95,11 @@ contract SparkGoerli_20230830Test is SparkGoerliTestBase {
                 addressesProvider:             address(poolAddressesProvider),
                 optimalUsageRatio:             NEW_WETH_OPTIMAL_USAGE_RATIO,
                 optimalStableToTotalDebtRatio: interestRateStrategyBefore.OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO(),
-                baseStableBorrowRate:          NEW_WETH_OPTIMAL_INTEREST_RATE,
+                baseStableBorrowRate:          NEW_WETH_VARIABLE_RATE_SLOPE_1,
                 stableRateSlope1:              interestRateStrategyBefore.getStableRateSlope1(),
                 stableRateSlope2:              interestRateStrategyBefore.getStableRateSlope2(),
                 baseVariableBorrowRate:        interestRateStrategyBefore.getBaseVariableBorrowRate(),
-                variableRateSlope1:            NEW_WETH_OPTIMAL_INTEREST_RATE,
+                variableRateSlope1:            NEW_WETH_VARIABLE_RATE_SLOPE_1,
                 variableRateSlope2:            interestRateStrategyBefore.getVariableRateSlope2()
             })
         );

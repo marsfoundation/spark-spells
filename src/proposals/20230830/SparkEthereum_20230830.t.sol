@@ -12,8 +12,8 @@ contract SparkEthereum_20230830Test is SparkEthereumTestBase {
     address public   constant WETH                           = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     uint256 public   constant OLD_WETH_OPTIMAL_USAGE_RATIO   = 0.80e27;
     uint256 public   constant NEW_WETH_OPTIMAL_USAGE_RATIO   = 0.90e27;
-    uint256 public   constant OLD_WETH_OPTIMAL_INTEREST_RATE = 0.030e27;
-    uint256 public   constant NEW_WETH_OPTIMAL_INTEREST_RATE = 0.038e27;
+    uint256 public   constant OLD_WETH_VARIABLE_RATE_SLOPE_1 = 0.030e27;
+    uint256 public   constant NEW_WETH_VARIABLE_RATE_SLOPE_1 = 0.028e27;
 
     address public   constant wstETH                         = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0;
     uint256 public   constant OLD_WSTETH_SUPPLY_CAP          = 200_000;
@@ -58,11 +58,11 @@ contract SparkEthereum_20230830Test is SparkEthereumTestBase {
                 addressesProvider:             address(poolAddressesProvider),
                 optimalUsageRatio:             OLD_WETH_OPTIMAL_USAGE_RATIO,
                 optimalStableToTotalDebtRatio: interestRateStrategyBefore.OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO(),
-                baseStableBorrowRate:          OLD_WETH_OPTIMAL_INTEREST_RATE,
+                baseStableBorrowRate:          OLD_WETH_VARIABLE_RATE_SLOPE_1,
                 stableRateSlope1:              interestRateStrategyBefore.getStableRateSlope1(),
                 stableRateSlope2:              interestRateStrategyBefore.getStableRateSlope2(),
                 baseVariableBorrowRate:        interestRateStrategyBefore.getBaseVariableBorrowRate(),
-                variableRateSlope1:            OLD_WETH_OPTIMAL_INTEREST_RATE,
+                variableRateSlope1:            OLD_WETH_VARIABLE_RATE_SLOPE_1,
                 variableRateSlope2:            interestRateStrategyBefore.getVariableRateSlope2()
             })
         );
@@ -95,11 +95,11 @@ contract SparkEthereum_20230830Test is SparkEthereumTestBase {
                 addressesProvider:             address(poolAddressesProvider),
                 optimalUsageRatio:             NEW_WETH_OPTIMAL_USAGE_RATIO,
                 optimalStableToTotalDebtRatio: interestRateStrategyBefore.OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO(),
-                baseStableBorrowRate:          NEW_WETH_OPTIMAL_INTEREST_RATE,
+                baseStableBorrowRate:          NEW_WETH_VARIABLE_RATE_SLOPE_1,
                 stableRateSlope1:              interestRateStrategyBefore.getStableRateSlope1(),
                 stableRateSlope2:              interestRateStrategyBefore.getStableRateSlope2(),
                 baseVariableBorrowRate:        interestRateStrategyBefore.getBaseVariableBorrowRate(),
-                variableRateSlope1:            NEW_WETH_OPTIMAL_INTEREST_RATE,
+                variableRateSlope1:            NEW_WETH_VARIABLE_RATE_SLOPE_1,
                 variableRateSlope2:            interestRateStrategyBefore.getVariableRateSlope2()
             })
         );
