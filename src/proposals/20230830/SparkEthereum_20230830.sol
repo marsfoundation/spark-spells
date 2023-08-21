@@ -9,8 +9,9 @@ import { SparkPayloadEthereum, IEngine, Rates, EngineFlags } from '../../SparkPa
  * @title  August 30, 2023 Spark Ethereum Proposal - Update ETH utilization rate parameters, increase wstETH supply cap
  * @author Phoenix Labs
  * @dev    This proposal updates ETH market optimalUsageRatio, variableRateSlope1, variableRateSlope2 parameters and raises wstETH supplyCap
- * Forum:  https://forum.makerdao.com/t/phoenix-labs-proposed-changes-for-spark-for-next-upcoming-spell/21685
- * Vote:   N/A
+ * Forum:       https://forum.makerdao.com/t/phoenix-labs-proposed-changes-for-spark-for-next-upcoming-spell/21685
+ * ETH Vote:    https://vote.makerdao.com/polling/QmULJKwK
+ * wstETH Vote: https://vote.makerdao.com/polling/QmbMR8PU
  */
 contract SparkEthereum_20230830 is SparkPayloadEthereum {
 

@@ -10,7 +10,8 @@ import { SparkPayloadGoerli, IEngine, Rates, EngineFlags } from '../../SparkPayl
  * @author Phoenix Labs
  * @dev    This proposal updates ETH market optimalUsageRatio, variableRateSlope1, variableRateSlope2 parameters and raises wstETH supplyCap
  * Forum:  https://forum.makerdao.com/t/phoenix-labs-proposed-changes-for-spark-for-next-upcoming-spell/21685
- * Vote:   N/A
+ * ETH Vote:    https://vote.makerdao.com/polling/QmULJKwK
+ * wstETH Vote: https://vote.makerdao.com/polling/QmbMR8PU
  */
 contract SparkGoerli_20230830 is SparkPayloadGoerli {
 
