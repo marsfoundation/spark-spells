@@ -9,17 +9,17 @@ import { SparkGoerli_20230830 } from './SparkGoerli_20230830.sol';
 
 contract SparkGoerli_20230830Test is SparkGoerliTestBase {
 
-    address public   constant WETH                           = 0x7D5afF7ab67b431cDFA6A94d50d3124cC4AB2611;
-    uint256 public   constant OLD_WETH_OPTIMAL_USAGE_RATIO   = 0.80e27;
-    uint256 public   constant NEW_WETH_OPTIMAL_USAGE_RATIO   = 0.90e27;
-    uint256 public   constant OLD_WETH_VARIABLE_RATE_SLOPE_1 = 0.030e27;
-    uint256 public   constant NEW_WETH_VARIABLE_RATE_SLOPE_1 = 0.028e27;
-    uint256 public   constant OLD_WETH_VARIABLE_RATE_SLOPE_2 = 0.80e27;
-    uint256 public   constant NEW_WETH_VARIABLE_RATE_SLOPE_2 = 1.20e27;
+    address public constant WETH   = 0x7D5afF7ab67b431cDFA6A94d50d3124cC4AB2611;
+    address public constant WSTETH = 0x6E4F1e8d4c5E5E6e2781FD814EE0744cc16Eb352;
 
-    address public   constant wstETH                         = 0x6E4F1e8d4c5E5E6e2781FD814EE0744cc16Eb352;
-    uint256 public   constant OLD_WSTETH_SUPPLY_CAP          = 200_000;
-    uint256 public   constant NEW_WSTETH_SUPPLY_CAP          = 400_000;
+    uint256 public constant OLD_WETH_OPTIMAL_USAGE_RATIO   = 0.80e27;
+    uint256 public constant NEW_WETH_OPTIMAL_USAGE_RATIO   = 0.90e27;
+    uint256 public constant OLD_WETH_VARIABLE_RATE_SLOPE_1 = 0.030e27;
+    uint256 public constant NEW_WETH_VARIABLE_RATE_SLOPE_1 = 0.028e27;
+    uint256 public constant OLD_WETH_VARIABLE_RATE_SLOPE_2 = 0.80e27;
+    uint256 public constant NEW_WETH_VARIABLE_RATE_SLOPE_2 = 1.20e27;
+    uint256 public constant OLD_WSTETH_SUPPLY_CAP          = 200_000;
+    uint256 public constant NEW_WSTETH_SUPPLY_CAP          = 400_000;
     
     constructor() {
         id = '20230830';
@@ -41,7 +41,7 @@ contract SparkGoerli_20230830Test is SparkGoerliTestBase {
         /*** wstETH Supply Cap Before Assertions ***/
         /*******************************************/
         
-        ReserveConfig memory wstETHConfigBefore = _findReserveConfig(allConfigsBefore, wstETH);
+        ReserveConfig memory wstETHConfigBefore = _findReserveConfig(allConfigsBefore, WSTETH);
         assertEq(wstETHConfigBefore.supplyCap, OLD_WSTETH_SUPPLY_CAP);
 
         /*****************************************************/
