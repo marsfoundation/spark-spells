@@ -48,22 +48,22 @@ contract SparkGoerli_20230830Test is SparkGoerliTestBase {
         /*** WETH Interest Rate Strategy Before Assertions ***/
         /*****************************************************/
         
-        ReserveConfig memory WETHConfigBefore = _findReserveConfig(allConfigsBefore, WETH);
-        IDefaultInterestRateStrategy interestRateStrategyBefore = IDefaultInterestRateStrategy(
-            WETHConfigBefore.interestRateStrategy
+        ReserveConfig memory wethConfigBefore = _findReserveConfig(allConfigsBefore, WETH);
+        IDefaultInterestRateStrategy interestRateStrategy = IDefaultInterestRateStrategy(
+            wethConfigBefore.interestRateStrategy
         );
 
         _validateInterestRateStrategy(
-            WETHConfigBefore.interestRateStrategy,
-            WETHConfigBefore.interestRateStrategy,
+            interestRateStrategy,
+            interestRateStrategy,
             InterestStrategyValues({
                 addressesProvider:             address(poolAddressesProvider),
                 optimalUsageRatio:             OLD_WETH_OPTIMAL_USAGE_RATIO,
-                optimalStableToTotalDebtRatio: interestRateStrategyBefore.OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO(),
+                optimalStableToTotalDebtRatio: interestRateStrategy.OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO(),
                 baseStableBorrowRate:          OLD_WETH_VARIABLE_RATE_SLOPE_1,
-                stableRateSlope1:              interestRateStrategyBefore.getStableRateSlope1(),
-                stableRateSlope2:              interestRateStrategyBefore.getStableRateSlope2(),
-                baseVariableBorrowRate:        interestRateStrategyBefore.getBaseVariableBorrowRate(),
+                stableRateSlope1:              interestRateStrategy.getStableRateSlope1(),
+                stableRateSlope2:              interestRateStrategy.getStableRateSlope2(),
+                baseVariableBorrowRate:        interestRateStrategy.getBaseVariableBorrowRate(),
                 variableRateSlope1:            OLD_WETH_VARIABLE_RATE_SLOPE_1,
                 variableRateSlope2:            OLD_WETH_VARIABLE_RATE_SLOPE_2
             })
@@ -96,11 +96,11 @@ contract SparkGoerli_20230830Test is SparkGoerliTestBase {
             InterestStrategyValues({
                 addressesProvider:             address(poolAddressesProvider),
                 optimalUsageRatio:             NEW_WETH_OPTIMAL_USAGE_RATIO,
-                optimalStableToTotalDebtRatio: interestRateStrategyBefore.OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO(),
+                optimalStableToTotalDebtRatio: interestRateStrategy.OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO(),
                 baseStableBorrowRate:          NEW_WETH_VARIABLE_RATE_SLOPE_1,
-                stableRateSlope1:              interestRateStrategyBefore.getStableRateSlope1(),
-                stableRateSlope2:              interestRateStrategyBefore.getStableRateSlope2(),
-                baseVariableBorrowRate:        interestRateStrategyBefore.getBaseVariableBorrowRate(),
+                stableRateSlope1:              interestRateStrategy.getStableRateSlope1(),
+                stableRateSlope2:              interestRateStrategy.getStableRateSlope2(),
+                baseVariableBorrowRate:        interestRateStrategy.getBaseVariableBorrowRate(),
                 variableRateSlope1:            NEW_WETH_VARIABLE_RATE_SLOPE_1,
                 variableRateSlope2:            NEW_WETH_VARIABLE_RATE_SLOPE_2
             })
