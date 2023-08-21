@@ -54,8 +54,8 @@ contract SparkGoerli_20230830Test is SparkGoerliTestBase {
         );
 
         _validateInterestRateStrategy(
-            interestRateStrategy,
-            interestRateStrategy,
+            address(interestRateStrategy),
+            address(interestRateStrategy),
             InterestStrategyValues({
                 addressesProvider:             address(poolAddressesProvider),
                 optimalUsageRatio:             OLD_WETH_OPTIMAL_USAGE_RATIO,
