@@ -7,9 +7,6 @@ import { SparkEthereum_20230830 } from './SparkEthereum_20230830.sol';
 
 contract SparkEthereum_20230830Test is SparkEthereumTestBase {
 
-    address public constant WETH   = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-    address public constant WSTETH = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0;
-    
     uint256 public constant OLD_WETH_OPTIMAL_USAGE_RATIO   = 0.80e27;
     uint256 public constant NEW_WETH_OPTIMAL_USAGE_RATIO   = 0.90e27;
     uint256 public constant OLD_WETH_VARIABLE_RATE_SLOPE_1 = 0.030e27;
@@ -39,14 +36,14 @@ contract SparkEthereum_20230830Test is SparkEthereumTestBase {
         /*** wstETH Supply Cap Before Assertions ***/
         /*******************************************/
         
-        ReserveConfig memory wstETHConfigBefore = _findReserveConfig(allConfigsBefore, WSTETH);
+        ReserveConfig memory wstETHConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'wstETH');
         assertEq(wstETHConfigBefore.supplyCap, OLD_WSTETH_SUPPLY_CAP);
 
         /*****************************************************/
         /*** WETH Interest Rate Strategy Before Assertions ***/
         /*****************************************************/
         
-        ReserveConfig memory wethConfigBefore = _findReserveConfig(allConfigsBefore, WETH);
+        ReserveConfig memory wethConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'WETH');
         IDefaultInterestRateStrategy interestRateStrategy = IDefaultInterestRateStrategy(
             wethConfigBefore.interestRateStrategy
         );
@@ -86,11 +83,11 @@ contract SparkEthereum_20230830Test is SparkEthereumTestBase {
         /*** WETH Interest Rate Strategy After Assertions ***/
         /****************************************************/
 
-        ReserveConfig memory WETHConfigAfter = _findReserveConfig(allConfigsAfter, WETH);
+        ReserveConfig memory wethConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'WETH');
 
         _validateInterestRateStrategy(
-            WETHConfigAfter.interestRateStrategy,
-            WETHConfigAfter.interestRateStrategy,
+            wethConfigAfter.interestRateStrategy,
+            wethConfigAfter.interestRateStrategy,
             InterestStrategyValues({
                 addressesProvider:             address(poolAddressesProvider),
                 optimalUsageRatio:             NEW_WETH_OPTIMAL_USAGE_RATIO,
