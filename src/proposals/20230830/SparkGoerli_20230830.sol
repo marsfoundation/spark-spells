@@ -43,7 +43,7 @@ contract SparkGoerli_20230830 is SparkPayloadGoerli {
     }
 
     function capsUpdates()
-        public view override returns (IEngine.CapsUpdate[] memory)
+        public pure override returns (IEngine.CapsUpdate[] memory)
     {
         IEngine.CapsUpdate[] memory capsUpdate = new IEngine.CapsUpdate[](1);
         capsUpdate[0] = IEngine.CapsUpdate({
