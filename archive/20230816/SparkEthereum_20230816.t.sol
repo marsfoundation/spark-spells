@@ -34,7 +34,7 @@ contract SparkEthereum_20230816Test is SparkEthereumTestBase {
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('mainnet').rpcUrl, 17_892_780);
+        vm.createSelectFork(getChain('mainnet').rpcUrl);
         payload = 0x60cC45DaB5F0B17789C77d5FE990f1aD80e9DD65;
 
         // This will be done in the main spell (simulate it here)
