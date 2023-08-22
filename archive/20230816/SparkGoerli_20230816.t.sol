@@ -34,7 +34,7 @@ contract SparkGoerli_20230816Test is SparkGoerliTestBase {
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('goerli').rpcUrl);
+        vm.createSelectFork(getChain('goerli').rpcUrl, 9_500_235);
         payload = 0x13176Ad78eC3d2b6E32908B019D0F772EC0b4dFd;
 
         // This will be done in the main spell (simulate it here)

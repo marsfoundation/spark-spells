@@ -21,7 +21,7 @@ contract SparkGoerli_20230830Test is SparkGoerliTestBase {
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('goerli').rpcUrl, 9_534_370);
+        vm.createSelectFork(getChain('goerli').rpcUrl);
         // For now deploying the payload in the test
         payload = deployPayload();
 
