@@ -3,8 +3,6 @@ pragma solidity ^0.8.10;
 
 import '../../SparkTestBase.sol';
 
-import { Ownable } from 'aave-v3-core/contracts/dependencies/openzeppelin/contracts/Ownable.sol';
-
 import { SparkEthereum_20230830 } from './SparkEthereum_20230830.sol';
 
 contract SparkEthereum_20230830Test is SparkEthereumTestBase {
