@@ -15,7 +15,7 @@ contract SparkGoerli_20230830Test is SparkGoerliTestBase {
     uint256 public constant NEW_WETH_VARIABLE_RATE_SLOPE_2 = 1.20e27;
     uint256 public constant OLD_WSTETH_SUPPLY_CAP          = 200_000;
     uint256 public constant NEW_WSTETH_SUPPLY_CAP          = 400_000;
-    
+
     constructor() {
         id = '20230830';
     }
@@ -31,18 +31,18 @@ contract SparkGoerli_20230830Test is SparkGoerliTestBase {
     function testSpellSpecifics() public {
 
         ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', pool);
-        
+
         /*******************************************/
         /*** wstETH Supply Cap Before Assertions ***/
         /*******************************************/
-        
+
         ReserveConfig memory wstETHConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'wstETH');
         assertEq(wstETHConfigBefore.supplyCap, OLD_WSTETH_SUPPLY_CAP);
 
         /*****************************************************/
         /*** WETH Interest Rate Strategy Before Assertions ***/
         /*****************************************************/
-        
+
         ReserveConfig memory wethConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'WETH');
         IDefaultInterestRateStrategy interestRateStrategy = IDefaultInterestRateStrategy(
             wethConfigBefore.interestRateStrategy
@@ -63,22 +63,22 @@ contract SparkGoerli_20230830Test is SparkGoerliTestBase {
                 variableRateSlope2:            OLD_WETH_VARIABLE_RATE_SLOPE_2
             })
         );
-        
+
         /***********************/
         /*** Execute Payload ***/
         /***********************/
-        
+
         GovHelpers.executePayload(vm, payload, executor);
 
         ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
-        
+
         /******************************************/
         /*** wstETH Supply Cap After Assertions ***/
         /******************************************/
-        
+
         wstETHConfigBefore.supplyCap = NEW_WSTETH_SUPPLY_CAP;
         _validateReserveConfig(wstETHConfigBefore, allConfigsAfter);
-        
+
         /****************************************************/
         /*** WETH Interest Rate Strategy After Assertions ***/
         /****************************************************/

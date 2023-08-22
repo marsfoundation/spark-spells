@@ -49,7 +49,7 @@ contract SparkGoerli_20230830 is SparkPayloadGoerli {
         capsUpdate[0] = IEngine.CapsUpdate({
             asset:     WSTETH,
             supplyCap: NEW_WSTETH_SUPPLY_CAP,
-            borrowCap: EngineFlags.KEEP_CURRENT 
+            borrowCap: EngineFlags.KEEP_CURRENT
         });
 
         return capsUpdate;

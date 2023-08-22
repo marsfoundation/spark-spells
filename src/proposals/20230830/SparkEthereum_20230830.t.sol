@@ -29,20 +29,20 @@ contract SparkEthereum_20230830Test is SparkEthereumTestBase {
     }
 
     function testSpellSpecifics() public {
-        
+
         ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', pool);
-                
+
         /*******************************************/
         /*** wstETH Supply Cap Before Assertions ***/
         /*******************************************/
-        
+
         ReserveConfig memory wstETHConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'wstETH');
         assertEq(wstETHConfigBefore.supplyCap, OLD_WSTETH_SUPPLY_CAP);
 
         /*****************************************************/
         /*** WETH Interest Rate Strategy Before Assertions ***/
         /*****************************************************/
-        
+
         ReserveConfig memory wethConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'WETH');
         IDefaultInterestRateStrategy interestRateStrategy = IDefaultInterestRateStrategy(
             wethConfigBefore.interestRateStrategy
@@ -63,19 +63,19 @@ contract SparkEthereum_20230830Test is SparkEthereumTestBase {
                 variableRateSlope2:            OLD_WETH_VARIABLE_RATE_SLOPE_2
             })
         );
-        
+
         /***********************/
         /*** Execute Payload ***/
         /***********************/
-        
+
         GovHelpers.executePayload(vm, payload, executor);
 
         ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
-                
+
         /******************************************/
         /*** wstETH Supply Cap After Assertions ***/
         /******************************************/
-        
+
         wstETHConfigBefore.supplyCap = NEW_WSTETH_SUPPLY_CAP;
         _validateReserveConfig(wstETHConfigBefore, allConfigsAfter);
 
