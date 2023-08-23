@@ -2,18 +2,24 @@
 pragma solidity >=0.7.5 <0.9.0;
 
 import 'forge-std/Test.sol';
-import {IAaveOracle, IPool, IPoolAddressesProvider, IPoolDataProvider, IDefaultInterestRateStrategy, DataTypes, IPoolConfigurator} from 'aave-address-book/AaveV3.sol';
-import {IERC20} from 'solidity-utils/src/contracts/oz-common/interfaces/IERC20.sol';
-import {SafeERC20} from 'solidity-utils/src/contracts/oz-common/SafeERC20.sol';
-// import {IProxyLike} from './interfaces/IProxyLike.sol';
-// import {IOracleLike} from './interfaces/IOracleLike.sol';
-import {ProxyHelpers} from './ProxyHelpers.sol';
-import {CommonTestBase} from './CommonTestBase.sol';
-import {ReserveConfiguration} from 'aave-v3-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
+import {
+  IAaveOracle,
+  IPool,
+  IPoolAddressesProvider,
+  IPoolDataProvider,
+  IDefaultInterestRateStrategy,
+  DataTypes,
+  IPoolConfigurator
+} from 'aave-address-book/AaveV3.sol';
 
-import { IAToken } from 'aave-v3-core/contracts/interfaces/IAToken.sol';
+import { ReserveConfiguration } from 'aave-v3-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
+import { IAToken }              from 'aave-v3-core/contracts/interfaces/IAToken.sol';
 
-// import { DataTypes } from 'aave-v3-core/contracts/protocol/libraries/types/DataTypes.sol';
+import { IERC20 }    from 'solidity-utils/src/contracts/oz-common/interfaces/IERC20.sol';
+import { SafeERC20 } from 'solidity-utils/src/contracts/oz-common/SafeERC20.sol';
+
+import { ProxyHelpers }   from './libraries/ProxyHelpers.sol';
+import { CommonTestBase } from './CommonTestBase.sol';
 
 interface IERC20Detailed is IERC20 {
   function name() external view returns (string memory);
