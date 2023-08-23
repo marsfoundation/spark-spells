@@ -2,9 +2,6 @@
 src = 'src'
 out = 'out'
 libs = ['lib']
-remappings = [
-    'aave-helpers/=lib/aave-helpers/src/'
-]
 fs_permissions = [
     { access = "read", path = "./out" },
     { access = "write", path = "./reports" }
