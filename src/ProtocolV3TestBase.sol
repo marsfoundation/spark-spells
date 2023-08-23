@@ -15,8 +15,8 @@ import {
 import { ReserveConfiguration } from 'aave-v3-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
 import { IAToken }              from 'aave-v3-core/contracts/interfaces/IAToken.sol';
 
-import { IERC20 }    from 'solidity-utils/src/contracts/oz-common/interfaces/IERC20.sol';
-import { SafeERC20 } from 'solidity-utils/src/contracts/oz-common/SafeERC20.sol';
+import { IERC20 }    from './interfaces/IERC20.sol';
+import { SafeERC20 } from './libraries/SafeERC20.sol';
 
 import { ProxyHelpers }   from './libraries/ProxyHelpers.sol';
 import { CommonTestBase } from './CommonTestBase.sol';
