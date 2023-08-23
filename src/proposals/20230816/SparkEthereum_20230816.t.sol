@@ -3,13 +3,17 @@ pragma solidity ^0.8.10;
 
 import '../../SparkTestBase.sol';
 
-import { BaseAdminUpgradeabilityProxy } from 'aave-v3-core/contracts/dependencies/openzeppelin/upgradeability/BaseAdminUpgradeabilityProxy.sol';
+// import { BaseAdminUpgradeabilityProxy } from 'aave-v3-core/contracts/dependencies/openzeppelin/upgradeability/BaseAdminUpgradeabilityProxy.sol';
 
 import { SparkEthereum_20230816 } from './SparkEthereum_20230816.sol';
 
 interface IOwnableLike {
     function transferOwnership(address newOwner) external;
 }
+
+// interface IProxyLike {
+//     function implementation() external view returns (address);
+// }
 
 contract SparkEthereum_20230816Test is SparkEthereumTestBase {
 
@@ -70,7 +74,7 @@ contract SparkEthereum_20230816Test is SparkEthereumTestBase {
         );
         assertEq(_findReserveConfigBySymbol(configsBefore, 'sDAI').isFrozen, true);
         vm.prank(address(poolAddressesProvider));
-        assertEq(BaseAdminUpgradeabilityProxy(payable(address(pool))).implementation(), POOL_IMPLEMENTATION_OLD);
+        assertEq(IProxyLike(payable(address(pool))).implementation(), POOL_IMPLEMENTATION_OLD);
 
         /***********************/
         /*** Execute Payload ***/
@@ -100,7 +104,7 @@ contract SparkEthereum_20230816Test is SparkEthereumTestBase {
         );
         assertEq(_findReserveConfigBySymbol(configsAfter, 'sDAI').isFrozen, false);
         vm.prank(address(poolAddressesProvider));
-        assertEq(BaseAdminUpgradeabilityProxy(payable(address(pool))).implementation(), POOL_IMPLEMENTATION_NEW);
+        assertEq(IProxyLike(payable(address(pool))).implementation(), POOL_IMPLEMENTATION_NEW);
     }
 
 }
