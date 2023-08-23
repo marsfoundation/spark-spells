@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import './ProtocolV3TestBase.sol';
 
-// import { GovHelpers } from 'aave-helpers/GovHelpers.sol';
+import { GovHelpers } from './libraries/GovHelpers.sol';
 
 import { IPool }                          from 'aave-v3-core/contracts/interfaces/IPool.sol';
 import { IPoolAddressesProvider }         from 'aave-v3-core/contracts/interfaces/IPoolAddressesProvider.sol';

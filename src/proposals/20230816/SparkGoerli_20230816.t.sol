@@ -74,7 +74,7 @@ contract SparkGoerli_20230816Test is SparkGoerliTestBase {
         /*** Execute Payload ***/
         /***********************/
 
-        // GovHelpers.executePayload(vm, payload, executor);
+        GovHelpers.executePayload(vm, payload, executor);
 
         /************************/
         /*** After Assertions ***/

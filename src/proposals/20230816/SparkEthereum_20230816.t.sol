@@ -3,8 +3,6 @@ pragma solidity ^0.8.10;
 
 import '../../SparkTestBase.sol';
 
-// import { BaseAdminUpgradeabilityProxy } from 'aave-v3-core/contracts/dependencies/openzeppelin/upgradeability/BaseAdminUpgradeabilityProxy.sol';
-
 import { SparkEthereum_20230816 } from './SparkEthereum_20230816.sol';
 
 interface IOwnableLike {
@@ -76,7 +74,7 @@ contract SparkEthereum_20230816Test is SparkEthereumTestBase {
         /*** Execute Payload ***/
         /***********************/
 
-        // GovHelpers.executePayload(vm, payload, executor);
+        GovHelpers.executePayload(vm, payload, executor);
 
         /************************/
         /*** After Assertions ***/
