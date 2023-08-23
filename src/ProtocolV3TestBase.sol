@@ -3,8 +3,8 @@ pragma solidity >=0.7.5 <0.9.0;
 
 import 'forge-std/Test.sol';
 import {IAaveOracle, IPool, IPoolAddressesProvider, IPoolDataProvider, IDefaultInterestRateStrategy, DataTypes, IPoolConfigurator} from 'aave-address-book/AaveV3.sol';
-import {IERC20} from 'solidity-utils/contracts/oz-common/interfaces/IERC20.sol';
-import {SafeERC20} from 'solidity-utils/contracts/oz-common/SafeERC20.sol';
+import {IERC20} from 'solidity-utils/src/contracts/oz-common/interfaces/IERC20.sol';
+import {SafeERC20} from 'solidity-utils/src/contracts/oz-common/SafeERC20.sol';
 // import {IProxyLike} from './interfaces/IProxyLike.sol';
 // import {IOracleLike} from './interfaces/IOracleLike.sol';
 import {ProxyHelpers} from './ProxyHelpers.sol';

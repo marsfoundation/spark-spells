@@ -3,8 +3,7 @@ src = 'src'
 out = 'out'
 libs = ['lib']
 remappings = [
-    'aave-helpers/=lib/aave-helpers/src/',
-    'solidity-utils/=lib/aave-helpers/lib/solidity-utils/src/'
+    'aave-helpers/=lib/aave-helpers/src/'
 ]
 fs_permissions = [
     { access = "read", path = "./out" },

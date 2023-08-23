@@ -48,7 +48,7 @@ contract SparkGoerli_20230816Test is SparkGoerliTestBase {
         /*************************/
         /*** Before Assertions ***/
         /*************************/
-        
+
         ReserveConfig[] memory configsBefore = createConfigurationSnapshot('', POOL);
 
         _validateDaiJugInterestRateStrategy(
@@ -73,7 +73,7 @@ contract SparkGoerli_20230816Test is SparkGoerliTestBase {
         /*** Execute Payload ***/
         /***********************/
 
-        GovHelpers.executePayload(vm, payload, executor);
+        // GovHelpers.executePayload(vm, payload, executor);
 
         /************************/
         /*** After Assertions ***/

@@ -3,7 +3,7 @@ pragma solidity >=0.7.5 <0.9.0;
 
 import 'forge-std/StdJson.sol';
 import 'forge-std/Test.sol';
-import {IERC20} from 'solidity-utils/contracts/oz-common/interfaces/IERC20.sol';
+import {IERC20} from './interfaces/IERC20.sol';
 import {AaveV2EthereumAssets} from 'aave-address-book/AaveV2Ethereum.sol';
 import {AaveV3OptimismAssets} from 'aave-address-book/AaveV3Optimism.sol';
 

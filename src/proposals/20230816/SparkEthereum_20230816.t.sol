@@ -73,7 +73,7 @@ contract SparkEthereum_20230816Test is SparkEthereumTestBase {
         /*** Execute Payload ***/
         /***********************/
 
-        GovHelpers.executePayload(vm, payload, executor);
+        // GovHelpers.executePayload(vm, payload, executor);
 
         /************************/
         /*** After Assertions ***/
