@@ -12,6 +12,10 @@ import { IPoolAddressesProviderRegistry } from 'aave-v3-core/contracts/interface
 import { IDaiInterestRateStrategy }    from "./interfaces/IDaiInterestRateStrategy.sol";
 import { IDaiJugInterestRateStrategy } from "./interfaces/IDaiJugInterestRateStrategy.sol";
 
+// REPO ARCHITECTURE TODOs
+// TODO: Investigate if aave-address-book can be removed as dep
+// TODO: Refactor Mock logic for executor to be more realistic, consider fork + prank.
+
 abstract contract SparkTestBase is ProtocolV3TestBase {
 
     struct DaiInterestStrategyValues {
@@ -96,7 +100,7 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
             e2eTest(pool);
         }
 
-        // GovHelpers.executePayload(vm, payload, executor);
+        GovHelpers.executePayload(vm, payload, executor);
 
         for (uint256 i = 0; i < poolProviders.length; i++) {
             loadPoolContext(poolProviders[i]);

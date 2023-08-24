@@ -121,7 +121,7 @@ abstract contract AaveV3PayloadBase {
    * e.g. 10_00 (10.00%) will return 100000000000000000000000000
    */
   function _bpsToRay(uint256 amount) internal pure returns (uint256) {
-    return (amount * 1e27 / 10_000);
+    return (amount * 1e27) / 10_000;
   }
 
   /// @dev to be defined in the child with a list of new assets to list
