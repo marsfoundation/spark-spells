@@ -1,16 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.0;
 
-import 'aave-helpers/ProtocolV3TestBase.sol';
+import './ProtocolV3TestBase.sol';
 
-import { GovHelpers } from 'aave-helpers/GovHelpers.sol';
+import { GovHelpers } from './libraries/GovHelpers.sol';
 
 import { IPool }                          from 'aave-v3-core/contracts/interfaces/IPool.sol';
 import { IPoolAddressesProvider }         from 'aave-v3-core/contracts/interfaces/IPoolAddressesProvider.sol';
 import { IPoolAddressesProviderRegistry } from 'aave-v3-core/contracts/interfaces/IPoolAddressesProviderRegistry.sol';
 
-import { IDaiInterestRateStrategy }    from "./IDaiInterestRateStrategy.sol";
-import { IDaiJugInterestRateStrategy } from "./IDaiJugInterestRateStrategy.sol";
+import { IDaiInterestRateStrategy }    from "./interfaces/IDaiInterestRateStrategy.sol";
+import { IDaiJugInterestRateStrategy } from "./interfaces/IDaiJugInterestRateStrategy.sol";
+
+// REPO ARCHITECTURE TODOs
+// TODO: Investigate if aave-address-book can be removed as dep
+// TODO: Refactor Mock logic for executor to be more realistic, consider fork + prank.
 
 abstract contract SparkTestBase is ProtocolV3TestBase {
 
@@ -38,7 +42,7 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
 
     address internal executor;
     address internal payload;
-    
+
     string internal domain;
     string internal id;
 
@@ -97,7 +101,7 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
         }
 
         GovHelpers.executePayload(vm, payload, executor);
-        
+
         for (uint256 i = 0; i < poolProviders.length; i++) {
             loadPoolContext(poolProviders[i]);
             e2eTest(pool);

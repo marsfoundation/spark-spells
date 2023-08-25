@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.0;
 
-import 'aave-helpers/v3-config-engine/AaveV3PayloadBase.sol';
+import './AaveV3PayloadBase.sol';
 
 /**
  * @dev Base smart contract for a Aave v3.0.1 (compatible with 3.0.0) listing on Goerli.
