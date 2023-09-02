@@ -3,10 +3,11 @@ pragma solidity ^0.8.10;
 
 import '../../SparkTestBase.sol';
 
-import { Ownable } from 'aave-v3-core/contracts/dependencies/openzeppelin/contracts/Ownable.sol';
-import { BaseAdminUpgradeabilityProxy } from 'aave-v3-core/contracts/dependencies/openzeppelin/upgradeability/BaseAdminUpgradeabilityProxy.sol';
-
 import { SparkGoerli_20230816 } from './SparkGoerli_20230816.sol';
+
+interface IOwnableLike {
+    function transferOwnership(address newOwner) external;
+}
 
 contract SparkGoerli_20230816Test is SparkGoerliTestBase {
 
@@ -40,7 +41,7 @@ contract SparkGoerli_20230816Test is SparkGoerliTestBase {
         // This will be done in the main spell (simulate it here)
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
         vm.prank(PAUSE_PROXY);
-        Ownable(address(poolAddressesProvider)).transferOwnership(address(executor));
+        IOwnableLike(address(poolAddressesProvider)).transferOwnership(address(executor));
     }
 
     function testSpellSpecifics() public {
@@ -48,7 +49,7 @@ contract SparkGoerli_20230816Test is SparkGoerliTestBase {
         /*************************/
         /*** Before Assertions ***/
         /*************************/
-        
+
         ReserveConfig[] memory configsBefore = createConfigurationSnapshot('', POOL);
 
         _validateDaiJugInterestRateStrategy(
@@ -67,7 +68,7 @@ contract SparkGoerli_20230816Test is SparkGoerliTestBase {
         );
         assertEq(_findReserveConfigBySymbol(configsBefore, 'sDAI').isFrozen, true);
         vm.prank(address(poolAddressesProvider));
-        assertEq(BaseAdminUpgradeabilityProxy(payable(address(pool))).implementation(), POOL_IMPLEMENTATION_OLD);
+        assertEq(IProxyLike(payable(address(pool))).implementation(), POOL_IMPLEMENTATION_OLD);
 
         /***********************/
         /*** Execute Payload ***/
@@ -97,7 +98,7 @@ contract SparkGoerli_20230816Test is SparkGoerliTestBase {
         );
         assertEq(_findReserveConfigBySymbol(configsAfter, 'sDAI').isFrozen, false);
         vm.prank(address(poolAddressesProvider));
-        assertEq(BaseAdminUpgradeabilityProxy(payable(address(pool))).implementation(), POOL_IMPLEMENTATION_NEW);
+        assertEq(IProxyLike(payable(address(pool))).implementation(), POOL_IMPLEMENTATION_NEW);
     }
 
 }
