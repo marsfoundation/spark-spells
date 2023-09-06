@@ -12,6 +12,7 @@ import { SparkPayloadGoerli } from '../../SparkPayloadGoerli.sol';
  * Flash Loan Vote: https://vote.makerdao.com/polling/QmbCDKof
  */
 contract SparkGoerli_20230913 is SparkPayloadGoerli {
+
     uint128 public constant NEW_FLASHLOAN_PREMIUM_TOTAL = 0;
 
     function _postExecute() internal override {
