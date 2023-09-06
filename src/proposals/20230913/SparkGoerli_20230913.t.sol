@@ -7,7 +7,6 @@ import { SparkGoerli_20230913 } from './SparkGoerli_20230913.sol';
 
 contract SparkGoerli_20230913Test is SparkGoerliTestBase {
 
-
     uint128 public constant OLD_FLASHLOAN_PREMIUM_TOTAL = 9;
     uint128 public constant NEW_FLASHLOAN_PREMIUM_TOTAL = 0;
 
