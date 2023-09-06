@@ -9,6 +9,11 @@ contract SparkEthereum_20230913Test is SparkEthereumTestBase {
 
     uint128 public constant OLD_FLASHLOAN_PREMIUM_TOTAL = 9;
     uint128 public constant NEW_FLASHLOAN_PREMIUM_TOTAL = 0;
+    uint256 public constant OLD_BORROW_SPREAD           = 0;
+    uint256 public constant NEW_BORROW_SPREAD           = 0.005e27;
+
+    address public constant OLD_DAI_INTEREST_RATE_STRATEGY = 0x9f9782880dd952F067Cad97B8503b0A3ac0fb21d;
+    address public constant NEW_DAI_INTEREST_RATE_STRATEGY = 0xE9EcFDF222b0F4643C96502F985B575e81f32cCb;
 
     constructor() {
         id = '20230913';
@@ -23,11 +28,20 @@ contract SparkEthereum_20230913Test is SparkEthereumTestBase {
 
     function testSpellSpecifics() public {
 
+        ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', pool);
+
         /*************************************************/
         /*** FLASHLOAN_PREMIUM_TOTAL Before Assertions ***/
         /*************************************************/
 
         assertEq(pool.FLASHLOAN_PREMIUM_TOTAL(), OLD_FLASHLOAN_PREMIUM_TOTAL);
+
+        /****************************************************/
+        /*** Dai Interest Rate Strategy Before Assertions ***/
+        /****************************************************/
+
+        ReserveConfig memory daiConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'DAI');
+        assertEq(daiConfigBefore.interestRateStrategy, OLD_DAI_INTEREST_RATE_STRATEGY);
 
         /***********************/
         /*** Execute Payload ***/
@@ -35,10 +49,34 @@ contract SparkEthereum_20230913Test is SparkEthereumTestBase {
 
         GovHelpers.executePayload(vm, payload, executor);
 
+        ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
+
         /************************************************/
         /*** FLASHLOAN_PREMIUM_TOTAL After Assertions ***/
         /************************************************/
 
         assertEq(pool.FLASHLOAN_PREMIUM_TOTAL(), NEW_FLASHLOAN_PREMIUM_TOTAL);
+
+        /***************************************************/
+        /*** Dai Interest Rate Strategy After Assertions ***/
+        /***************************************************/
+
+        ReserveConfig memory daiConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'DAI');
+        assertEq(daiConfigAfter.interestRateStrategy, NEW_DAI_INTEREST_RATE_STRATEGY);
+
+        _validateDaiInterestRateStrategy(
+            daiConfigAfter.interestRateStrategy,
+            NEW_DAI_INTEREST_RATE_STRATEGY,
+            DaiInterestStrategyValues({
+                vat:                IDaiInterestRateStrategy(OLD_DAI_INTEREST_RATE_STRATEGY).vat(),
+                pot:                IDaiInterestRateStrategy(OLD_DAI_INTEREST_RATE_STRATEGY).pot(),
+                ilk:                IDaiInterestRateStrategy(OLD_DAI_INTEREST_RATE_STRATEGY).ilk(),
+                baseRateConversion: IDaiInterestRateStrategy(OLD_DAI_INTEREST_RATE_STRATEGY).baseRateConversion(),
+                borrowSpread:       NEW_BORROW_SPREAD,
+                supplySpread:       IDaiInterestRateStrategy(OLD_DAI_INTEREST_RATE_STRATEGY).supplySpread(),
+                maxRate:            IDaiInterestRateStrategy(OLD_DAI_INTEREST_RATE_STRATEGY).maxRate(),
+                performanceBonus:   IDaiInterestRateStrategy(OLD_DAI_INTEREST_RATE_STRATEGY).performanceBonus()
+            })
+        );
     }
 }

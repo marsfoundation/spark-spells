@@ -13,9 +13,17 @@ import { SparkPayloadEthereum } from '../../SparkPayloadEthereum.sol';
  */
 contract SparkEthereum_20230913 is SparkPayloadEthereum {
 
+    address public constant DAI                            = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
+    address public constant NEW_DAI_INTEREST_RATE_STRATEGY = 0xE9EcFDF222b0F4643C96502F985B575e81f32cCb;
+
     uint128 public constant NEW_FLASHLOAN_PREMIUM_TOTAL = 0;
 
     function _postExecute() internal override {
+        LISTING_ENGINE.POOL_CONFIGURATOR().setReserveInterestRateStrategyAddress(
+            DAI,
+            NEW_DAI_INTEREST_RATE_STRATEGY
+        );
+
         LISTING_ENGINE.POOL_CONFIGURATOR().updateFlashloanPremiumTotal(
             NEW_FLASHLOAN_PREMIUM_TOTAL
         );
