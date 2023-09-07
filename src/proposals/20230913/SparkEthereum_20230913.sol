@@ -14,7 +14,7 @@ import { SparkPayloadEthereum } from '../../SparkPayloadEthereum.sol';
 contract SparkEthereum_20230913 is SparkPayloadEthereum {
 
     address public constant DAI                            = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
-    address public constant NEW_DAI_INTEREST_RATE_STRATEGY = 0xE9EcFDF222b0F4643C96502F985B575e81f32cCb;
+    address public constant NEW_DAI_INTEREST_RATE_STRATEGY = 0x41709f51E59ddbEbF37cE95257b2E4f2884a45F8;
 
     uint128 public constant NEW_FLASHLOAN_PREMIUM_TOTAL = 0;
 

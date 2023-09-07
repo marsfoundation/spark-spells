@@ -13,7 +13,7 @@ contract SparkGoerli_20230913Test is SparkGoerliTestBase {
     uint256 public constant NEW_BORROW_SPREAD           = 0.005e27;
 
     address public constant OLD_DAI_INTEREST_RATE_STRATEGY = 0x70659BcA22A2a8BB324A526a8BB919185d3ecEBC;
-    address public constant NEW_DAI_INTEREST_RATE_STRATEGY = 0xE9EcFDF222b0F4643C96502F985B575e81f32cCb;
+    address public constant NEW_DAI_INTEREST_RATE_STRATEGY = 0x41709f51E59ddbEbF37cE95257b2E4f2884a45F8;
 
     constructor() {
         id = '20230913';

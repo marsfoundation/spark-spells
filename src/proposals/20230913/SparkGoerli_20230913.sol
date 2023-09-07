@@ -14,7 +14,7 @@ import { SparkPayloadGoerli } from '../../SparkPayloadGoerli.sol';
 contract SparkGoerli_20230913 is SparkPayloadGoerli {
 
     address public constant DAI                            = 0x11fE4B6AE13d2a6055C8D9cF65c55bac32B5d844;
-    address public constant NEW_DAI_INTEREST_RATE_STRATEGY = 0xE9EcFDF222b0F4643C96502F985B575e81f32cCb;
+    address public constant NEW_DAI_INTEREST_RATE_STRATEGY = 0x41709f51E59ddbEbF37cE95257b2E4f2884a45F8;
 
     uint128 public constant NEW_FLASHLOAN_PREMIUM_TOTAL = 0;
 
