@@ -7,7 +7,7 @@ import { SparkPayloadEthereum } from '../../SparkPayloadEthereum.sol';
  * @title  September 13, 2023 Spark Ethereum Proposal - Set DAI borrow spread to 0.5%, set flash loan fee to 0
  * @author Phoenix Labs
  * @dev    This proposal updates DAI Interest Rate Strategy borrowSpread parameter and updates FLASHLOAN_PREMIUM_TOTAL pool parameter
- * Forum:           https://forum.makerdao.com/t/phoenix-labs-proposed-changes-for-spark-for-next-upcoming-spell/21685
+ * Forum:           https://forum.makerdao.com/t/upcoming-spell-proposed-changes/21801
  * DAI Vote:        https://vote.makerdao.com/polling/QmQrkxud
  * Flash Loan Vote: https://vote.makerdao.com/polling/QmbCDKof
  */
