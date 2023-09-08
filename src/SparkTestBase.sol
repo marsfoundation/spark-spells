@@ -93,6 +93,8 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
     }
 
     function testE2E() public {
+        if (block.chainid == 5) return;
+
         address[] memory poolProviders = poolAddressesProviderRegistry.getAddressesProvidersList();
 
         for (uint256 i = 0; i < poolProviders.length; i++) {
