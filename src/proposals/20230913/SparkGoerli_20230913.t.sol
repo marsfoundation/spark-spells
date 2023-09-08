@@ -20,8 +20,8 @@ contract SparkGoerli_20230913Test is SparkGoerliTestBase {
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('goerli').rpcUrl);
-        payload = deployPayload();
+        vm.createSelectFork(getChain('goerli').rpcUrl, 9_657_520);
+        payload = 0x95bcf659653d2E0b44851232d61F6F9d2e933fB1;
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
     }
