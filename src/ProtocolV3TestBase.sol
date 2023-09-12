@@ -13,10 +13,10 @@ import {
 } from 'aave-address-book/AaveV3.sol';
 
 import { ReserveConfiguration } from 'aave-v3-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
-import { WadRayMath } from 'aave-v3-core/contracts/protocol/libraries/math/WadRayMath.sol';
-import { IAToken } from 'aave-v3-core/contracts/interfaces/IAToken.sol';
-import { IStableDebtToken } from 'aave-v3-core/contracts/interfaces/IStableDebtToken.sol';
-import { IVariableDebtToken } from 'aave-v3-core/contracts/interfaces/IVariableDebtToken.sol';
+import { WadRayMath }           from 'aave-v3-core/contracts/protocol/libraries/math/WadRayMath.sol';
+import { IAToken }              from 'aave-v3-core/contracts/interfaces/IAToken.sol';
+import { IStableDebtToken }     from 'aave-v3-core/contracts/interfaces/IStableDebtToken.sol';
+import { IVariableDebtToken }   from 'aave-v3-core/contracts/interfaces/IVariableDebtToken.sol';
 
 import { IERC20 }    from './interfaces/IERC20.sol';
 import { SafeERC20 } from './libraries/SafeERC20.sol';
