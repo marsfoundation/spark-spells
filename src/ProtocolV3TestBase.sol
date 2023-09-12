@@ -13,7 +13,10 @@ import {
 } from 'aave-address-book/AaveV3.sol';
 
 import { ReserveConfiguration } from 'aave-v3-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
-import { IAToken }              from 'aave-v3-core/contracts/interfaces/IAToken.sol';
+import { WadRayMath } from 'aave-v3-core/contracts/protocol/libraries/math/WadRayMath.sol';
+import { IAToken } from 'aave-v3-core/contracts/interfaces/IAToken.sol';
+import { IStableDebtToken } from 'aave-v3-core/contracts/interfaces/IStableDebtToken.sol';
+import { IVariableDebtToken } from 'aave-v3-core/contracts/interfaces/IVariableDebtToken.sol';
 
 import { IERC20 }    from './interfaces/IERC20.sol';
 import { SafeERC20 } from './libraries/SafeERC20.sol';
@@ -112,6 +115,7 @@ struct ReserveTokens {
 contract ProtocolV3TestBase is CommonTestBase {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   using SafeERC20 for IERC20;
+  using WadRayMath for uint256;
 
   /**
    * @dev Generates a markdown compatible snapshot of the whole pool configuration into `/reports`.
@@ -219,6 +223,13 @@ contract ProtocolV3TestBase is CommonTestBase {
       return;
     }
 
+    if (
+      _isAboveBorrowCap(pool, borrowConfig, maxBorrowAmount)
+    ) {
+      console.log('Skip borrow: %s, borrow cap fully utilized', borrowConfig.symbol);
+      return;
+    }
+
     if (collateralConfig.debtCeiling > 0 && !borrowConfig.isBorrowableInIsolation) {
       console.log('Skip: %s-%s combo, asset not supported for isolated borrow', collateralConfig.symbol, borrowConfig.symbol);
       return;
@@ -305,6 +316,26 @@ contract ProtocolV3TestBase is CommonTestBase {
       / _getTokenPrice(pool, borrowConfig)
       / (10 ** collateralConfig.decimals)
       / 100_00;
+  }
+
+  function _isAboveBorrowCap(
+    IPool pool,
+    ReserveConfig memory borrowConfig,
+    uint256 borrowAmount
+  ) internal view returns (bool) {
+    if(keccak256(abi.encodePacked(borrowConfig.symbol)) == keccak256(abi.encodePacked('DAI')))
+      return false;
+
+    DataTypes.ReserveData memory reserveData = pool.getReserveData(borrowConfig.underlying);
+
+    uint256 scaledBorrowCap = borrowConfig.borrowCap * 10 ** borrowConfig.decimals;
+
+    uint256 currScaledVariableDebt = IVariableDebtToken(borrowConfig.variableDebtToken).scaledTotalSupply();
+    (,uint256 currTotalStableDebt,,) = IStableDebtToken(borrowConfig.stableDebtToken).getSupplyData();
+
+    uint256 totalDebt = currTotalStableDebt + currScaledVariableDebt.rayMul(reserveData.variableBorrowIndex);
+
+    return borrowAmount > (scaledBorrowCap - totalDebt);
   }
 
   function _e2eTestBorrowAboveLTV(
