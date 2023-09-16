@@ -21,7 +21,18 @@ contract SparkGnosis_20230927 is SparkPayloadGnosis {
     address public constant GNO               = 0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb;
     address public constant GNO_PRICE_FEED    = 0x22441d81416430A54336aB28765abd31a792Ad37;
 
-    function newListings() public view virtual returns (IEngine.Listing[] memory) {
+    function _preExecute() internal virtual {
+        LISTING_ENGINE.POOL_CONFIGURATOR().setEModeCategory(
+            1,
+            85_00,
+            90_00,
+            103_00,
+            address(0),
+            "ETH"
+        );
+    }
+
+    function newListings() public view override returns (IEngine.Listing[] memory) {
         IEngine.Listing[] memory listings = new IEngine.Listing[](4);
 
         // wxDAI
@@ -126,10 +137,10 @@ contract SparkGnosis_20230927 is SparkPayloadGnosis {
             assetSymbol:        'GNO',
             priceFeed:          GNO_PRICE_FEED,
             rateStrategyParams: Rates.RateStrategyParams({
-                optimalUsageRatio:             _bpsToRay(45_00),
-                baseVariableBorrowRate:        _bpsToRay(1_00),
-                variableRateSlope1:            _bpsToRay(3_00),
-                variableRateSlope2:            _bpsToRay(100_00),
+                optimalUsageRatio:             0,
+                baseVariableBorrowRate:        0,
+                variableRateSlope1:            0,
+                variableRateSlope2:            0,
                 stableRateSlope1:              0,
                 stableRateSlope2:              0,
                 baseStableRateOffset:          0,
