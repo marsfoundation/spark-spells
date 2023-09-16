@@ -12,13 +12,13 @@ import { SparkPayloadGnosis, IEngine } from '../../SparkPayloadGnosis.sol';
  */
 contract SparkGnosis_20230927 is SparkPayloadGnosis {
 
-    address public constant WXDAI             = ;
+    address public constant WXDAI             = 0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d;
     address public constant WXDAI_PRICE_FEED  = 0x678df3415fc31947dA4324eC63212874be5a82f8;
-    address public constant WETH              = ;
+    address public constant WETH              = 0x6A023CCd1ff6F2045C3309768eAd9E68F978f6e1;
     address public constant WETH_PRICE_FEED   = 0xa767f745331D267c7751297D982b050c93985627;
-    address public constant WSTETH            = ;
+    address public constant WSTETH            = 0x6C76971f98945AE98dD7d4DFcA8711ebea946eA6;
     address public constant WSTETH_PRICE_FEED = ;
-    address public constant GNO               = ;
+    address public constant GNO               = 0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb;
     address public constant GNO_PRICE_FEED    = 0x22441d81416430A54336aB28765abd31a792Ad37;
 
     function newListings() public view virtual returns (IEngine.Listing[] memory) {
@@ -26,14 +26,46 @@ contract SparkGnosis_20230927 is SparkPayloadGnosis {
 
         // wxDAI
         listings[0] = IEngine.Listing({
-            asset:              RETH,
-            assetSymbol:        'rETH',
-            priceFeed:          RETH_PRICE_FEED,
+            asset:              WXDAI,
+            assetSymbol:        'WXDAI',
+            priceFeed:          WXDAI_PRICE_FEED,
             rateStrategyParams: Rates.RateStrategyParams({
-                optimalUsageRatio:             _bpsToRay(45_00),
-                baseVariableBorrowRate:        0,
-                variableRateSlope1:            _bpsToRay(7_00),
-                variableRateSlope2:            _bpsToRay(300_00),
+                optimalUsageRatio:             _bpsToRay(90_00),
+                baseVariableBorrowRate:        48790164207174267760128000,      // DSR expressed as a yearly APR [RAY]
+                variableRateSlope1:            0,
+                variableRateSlope2:            _bpsToRay(50_00),
+                stableRateSlope1:              0,
+                stableRateSlope2:              0,
+                baseStableRateOffset:          0,
+                stableRateExcessOffset:        0,
+                optimalStableToTotalDebtRatio: 0
+            }),
+            enabledToBorrow:       EngineFlags.ENABLED,
+            stableRateModeEnabled: EngineFlags.DISABLED,
+            borrowableInIsolation: EngineFlags.ENABLED,
+            withSiloedBorrowing:   EngineFlags.DISABLED,
+            flashloanable:         EngineFlags.ENABLED,
+            ltv:                   70_00,
+            liqThreshold:          75_00,
+            liqBonus:              5_00,
+            reserveFactor:         0,
+            supplyCap:             10_000_000,
+            borrowCap:             8_000_000,
+            debtCeiling:           0,
+            liqProtocolFee:        10_00,
+            eModeCategory:         0
+        });
+
+        // WETH
+        listings[1] = IEngine.Listing({
+            asset:              WETH,
+            assetSymbol:        'WETH',
+            priceFeed:          WETH_PRICE_FEED,
+            rateStrategyParams: Rates.RateStrategyParams({
+                optimalUsageRatio:             _bpsToRay(90_00),
+                baseVariableBorrowRate:        _bpsToRay(1_00),
+                variableRateSlope1:            _bpsToRay(2_80),
+                variableRateSlope2:            _bpsToRay(120_00),
                 stableRateSlope1:              0,
                 stableRateSlope2:              0,
                 baseStableRateOffset:          0,
@@ -45,15 +77,79 @@ contract SparkGnosis_20230927 is SparkPayloadGnosis {
             borrowableInIsolation: EngineFlags.DISABLED,
             withSiloedBorrowing:   EngineFlags.DISABLED,
             flashloanable:         EngineFlags.ENABLED,
-            ltv:                   68_50,
-            liqThreshold:          79_50,
-            liqBonus:              7_00,
-            reserveFactor:         15_00,
-            supplyCap:             20_000,
-            borrowCap:             2_400,
+            ltv:                   70_00,
+            liqThreshold:          75_00,
+            liqBonus:              5_00,
+            reserveFactor:         10_00,
+            supplyCap:             5_000,
+            borrowCap:             3_000,
             debtCeiling:           0,
             liqProtocolFee:        10_00,
             eModeCategory:         1
+        });
+
+        // wstETH
+        listings[2] = IEngine.Listing({
+            asset:              WSTETH,
+            assetSymbol:        'wstETH',
+            priceFeed:          WSTETH_PRICE_FEED,
+            rateStrategyParams: Rates.RateStrategyParams({
+                optimalUsageRatio:             _bpsToRay(45_00),
+                baseVariableBorrowRate:        _bpsToRay(1_00),
+                variableRateSlope1:            _bpsToRay(3_00),
+                variableRateSlope2:            _bpsToRay(100_00),
+                stableRateSlope1:              0,
+                stableRateSlope2:              0,
+                baseStableRateOffset:          0,
+                stableRateExcessOffset:        0,
+                optimalStableToTotalDebtRatio: 0
+            }),
+            enabledToBorrow:       EngineFlags.ENABLED,
+            stableRateModeEnabled: EngineFlags.DISABLED,
+            borrowableInIsolation: EngineFlags.DISABLED,
+            withSiloedBorrowing:   EngineFlags.DISABLED,
+            flashloanable:         EngineFlags.ENABLED,
+            ltv:                   65_00,
+            liqThreshold:          72_50,
+            liqBonus:              8_00,
+            reserveFactor:         30_00,
+            supplyCap:             5_000,
+            borrowCap:             100,
+            debtCeiling:           0,
+            liqProtocolFee:        10_00,
+            eModeCategory:         1
+        });
+
+        // GNO
+        listings[3] = IEngine.Listing({
+            asset:              GNO,
+            assetSymbol:        'GNO',
+            priceFeed:          GNO_PRICE_FEED,
+            rateStrategyParams: Rates.RateStrategyParams({
+                optimalUsageRatio:             _bpsToRay(45_00),
+                baseVariableBorrowRate:        _bpsToRay(1_00),
+                variableRateSlope1:            _bpsToRay(3_00),
+                variableRateSlope2:            _bpsToRay(100_00),
+                stableRateSlope1:              0,
+                stableRateSlope2:              0,
+                baseStableRateOffset:          0,
+                stableRateExcessOffset:        0,
+                optimalStableToTotalDebtRatio: 0
+            }),
+            enabledToBorrow:       EngineFlags.DISABLED,
+            stableRateModeEnabled: EngineFlags.DISABLED,
+            borrowableInIsolation: EngineFlags.DISABLED,
+            withSiloedBorrowing:   EngineFlags.DISABLED,
+            flashloanable:         EngineFlags.ENABLED,
+            ltv:                   40_00,
+            liqThreshold:          50_00,
+            liqBonus:              12_00,
+            reserveFactor:         0,
+            supplyCap:             200_000,
+            borrowCap:             0,
+            debtCeiling:           1_000_000,
+            liqProtocolFee:        10_00,
+            eModeCategory:         0
         });
 
         return listings;
