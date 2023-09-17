@@ -46,6 +46,9 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
     string internal domain;
     string internal id;
 
+    bool internal exportDiff = true;
+    bool internal disableE2E = false;
+
     IPoolAddressesProviderRegistry internal poolAddressesProviderRegistry;
     IPoolAddressesProvider         internal poolAddressesProvider;
     IPool                          internal pool;
@@ -82,8 +85,7 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
                 pool
             );
 
-            // Goerli is broken so just disable for now
-            if (block.chainid != 5) {
+            if (exportDiff) {
                 diffReports(
                     string(abi.encodePacked(prefix, '-', vm.toString(address(pool)), '-pre')),
                     string(abi.encodePacked(prefix, '-', vm.toString(address(pool)), '-post'))
@@ -93,8 +95,7 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
     }
 
     function testE2E() public {
-        // Temporarily disable e2e tests on Goerli
-        if (block.chainid == 5) return;
+        if (disableE2E) return;
 
         address[] memory poolProviders = poolAddressesProviderRegistry.getAddressesProvidersList();
 
@@ -295,6 +296,8 @@ abstract contract SparkGoerliTestBase is SparkTestBase {
         executor = 0x4e847915D8a9f2Ab0cDf2FC2FD0A30428F25665d;
         domain = 'Goerli';
         poolAddressesProviderRegistry = IPoolAddressesProviderRegistry(0x1ad570fDEA255a3c1d8Cf56ec76ebA2b7bFDFfea);
+        exportDiff = false; // TODO fix this in the aave-cli
+        disableE2E = true;  // TODO enable once this is fixed
     }
 
 }
@@ -305,6 +308,7 @@ abstract contract SparkGnosisTestBase is SparkTestBase {
         executor = 0xc4218C1127cB24a0D6c1e7D25dc34e10f2625f5A;
         domain = 'Gnosis';
         poolAddressesProviderRegistry = IPoolAddressesProviderRegistry(0x49d24798d3b84965F0d1fc8684EF6565115e70c1);
+        exportDiff = false; // TODO fix this in the aave-cli
     }
 
 }

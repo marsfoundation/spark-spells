@@ -139,7 +139,7 @@ contract SparkGnosis_20230927 is SparkPayloadGnosis {
             assetSymbol:        'GNO',
             priceFeed:          GNO_PRICE_FEED,
             rateStrategyParams: Rates.RateStrategyParams({
-                optimalUsageRatio:             0,
+                optimalUsageRatio:             _bpsToRay(80_00),   // Needs to be > 0, but doesn't matter the value beyond that
                 baseVariableBorrowRate:        0,
                 variableRateSlope1:            0,
                 variableRateSlope2:            0,
