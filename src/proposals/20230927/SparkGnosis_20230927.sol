@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.10;
 
-import { SparkPayloadGnosis, IEngine } from '../../SparkPayloadGnosis.sol';
+import { SparkPayloadGnosis, IEngine, Rates, EngineFlags } from '../../SparkPayloadGnosis.sol';
 
 /**
  * @title  September 27, 2023 Spark Gnosis Proposal - Activate Gnosis Chain instance
@@ -17,11 +17,11 @@ contract SparkGnosis_20230927 is SparkPayloadGnosis {
     address public constant WETH              = 0x6A023CCd1ff6F2045C3309768eAd9E68F978f6e1;
     address public constant WETH_PRICE_FEED   = 0xa767f745331D267c7751297D982b050c93985627;
     address public constant WSTETH            = 0x6C76971f98945AE98dD7d4DFcA8711ebea946eA6;
-    address public constant WSTETH_PRICE_FEED = ;
+    address public constant WSTETH_PRICE_FEED = 0xae27e63307963850c4d30BFba78FC1116d7b48C3;
     address public constant GNO               = 0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb;
     address public constant GNO_PRICE_FEED    = 0x22441d81416430A54336aB28765abd31a792Ad37;
 
-    function _preExecute() internal virtual {
+    function _preExecute() internal override {
         LISTING_ENGINE.POOL_CONFIGURATOR().setEModeCategory(
             1,
             85_00,
@@ -32,7 +32,7 @@ contract SparkGnosis_20230927 is SparkPayloadGnosis {
         );
     }
 
-    function newListings() public view override returns (IEngine.Listing[] memory) {
+    function newListings() public pure override returns (IEngine.Listing[] memory) {
         IEngine.Listing[] memory listings = new IEngine.Listing[](4);
 
         // wxDAI
