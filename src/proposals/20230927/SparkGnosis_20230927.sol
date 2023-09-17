@@ -59,7 +59,9 @@ contract SparkGnosis_20230927 is SparkPayloadGnosis {
             ltv:                   70_00,
             liqThreshold:          75_00,
             liqBonus:              5_00,
-            reserveFactor:         0,
+            // NOTE reserve factor needs to be set > 0 for the config engine (soft constraint), set it to 1bps here and set it to 0 manually in _postExecute
+            // https://github.com/bgd-labs/aave-helpers/blob/master/src/v3-config-engine/libraries/BorrowEngine.sol#L60
+            reserveFactor:         1,
             supplyCap:             10_000_000,
             borrowCap:             8_000_000,
             debtCeiling:           0,
@@ -155,7 +157,9 @@ contract SparkGnosis_20230927 is SparkPayloadGnosis {
             ltv:                   40_00,
             liqThreshold:          50_00,
             liqBonus:              12_00,
-            reserveFactor:         0,
+            // NOTE reserve factor needs to be set > 0 for the config engine (soft constraint), set it to 1bps here and set it to 0 manually in _postExecute
+            // https://github.com/bgd-labs/aave-helpers/blob/master/src/v3-config-engine/libraries/BorrowEngine.sol#L60
+            reserveFactor:         1,
             supplyCap:             200_000,
             borrowCap:             0,
             debtCeiling:           1_000_000,
@@ -164,6 +168,11 @@ contract SparkGnosis_20230927 is SparkPayloadGnosis {
         });
 
         return listings;
+    }
+
+    function _postExecute() internal override {
+        LISTING_ENGINE.POOL_CONFIGURATOR().setReserveFactor(WXDAI, 0);
+        LISTING_ENGINE.POOL_CONFIGURATOR().setReserveFactor(GNO, 0);
     }
 
 }
