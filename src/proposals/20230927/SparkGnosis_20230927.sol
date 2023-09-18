@@ -8,7 +8,7 @@ import { SparkPayloadGnosis, IEngine, Rates, EngineFlags } from '../../SparkPayl
  * @author Phoenix Labs
  * @dev    This proposal activates the Gnosis Chain instance of Spark Lend
  * Forum:  https://forum.makerdao.com/t/proposal-for-activation-of-gnosis-chain-instance/22098
- * Vote:   TODO
+ * Vote:   https://vote.makerdao.com/polling/QmVcxd7J#poll-detail
  */
 contract SparkGnosis_20230927 is SparkPayloadGnosis {
 
