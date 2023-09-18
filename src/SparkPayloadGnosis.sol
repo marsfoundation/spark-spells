@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import './AaveV3PayloadBase.sol';
 
 /**
- * @dev Base smart contract for a Aave v3.0.1 (compatible with 3.0.0) listing on Ethereum.
+ * @dev Base smart contract for a Aave v3.0.1 (compatible with 3.0.0) listing on Gnosis Chain.
  * @author Phoenix Labs
  */
 abstract contract SparkPayloadGnosis is

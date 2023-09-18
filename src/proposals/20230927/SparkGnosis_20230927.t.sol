@@ -12,9 +12,8 @@ contract SparkGnosis_20230927Test is SparkGnosisTestBase {
     }
 
     function setUp() public {
-        //vm.createSelectFork(getChain('gnosis_chain').rpcUrl);
-        vm.createSelectFork("http://127.0.0.1:8545");
-        payload = deployPayload();
+        vm.createSelectFork(getChain('gnosis_chain').rpcUrl, 30028657);
+        payload = 0x1472B7d120ab62D60f60e1D804B3858361c3C475;
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
     }

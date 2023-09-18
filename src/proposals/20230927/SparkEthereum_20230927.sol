@@ -19,7 +19,7 @@ contract SparkEthereum_20230927 is SparkPayloadEthereum {
     using Address for address;
 
     address public constant GNOSIS_FORWARDER = 0x44f993EAe9a420Df9ffa5263c55f6C8eF46c0340;
-    address public constant GNOSIS_PAYLOAD   = address(0);  // TODO replace with deployed payload address
+    address public constant GNOSIS_PAYLOAD   = 0x1472B7d120ab62D60f60e1D804B3858361c3C475;
 
     function _postExecute() internal override {
         GNOSIS_FORWARDER.functionDelegateCall(
