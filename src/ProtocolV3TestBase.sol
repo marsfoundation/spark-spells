@@ -323,9 +323,6 @@ contract ProtocolV3TestBase is CommonTestBase {
     ReserveConfig memory borrowConfig,
     uint256 borrowAmount
   ) internal view returns (bool) {
-    if(keccak256(abi.encodePacked(borrowConfig.symbol)) == keccak256(abi.encodePacked('DAI')))
-      return false;
-
     DataTypes.ReserveData memory reserveData = pool.getReserveData(borrowConfig.underlying);
 
     uint256 scaledBorrowCap = borrowConfig.borrowCap * 10 ** borrowConfig.decimals;
