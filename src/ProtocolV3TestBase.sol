@@ -335,7 +335,7 @@ contract ProtocolV3TestBase is CommonTestBase {
 
     uint256 totalDebt = currTotalStableDebt + currScaledVariableDebt.rayMul(reserveData.variableBorrowIndex);
 
-    return borrowAmount > (scaledBorrowCap - totalDebt);
+    return (borrowAmount + totalDebt) > scaledBorrowCap;
   }
 
   function _e2eTestBorrowAboveLTV(
