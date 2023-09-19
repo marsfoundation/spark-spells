@@ -1,7 +1,6 @@
 # Spark Spells
 
 Install: `npm install .`
-
 To run a spell against a new tenderly fork, run the following command (using mainnet as an example):
 
 ```bash
