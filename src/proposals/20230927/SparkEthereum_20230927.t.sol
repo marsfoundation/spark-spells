@@ -104,7 +104,7 @@ contract SparkEthereum_20230927Test is SparkEthereumTestBase {
         }
 
         // Switch to Gnosis Chain fork
-        vm.createSelectFork(getChain('gnosis_chain').rpcUrl, 30028657);
+        vm.createSelectFork("https://rpc.vnet.tenderly.co/devnet/gnosis/5311b52e-c5d7-41a4-9cdb-3564f5861ca3", 30028657);
 
         // Simulate Gnosis Chain authorized validators signing the message
         IValidatorContract validatorContract = IValidatorContract(IAMB(L2_AMB_CROSS_DOMAIN_MESSENGER_ADDRESS).validatorContract());
