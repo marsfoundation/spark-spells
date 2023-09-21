@@ -18,3 +18,5 @@ reports/*
 !reports/.empty
 
 node_modules/
+
+.DS_Store

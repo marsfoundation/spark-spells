@@ -14,10 +14,12 @@ All non-payload contracts will be constant across deployments, but this can run 
 
 To run a spell against a new anvil fork, run the following command 
 ```bash
-sh scripts/fork-and-cast-spell.sh <spellPathOrAddress> <spellExecutor> <forkUrl> <forkBlockNumber>
+sh scripts/fork-and-cast-spell.sh <spellPathOrAddress> <spellExecutor> <forkUrl> <forkBlockNumber> <port>
 ```
 
-Where ```<forkBlockNumber>``` is optional - with latest as default
+Where 
+```<forkBlockNumber>``` is optional with latest as default
+```<port>``` is optional with 8545 as default
 
 Example for SparkGnosis_20230927 proposal
 
