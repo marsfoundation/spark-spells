@@ -33,3 +33,4 @@ cd "$(dirname "$0")"
 sh ./cast-spell.sh $anvil_priv_key $spell_addr $spell_executor $rpc_url
 
 wait
+

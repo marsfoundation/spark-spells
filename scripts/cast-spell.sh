@@ -10,3 +10,4 @@ echo "Replacing code of spell (${spell_addr:0:7}) with executor (${spell_executo
 code=$(cast rpc eth_getCode $spell_addr latest --rpc-url $rpc_url)
 cast rpc anvil_setCode $spell_executor $code --rpc-url $rpc_url
 cast send --private-key $anvil_priv_key $spell_executor --rpc-url $rpc_url "execute()"
+
