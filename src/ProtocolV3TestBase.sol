@@ -243,6 +243,12 @@ contract ProtocolV3TestBase is CommonTestBase {
     _supply(collateralConfig, pool, collateralSupplier, collateralAmount);
     _supply(borrowConfig,     pool, borrowSupplier,     maxBorrowAmount);
 
+    if (collateralConfig.debtCeiling > 0) {
+      // Need to enable as collateral before borrowing for assets in isolation mode
+      vm.prank(collateralSupplier);
+      pool.setUserUseReserveAsCollateral(collateralConfig.underlying, true);
+    }
+
     uint256 snapshot = vm.snapshot();
 
     // Test 1: Ensure user can't borrow more than LTV

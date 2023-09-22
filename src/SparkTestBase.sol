@@ -296,7 +296,6 @@ abstract contract SparkGoerliTestBase is SparkTestBase {
         executor = 0x4e847915D8a9f2Ab0cDf2FC2FD0A30428F25665d;
         domain = 'Goerli';
         poolAddressesProviderRegistry = IPoolAddressesProviderRegistry(0x1ad570fDEA255a3c1d8Cf56ec76ebA2b7bFDFfea);
-        disableE2E = true;          // TODO enable once this is fixed
     }
 
 }
@@ -307,7 +306,6 @@ abstract contract SparkGnosisTestBase is SparkTestBase {
         executor = 0xc4218C1127cB24a0D6c1e7D25dc34e10f2625f5A;
         domain = 'Gnosis';
         poolAddressesProviderRegistry = IPoolAddressesProviderRegistry(0x49d24798d3b84965F0d1fc8684EF6565115e70c1);
-        disableE2E = true;          // TODO enable once this is fixed
     }
 
 }
