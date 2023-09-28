@@ -176,6 +176,8 @@ contract ProtocolV3TestBase is CommonTestBase {
           continue;
         }
 
+    // uint256 i = 0 ; uint256 j = 0;
+
         e2eTestAsset(pool, configs[i], configs[j]);
         vm.revertTo(snapshot);
       }
@@ -251,32 +253,32 @@ contract ProtocolV3TestBase is CommonTestBase {
 
     uint256 snapshot = vm.snapshot();
 
-    // Test 1: Ensure user can't borrow more than LTV
+    console.log("\nTest 1: Ensure user can't borrow more than LTV");
 
     _e2eTestBorrowAboveLTV(pool, collateralSupplier, borrowConfig, maxBorrowAmount, false);
     vm.revertTo(snapshot);
 
-    // Test 2: Ensure user can borrow and repay with variable rates
+    console.log("\nTest 2: Ensure user can borrow and repay with variable rates");
 
     _e2eTestBorrowRepayWithdraw(pool, collateralSupplier, collateralConfig, borrowConfig, maxBorrowAmount, false);
     vm.revertTo(snapshot);
 
-    // Test 3: Ensure user can borrow and repay with stable rates
+    console.log("\nTest 3: Ensure user can borrow and repay with stable rates");
 
     _e2eTestBorrowRepayWithdraw(pool, collateralSupplier, collateralConfig, borrowConfig, maxBorrowAmount, true);
     vm.revertTo(snapshot);
 
-    // Test 4: Test liquidation
+    console.log("\nTest 4: Test liquidation");
 
     _e2eTestLiquidationReceiveCollateral(pool, collateralSupplier, liquidator, collateralConfig, borrowConfig, maxBorrowAmount);
     vm.revertTo(snapshot);
 
-    // Test 5: Test flashloan
+    console.log("\nTest 5: Test flashloan");
 
     _e2eTestFlashLoan(pool, borrowConfig, maxBorrowAmount);
     vm.revertTo(snapshot);
 
-    // Test 6: Test mintToTreasury
+    console.log("\nTest 6: Test mintToTreasury");
 
     _e2eTestMintToTreasury(pool, borrowConfig);
     vm.revertTo(snapshot);
@@ -457,25 +459,24 @@ contract ProtocolV3TestBase is CommonTestBase {
       assertLe(afterReserve.isolationModeTotalDebt,    beforeReserve.isolationModeTotalDebt,  "4");
     } else {
       if (flatSlope) {
-        assertEq(afterReserve.currentVariableBorrowRate, beforeReserve.currentVariableBorrowRate, "6");
+        assertEq(afterReserve.currentVariableBorrowRate, beforeReserve.currentVariableBorrowRate, "5");
       } else {
-        assertGe(afterReserve.currentVariableBorrowRate, beforeReserve.currentVariableBorrowRate, "6");
+        assertGe(afterReserve.currentVariableBorrowRate, beforeReserve.currentVariableBorrowRate, "5");
       }
-      assertGe(afterReserve.currentLiquidityRate,      beforeReserve.currentLiquidityRate,      "5");
-      assertGe(afterReserve.currentStableBorrowRate,   beforeReserve.currentStableBorrowRate,   "7");
-      assertGe(afterReserve.isolationModeTotalDebt,    beforeReserve.isolationModeTotalDebt,    "8");
+      assertGe(afterReserve.currentLiquidityRate,      beforeReserve.currentLiquidityRate,    "6");
+      assertGe(afterReserve.currentStableBorrowRate,   beforeReserve.currentStableBorrowRate, "7");
+      assertGe(afterReserve.isolationModeTotalDebt,    beforeReserve.isolationModeTotalDebt,  "8");
     }
 
     assertEq(afterReserve.lastUpdateTimestamp, beforeReserve.lastUpdateTimestamp + timeSinceLastUpdate, "9");
 
-    assertEq(afterReserve.id,                          beforeReserve.id, "10");
-    assertEq(afterReserve.aTokenAddress,               beforeReserve.aTokenAddress, "12");
-    assertEq(afterReserve.stableDebtTokenAddress,      beforeReserve.stableDebtTokenAddress, "13");
-    assertEq(afterReserve.variableDebtTokenAddress,    beforeReserve.variableDebtTokenAddress, "14");
+    assertEq(afterReserve.id,                          beforeReserve.id,                          "10");
+    assertEq(afterReserve.aTokenAddress,               beforeReserve.aTokenAddress,               "12");
+    assertEq(afterReserve.stableDebtTokenAddress,      beforeReserve.stableDebtTokenAddress,      "13");
+    assertEq(afterReserve.variableDebtTokenAddress,    beforeReserve.variableDebtTokenAddress,    "14");
     assertEq(afterReserve.interestRateStrategyAddress, beforeReserve.interestRateStrategyAddress, "15");
-    assertEq(afterReserve.unbacked,                    beforeReserve.unbacked, "16");
-
-    assertGe(afterReserve.accruedToTreasury, beforeReserve.accruedToTreasury, "17");
+    assertEq(afterReserve.unbacked,                    beforeReserve.unbacked,                    "16");
+    assertGe(afterReserve.accruedToTreasury,           beforeReserve.accruedToTreasury,           "17");
 
     uint256 expectedInterest;
     for (uint256 i; i < timeSinceLastUpdate; i++) {
