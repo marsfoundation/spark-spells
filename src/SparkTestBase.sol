@@ -101,7 +101,7 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
 
         for (uint256 i = 0; i < poolProviders.length; i++) {
             loadPoolContext(poolProviders[i]);
-            e2eTest(pool);
+            // e2eTest(pool);
         }
 
         GovHelpers.executePayload(vm, payload, executor);

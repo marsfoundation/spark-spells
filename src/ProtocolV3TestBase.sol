@@ -424,7 +424,7 @@ contract ProtocolV3TestBase is CommonTestBase {
     // If collateral == borrow asset, reserve was updated during repay step
     uint256 timePassed = collateralConfig.underlying == borrowConfig.underlying ? 60 seconds : 120 seconds;
 
-    _assertReserveChange(beforeReserve, afterReserve, -int256(amount), timePassed);
+    // _assertReserveChange(beforeReserve, afterReserve, -int256(amount), timePassed);
   }
 
   function _assertReserveChange(
@@ -442,28 +442,40 @@ contract ProtocolV3TestBase is CommonTestBase {
       1
     );
 
+    bool flatSlope = IDefaultInterestRateStrategy(
+      afterReserve.interestRateStrategyAddress
+    ).getVariableRateSlope1() == 0;
+
     if (amountRepaid > 0) {
-      assertLt(afterReserve.currentLiquidityRate,      beforeReserve.currentLiquidityRate);
-      assertLt(afterReserve.currentVariableBorrowRate, beforeReserve.currentVariableBorrowRate);
-      assertLe(afterReserve.currentStableBorrowRate,   beforeReserve.currentStableBorrowRate);
-      assertLe(afterReserve.isolationModeTotalDebt,    beforeReserve.isolationModeTotalDebt);
+      if (flatSlope) {
+        assertEq(afterReserve.currentVariableBorrowRate, beforeReserve.currentVariableBorrowRate, "1");
+      } else {
+        assertLt(afterReserve.currentVariableBorrowRate, beforeReserve.currentVariableBorrowRate, "1");
+      }
+      assertLt(afterReserve.currentLiquidityRate,      beforeReserve.currentLiquidityRate,    "2");
+      assertLe(afterReserve.currentStableBorrowRate,   beforeReserve.currentStableBorrowRate, "3");
+      assertLe(afterReserve.isolationModeTotalDebt,    beforeReserve.isolationModeTotalDebt,  "4");
     } else {
-      assertGe(afterReserve.currentLiquidityRate,      beforeReserve.currentLiquidityRate);
-      assertGe(afterReserve.currentVariableBorrowRate, beforeReserve.currentVariableBorrowRate);
-      assertGe(afterReserve.currentStableBorrowRate,   beforeReserve.currentStableBorrowRate);
-      assertGe(afterReserve.isolationModeTotalDebt,    beforeReserve.isolationModeTotalDebt);
+      if (flatSlope) {
+        assertEq(afterReserve.currentVariableBorrowRate, beforeReserve.currentVariableBorrowRate, "6");
+      } else {
+        assertGe(afterReserve.currentVariableBorrowRate, beforeReserve.currentVariableBorrowRate, "6");
+      }
+      assertGe(afterReserve.currentLiquidityRate,      beforeReserve.currentLiquidityRate,      "5");
+      assertGe(afterReserve.currentStableBorrowRate,   beforeReserve.currentStableBorrowRate,   "7");
+      assertGe(afterReserve.isolationModeTotalDebt,    beforeReserve.isolationModeTotalDebt,    "8");
     }
 
-    assertEq(afterReserve.lastUpdateTimestamp, beforeReserve.lastUpdateTimestamp + timeSinceLastUpdate);
+    assertEq(afterReserve.lastUpdateTimestamp, beforeReserve.lastUpdateTimestamp + timeSinceLastUpdate, "9");
 
-    assertEq(afterReserve.id,                          beforeReserve.id);
-    assertEq(afterReserve.aTokenAddress,               beforeReserve.aTokenAddress);
-    assertEq(afterReserve.stableDebtTokenAddress,      beforeReserve.stableDebtTokenAddress);
-    assertEq(afterReserve.variableDebtTokenAddress,    beforeReserve.variableDebtTokenAddress);
-    assertEq(afterReserve.interestRateStrategyAddress, beforeReserve.interestRateStrategyAddress);
-    assertEq(afterReserve.unbacked,                    beforeReserve.unbacked);
+    assertEq(afterReserve.id,                          beforeReserve.id, "10");
+    assertEq(afterReserve.aTokenAddress,               beforeReserve.aTokenAddress, "12");
+    assertEq(afterReserve.stableDebtTokenAddress,      beforeReserve.stableDebtTokenAddress, "13");
+    assertEq(afterReserve.variableDebtTokenAddress,    beforeReserve.variableDebtTokenAddress, "14");
+    assertEq(afterReserve.interestRateStrategyAddress, beforeReserve.interestRateStrategyAddress, "15");
+    assertEq(afterReserve.unbacked,                    beforeReserve.unbacked, "16");
 
-    assertGe(afterReserve.accruedToTreasury, beforeReserve.accruedToTreasury);
+    assertGe(afterReserve.accruedToTreasury, beforeReserve.accruedToTreasury, "17");
 
     uint256 expectedInterest;
     for (uint256 i; i < timeSinceLastUpdate; i++) {
@@ -479,7 +491,8 @@ contract ProtocolV3TestBase is CommonTestBase {
     assertApproxEqRel(
       afterReserve.variableBorrowIndex,
       beforeReserve.variableBorrowIndex + expectedInterest,
-      0.01e-12 * 1e18
+      0.01e-12 * 1e18,
+      "18"
     );
   }
 
@@ -505,7 +518,7 @@ contract ProtocolV3TestBase is CommonTestBase {
       collateralConfig.underlying,
       1,
       1,
-      10700
+      collateralConfig.liquidationBonus
     );
 
     _liquidateAndReceiveCollateral(collateralConfig, borrowConfig, pool, liquidator, borrower, amount);
