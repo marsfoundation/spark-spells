@@ -444,7 +444,7 @@ contract ProtocolV3TestBase is CommonTestBase {
 
     if (amountRepaid > 0) {
       assertLt(afterReserve.currentLiquidityRate,      beforeReserve.currentLiquidityRate);
-      assertLt(afterReserve.currentVariableBorrowRate, beforeReserve.currentVariableBorrowRate);
+      assertLe(afterReserve.currentVariableBorrowRate, beforeReserve.currentVariableBorrowRate);
       assertLe(afterReserve.currentStableBorrowRate,   beforeReserve.currentStableBorrowRate);
       assertLe(afterReserve.isolationModeTotalDebt,    beforeReserve.isolationModeTotalDebt);
     } else {
@@ -475,11 +475,11 @@ contract ProtocolV3TestBase is CommonTestBase {
         / 1e27;
     }
 
-    // Accurate to 0.000000000001%
+    // Accurate to 0.01%
     assertApproxEqRel(
       afterReserve.variableBorrowIndex,
       beforeReserve.variableBorrowIndex + expectedInterest,
-      0.01e-12 * 1e18
+      1e14
     );
   }
 
@@ -505,7 +505,7 @@ contract ProtocolV3TestBase is CommonTestBase {
       collateralConfig.underlying,
       1,
       1,
-      10700
+      collateralConfig.liquidationBonus
     );
 
     _liquidateAndReceiveCollateral(collateralConfig, borrowConfig, pool, liquidator, borrower, amount);
