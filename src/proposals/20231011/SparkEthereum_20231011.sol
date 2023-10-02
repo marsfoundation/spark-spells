@@ -59,40 +59,9 @@ contract SparkEthereum_20231011 is SparkPayloadEthereum {
     }
 
     function newListings() public pure override returns (IEngine.Listing[] memory) {
-        IEngine.Listing[] memory listings = new IEngine.Listing[](2);
+        IEngine.Listing[] memory listings = new IEngine.Listing[](1);
 
         listings[0] = IEngine.Listing({
-            asset:              USDC,
-            assetSymbol:        'USDC',
-            priceFeed:          USDC_PRICE_FEED,
-            rateStrategyParams: Rates.RateStrategyParams({
-                optimalUsageRatio:             _bpsToRay(95_00),
-                baseVariableBorrowRate:        0,
-                variableRateSlope1:            44790164207174267760128000, // DSR - 0.4% expressed as a yearly APR [RAY]
-                variableRateSlope2:            _bpsToRay(20_00),
-                stableRateSlope1:              0,
-                stableRateSlope2:              0,
-                baseStableRateOffset:          0,
-                stableRateExcessOffset:        0,
-                optimalStableToTotalDebtRatio: 0
-            }),
-            enabledToBorrow:       EngineFlags.ENABLED,
-            stableRateModeEnabled: EngineFlags.DISABLED,
-            borrowableInIsolation: EngineFlags.DISABLED,
-            withSiloedBorrowing:   EngineFlags.ENABLED,
-            flashloanable:         EngineFlags.ENABLED,
-            ltv:                   0,
-            liqThreshold:          0,
-            liqBonus:              0,
-            reserveFactor:         5_00,
-            supplyCap:             60_000_000,
-            borrowCap:             0,
-            debtCeiling:           0,
-            liqProtocolFee:        0,
-            eModeCategory:         2
-        });
-
-        listings[1] = IEngine.Listing({
             asset:              USDT,
             assetSymbol:        'USDT',
             priceFeed:          USDT_PRICE_FEED,
