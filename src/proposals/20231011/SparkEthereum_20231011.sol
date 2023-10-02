@@ -13,10 +13,10 @@ import { SparkPayloadEthereum, IEngine, Rates, EngineFlags } from '../../SparkPa
 contract SparkEthereum_20231011 is SparkPayloadEthereum {
 
     address public constant SDAI            = 0x83F20F44975D03b1b09e64809B757c47f942BEeA;
-    address public constant RETH            = 0xae78736cd615f374d3085123a210448e74fc6393;
-    address public constant USDC            = 0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48;
+    address public constant RETH            = 0xae78736Cd615f374D3085123A210448E74Fc6393;
+    address public constant USDC            = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
     address public constant USDC_PRICE_FEED = 0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6;
-    address public constant USDT            = 0xdac17f958d2ee523a2206206994597c13d831ec7;
+    address public constant USDT            = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
     address public constant USDT_PRICE_FEED = 0x3E7d1eAB13ad0104d2750B8863b489D65364e32D;
 
     function _preExecute() internal override {
