@@ -4,11 +4,13 @@ pragma solidity ^0.8.10;
 import { SparkPayloadEthereum, IEngine, Rates, EngineFlags } from '../../SparkPayloadEthereum.sol';
 
 /**
- * @title  October 11, 2023 Spark Ethereum Proposal -
+ * @title  October 11, 2023 Spark Ethereum Proposal - Add USDT and USDC markets, add USD eMode, raise rETH supply cap
  * @author Phoenix Labs
- * @dev
- * Forum:
- * Vote:
+ * @dev    This proposal activates USDT market, modifies multiple USDC market parameters, raises rETH supplyCap, introduces USD eMode and adds sDAI to the USD eMode
+ * Forum:     https://forum.makerdao.com/t/proposal-to-onboard-usdc-and-usdt-to-sparklend-ethereum/22227
+ * USDT Vote: https://vote.makerdao.com/polling/QmX95EAi
+ * USDC Vote: https://vote.makerdao.com/polling/QmUqRvBm
+ * rETH Vote: https://vote.makerdao.com/polling/QmQpNDXG
  */
 contract SparkEthereum_20231011 is SparkPayloadEthereum {
 
