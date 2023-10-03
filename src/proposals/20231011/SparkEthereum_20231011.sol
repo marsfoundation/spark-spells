@@ -32,98 +32,9 @@ contract SparkEthereum_20231011 is SparkPayloadEthereum {
         );
     }
 
-    function capsUpdates() public pure override returns (IEngine.CapsUpdate[] memory) {
-        IEngine.CapsUpdate[] memory capsUpdate = new IEngine.CapsUpdate[](2);
-
-        capsUpdate[0] = IEngine.CapsUpdate({
-            asset:     RETH,
-            supplyCap: 60_000,
-            borrowCap: EngineFlags.KEEP_CURRENT
-        });
-
-        capsUpdate[1] = IEngine.CapsUpdate({
-            asset:     USDC,
-            supplyCap: 60_000_000,
-            borrowCap: EngineFlags.KEEP_CURRENT
-        });
-
-        return capsUpdate;
-    }
-
-    function collateralsUpdates() public pure override returns (IEngine.CollateralUpdate[] memory) {
-        IEngine.CollateralUpdate[] memory collateralUpdates = new IEngine.CollateralUpdate[](2);
-
-        collateralUpdates[0] = IEngine.CollateralUpdate({
-            asset: SDAI,
-            ltv: EngineFlags.KEEP_CURRENT,
-            liqThreshold: EngineFlags.KEEP_CURRENT,
-            liqBonus: EngineFlags.KEEP_CURRENT,
-            debtCeiling: EngineFlags.KEEP_CURRENT,
-            liqProtocolFee: EngineFlags.KEEP_CURRENT,
-            eModeCategory: 2
-        });
-
-        collateralUpdates[1] = IEngine.CollateralUpdate({
-            asset: USDC,
-            ltv: EngineFlags.KEEP_CURRENT,
-            liqThreshold: EngineFlags.KEEP_CURRENT,
-            liqBonus: EngineFlags.KEEP_CURRENT,
-            debtCeiling: EngineFlags.KEEP_CURRENT,
-            liqProtocolFee: EngineFlags.KEEP_CURRENT,
-            eModeCategory: 2
-        });
-
-        return collateralUpdates;
-    }
-
-    function borrowsUpdates() public pure override returns (IEngine.BorrowUpdate[] memory) {
-        IEngine.BorrowUpdate[] memory borrowsUpdate = new IEngine.BorrowUpdate[](1);
-
-        borrowsUpdate[0] = IEngine.BorrowUpdate({
-            asset:                 USDC,
-            reserveFactor:         5_00,
-            enabledToBorrow:       EngineFlags.ENABLED,
-            flashloanable:         EngineFlags.KEEP_CURRENT,
-            stableRateModeEnabled: EngineFlags.KEEP_CURRENT,
-            borrowableInIsolation: EngineFlags.KEEP_CURRENT,
-            withSiloedBorrowing:   EngineFlags.ENABLED
-        });
-
-        return borrowsUpdate;
-    }
-
-    function rateStrategiesUpdates() public view override returns (IEngine.RateStrategyUpdate[] memory) {
-        IEngine.RateStrategyUpdate[] memory ratesUpdate = new IEngine.RateStrategyUpdate[](1);
-
-        Rates.RateStrategyParams memory usdcRateStrategyParams = LISTING_ENGINE
-            .RATE_STRATEGIES_FACTORY()
-            .getStrategyDataOfAsset(USDC);
-
-        usdcRateStrategyParams.optimalUsageRatio      = _bpsToRay(95_00);
-        usdcRateStrategyParams.baseVariableBorrowRate = 0;
-        usdcRateStrategyParams.variableRateSlope1     = VARIABLE_RATE;
-        usdcRateStrategyParams.variableRateSlope2     = _bpsToRay(20_00);
-
-        ratesUpdate[0] = IEngine.RateStrategyUpdate({
-            asset:  USDC,
-            params: usdcRateStrategyParams
-        });
-
-        return ratesUpdate;
-    }
-
-    function priceFeedsUpdates() public pure override returns (IEngine.PriceFeedUpdate[] memory) {
-        IEngine.PriceFeedUpdate[] memory priceFeedsUpdate = new IEngine.PriceFeedUpdate[](1);
-
-        priceFeedsUpdate[0] = IEngine.PriceFeedUpdate({
-            asset:     USDC,
-            priceFeed: USDC_PRICE_FEED
-        });
-
-        return priceFeedsUpdate;
-    }
-
-    function newListings() public pure override returns (IEngine.Listing[] memory) {
+    function newListings()
+        public pure override returns (IEngine.Listing[] memory)
+    {
         IEngine.Listing[] memory listings = new IEngine.Listing[](1);
 
         listings[0] = IEngine.Listing({
@@ -158,5 +69,106 @@ contract SparkEthereum_20231011 is SparkPayloadEthereum {
         });
 
         return listings;
+    }
+
+    function capsUpdates()
+        public pure override returns (IEngine.CapsUpdate[] memory)
+    {
+        IEngine.CapsUpdate[] memory capsUpdate = new IEngine.CapsUpdate[](2);
+
+        capsUpdate[0] = IEngine.CapsUpdate({
+            asset:     RETH,
+            supplyCap: 60_000,
+            borrowCap: EngineFlags.KEEP_CURRENT
+        });
+
+        capsUpdate[1] = IEngine.CapsUpdate({
+            asset:     USDC,
+            supplyCap: 60_000_000,
+            borrowCap: EngineFlags.KEEP_CURRENT
+        });
+
+        return capsUpdate;
+    }
+
+    function collateralsUpdates()
+        public pure override returns (IEngine.CollateralUpdate[] memory)
+    {
+        IEngine.CollateralUpdate[] memory collateralUpdates = new IEngine.CollateralUpdate[](2);
+
+        collateralUpdates[0] = IEngine.CollateralUpdate({
+            asset:          SDAI,
+            ltv:            EngineFlags.KEEP_CURRENT,
+            liqThreshold:   EngineFlags.KEEP_CURRENT,
+            liqBonus:       EngineFlags.KEEP_CURRENT,
+            debtCeiling:    EngineFlags.KEEP_CURRENT,
+            liqProtocolFee: EngineFlags.KEEP_CURRENT,
+            eModeCategory:  2
+        });
+
+        collateralUpdates[1] = IEngine.CollateralUpdate({
+            asset:          USDC,
+            ltv:            EngineFlags.KEEP_CURRENT,
+            liqThreshold:   EngineFlags.KEEP_CURRENT,
+            liqBonus:       EngineFlags.KEEP_CURRENT,
+            debtCeiling:    EngineFlags.KEEP_CURRENT,
+            liqProtocolFee: EngineFlags.KEEP_CURRENT,
+            eModeCategory:  2
+        });
+
+        return collateralUpdates;
+    }
+
+    function borrowsUpdates()
+        public pure override returns (IEngine.BorrowUpdate[] memory)
+    {
+        IEngine.BorrowUpdate[] memory borrowsUpdate = new IEngine.BorrowUpdate[](1);
+
+        borrowsUpdate[0] = IEngine.BorrowUpdate({
+            asset:                 USDC,
+            reserveFactor:         5_00,
+            enabledToBorrow:       EngineFlags.ENABLED,
+            flashloanable:         EngineFlags.KEEP_CURRENT,
+            stableRateModeEnabled: EngineFlags.KEEP_CURRENT,
+            borrowableInIsolation: EngineFlags.KEEP_CURRENT,
+            withSiloedBorrowing:   EngineFlags.ENABLED
+        });
+
+        return borrowsUpdate;
+    }
+
+    function priceFeedsUpdates()
+        public pure override returns (IEngine.PriceFeedUpdate[] memory)
+    {
+        IEngine.PriceFeedUpdate[] memory priceFeedsUpdate = new IEngine.PriceFeedUpdate[](1);
+
+        priceFeedsUpdate[0] = IEngine.PriceFeedUpdate({
+            asset:     USDC,
+            priceFeed: USDC_PRICE_FEED
+        });
+
+        return priceFeedsUpdate;
+    }
+
+    function rateStrategiesUpdates()
+        public view override returns (IEngine.RateStrategyUpdate[] memory)
+    {
+        IEngine.RateStrategyUpdate[] memory ratesUpdate = new IEngine.RateStrategyUpdate[](1);
+
+        Rates.RateStrategyParams memory usdcRateStrategyParams = LISTING_ENGINE
+            .RATE_STRATEGIES_FACTORY()
+            .getStrategyDataOfAsset(USDC);
+
+        usdcRateStrategyParams.optimalUsageRatio      = _bpsToRay(95_00);
+        usdcRateStrategyParams.baseVariableBorrowRate = 0;
+        usdcRateStrategyParams.variableRateSlope1     = VARIABLE_RATE;
+        usdcRateStrategyParams.variableRateSlope2     = _bpsToRay(20_00);
+
+        ratesUpdate[0] = IEngine.RateStrategyUpdate({
+            asset:  USDC,
+            params: usdcRateStrategyParams
+        });
+
+        return ratesUpdate;
     }
 }
