@@ -76,7 +76,6 @@ contract SparkEthereum_20231011Test is SparkEthereumTestBase {
 
         assertEq(_findReserveConfigBySymbol(allConfigsAfter, 'sDAI').eModeCategory, 2);
 
-
         /******************************/
         /*** rETH after validations ***/
         /******************************/
