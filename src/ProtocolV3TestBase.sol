@@ -333,6 +333,7 @@ contract ProtocolV3TestBase is CommonTestBase {
 
     uint256 scaledBorrowCap = borrowConfig.borrowCap * 10 ** borrowConfig.decimals;
 
+    // TODO: Figure out why USDT.approve fails and uncomment
     // if(scaledBorrowCap == 0) return false;
 
     uint256 currScaledVariableDebt = IVariableDebtToken(borrowConfig.variableDebtToken).scaledTotalSupply();
