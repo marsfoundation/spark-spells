@@ -21,6 +21,16 @@ contract SparkEthereum_20231011Test is SparkEthereumTestBase {
     function testSpellSpecifics() public {
         ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', pool);
 
+        /************************************/
+        /*** USD eMode before validations ***/
+        /************************************/
+
+        DataTypes.EModeCategory memory emode = pool.getEModeCategoryData(2);
+        assertEq(emode.ltv,                  0);
+        assertEq(emode.liquidationThreshold, 0);
+        assertEq(emode.liquidationBonus,     0);
+        assertEq(emode.priceSource,          address(0));
+        assertEq(emode.label,                '');
 
         /*******************************/
         /*** sDAI before validations ***/
@@ -48,6 +58,17 @@ contract SparkEthereum_20231011Test is SparkEthereumTestBase {
         GovHelpers.executePayload(vm, payload, executor);
 
         ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
+
+        /***********************************/
+        /*** USD eMode after validations ***/
+        /***********************************/
+
+        emode = pool.getEModeCategoryData(2);
+        assertEq(emode.ltv,                  91_00);
+        assertEq(emode.liquidationThreshold, 92_00);
+        assertEq(emode.liquidationBonus,     101_00);
+        assertEq(emode.priceSource,          address(0));
+        assertEq(emode.label,                'USD');
 
         /******************************/
         /*** sDAI after validations ***/
