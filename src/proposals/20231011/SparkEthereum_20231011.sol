@@ -87,7 +87,7 @@ contract SparkEthereum_20231011 is SparkPayloadEthereum {
         capsUpdate[1] = IEngine.CapsUpdate({
             asset:     USDC,
             supplyCap: 60_000_000,
-            borrowCap: EngineFlags.KEEP_CURRENT
+            borrowCap: 0
         });
 
         return capsUpdate;
@@ -110,11 +110,11 @@ contract SparkEthereum_20231011 is SparkPayloadEthereum {
 
         collateralUpdates[1] = IEngine.CollateralUpdate({
             asset:          USDC,
-            ltv:            EngineFlags.KEEP_CURRENT,
-            liqThreshold:   EngineFlags.KEEP_CURRENT,
-            liqBonus:       EngineFlags.KEEP_CURRENT,
-            debtCeiling:    EngineFlags.KEEP_CURRENT,
-            liqProtocolFee: EngineFlags.KEEP_CURRENT,
+            ltv:            0,
+            liqThreshold:   0,
+            liqBonus:       0,
+            debtCeiling:    0,
+            liqProtocolFee: 0,
             eModeCategory:  2
         });
 
@@ -130,9 +130,9 @@ contract SparkEthereum_20231011 is SparkPayloadEthereum {
             asset:                 USDC,
             reserveFactor:         5_00,
             enabledToBorrow:       EngineFlags.ENABLED,
-            flashloanable:         EngineFlags.KEEP_CURRENT,
-            stableRateModeEnabled: EngineFlags.KEEP_CURRENT,
-            borrowableInIsolation: EngineFlags.KEEP_CURRENT,
+            flashloanable:         EngineFlags.ENABLED,
+            stableRateModeEnabled: EngineFlags.DISABLED,
+            borrowableInIsolation: EngineFlags.DISABLED,
             withSiloedBorrowing:   EngineFlags.ENABLED
         });
 
@@ -153,18 +153,21 @@ contract SparkEthereum_20231011 is SparkPayloadEthereum {
     }
 
     function rateStrategiesUpdates()
-        public view override returns (IEngine.RateStrategyUpdate[] memory)
+        public pure override returns (IEngine.RateStrategyUpdate[] memory)
     {
         IEngine.RateStrategyUpdate[] memory ratesUpdate = new IEngine.RateStrategyUpdate[](1);
 
-        Rates.RateStrategyParams memory usdcRateStrategyParams = LISTING_ENGINE
-            .RATE_STRATEGIES_FACTORY()
-            .getStrategyDataOfAsset(USDC);
-
-        usdcRateStrategyParams.optimalUsageRatio      = _bpsToRay(95_00);
-        usdcRateStrategyParams.baseVariableBorrowRate = 0;
-        usdcRateStrategyParams.variableRateSlope1     = VARIABLE_RATE;
-        usdcRateStrategyParams.variableRateSlope2     = _bpsToRay(20_00);
+        Rates.RateStrategyParams memory usdcRateStrategyParams = Rates.RateStrategyParams({
+            optimalUsageRatio:             _bpsToRay(95_00),
+            baseVariableBorrowRate:        0,
+            variableRateSlope1:            VARIABLE_RATE,
+            variableRateSlope2:            _bpsToRay(20_00),
+            stableRateSlope1:              0,
+            stableRateSlope2:              0,
+            baseStableRateOffset:          0,
+            stableRateExcessOffset:        0,
+            optimalStableToTotalDebtRatio: 0
+        });
 
         ratesUpdate[0] = IEngine.RateStrategyUpdate({
             asset:  USDC,
