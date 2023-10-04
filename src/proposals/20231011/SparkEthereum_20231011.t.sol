@@ -48,7 +48,7 @@ contract SparkEthereum_20231011Test is SparkEthereumTestBase {
         /*** USDC & USDT before validations ***/
         /**************************************/
 
-        // There should be 8 markets after before USDT
+        // There should be 8 markets before USDT
         assertEq(allConfigsBefore.length, 8);
 
         /***********************/
