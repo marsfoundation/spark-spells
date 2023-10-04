@@ -48,6 +48,11 @@ contract SparkEthereum_20231011Test is SparkEthereumTestBase {
         /*** USDC & USDT before validations ***/
         /**************************************/
 
+        ReserveConfig memory usdcConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'USDC');
+        assertTrue(usdcConfigBefore.aToken            != address(0));
+        assertTrue(usdcConfigBefore.variableDebtToken != address(0));
+        assertTrue(usdcConfigBefore.stableDebtToken   != address(0));
+
         // There should be 8 markets before USDT
         assertEq(allConfigsBefore.length, 8);
 
@@ -90,12 +95,13 @@ contract SparkEthereum_20231011Test is SparkEthereumTestBase {
         assertEq(allConfigsAfter.length, 9);
 
         // USDT
-        ReserveConfig memory expectedUSDTConfig = ReserveConfig({
+        ReserveConfig memory usdtConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'USDT');
+        ReserveConfig memory usdtConfigExpected = ReserveConfig({
             symbol:                  'USDT',
             underlying:               SparkEthereum_20231011(payload).USDT(),
-            aToken:                   address(0),  // Mock, as they don't get validated, because of the "dynamic" deployment on proposal execution
-            variableDebtToken:        address(0),  // Mock, as they don't get validated, because of the "dynamic" deployment on proposal execution
-            stableDebtToken:          address(0),  // Mock, as they don't get validated, because of the "dynamic" deployment on proposal execution
+            aToken:                   address(0),  // Mock, as they don't get validated in '_validateReserveConfig'
+            variableDebtToken:        address(0),  // Mock, as they don't get validated in '_validateReserveConfig'
+            stableDebtToken:          address(0),  // Mock, as they don't get validated in '_validateReserveConfig'
             decimals:                 6,
             ltv:                      0,
             liquidationThreshold:     0,
@@ -104,7 +110,7 @@ contract SparkEthereum_20231011Test is SparkEthereumTestBase {
             reserveFactor:            5_00,
             usageAsCollateralEnabled: false,
             borrowingEnabled:         true,
-            interestRateStrategy:     _findReserveConfigBySymbol(allConfigsAfter, 'USDT').interestRateStrategy,
+            interestRateStrategy:     usdtConfigAfter.interestRateStrategy,
             stableBorrowRateEnabled:  false,
             isPaused:                 false,
             isActive:                 true,
@@ -117,10 +123,10 @@ contract SparkEthereum_20231011Test is SparkEthereumTestBase {
             debtCeiling:              0,
             eModeCategory:            2
         });
-        _validateReserveConfig(expectedUSDTConfig, allConfigsAfter);
+        _validateReserveConfig(usdtConfigExpected, allConfigsAfter);
         _validateInterestRateStrategy(
-            _findReserveConfigBySymbol(allConfigsAfter, 'USDT').interestRateStrategy,
-            expectedUSDTConfig.interestRateStrategy,
+            usdtConfigAfter.interestRateStrategy,
+            usdtConfigExpected.interestRateStrategy,
             InterestStrategyValues({
                 addressesProvider:             address(poolAddressesProvider),
                 optimalUsageRatio:             0.95e27,
@@ -138,16 +144,21 @@ contract SparkEthereum_20231011Test is SparkEthereumTestBase {
             SparkEthereum_20231011(payload).USDT(),
             SparkEthereum_20231011(payload).USDT_PRICE_FEED()
         );
+        assertTrue(usdtConfigAfter.aToken            != address(0));
+        assertTrue(usdtConfigAfter.variableDebtToken != address(0));
+        assertTrue(usdtConfigAfter.stableDebtToken   != address(0));
+
 
         // USDC
         // Performing a full market validation
         // It should be the same as USDT market, with only difference in 'supplyCap' & 'priceFeed'
-        ReserveConfig memory expectedUSDCConfig = ReserveConfig({
+        ReserveConfig memory usdcConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'USDC');
+        ReserveConfig memory usdcConfigExpected = ReserveConfig({
             symbol:                  'USDC',
             underlying:               SparkEthereum_20231011(payload).USDC(),
-            aToken:                   address(0),  // Mock, as they don't get validated, because of the "dynamic" deployment on proposal execution
-            variableDebtToken:        address(0),  // Mock, as they don't get validated, because of the "dynamic" deployment on proposal execution
-            stableDebtToken:          address(0),  // Mock, as they don't get validated, because of the "dynamic" deployment on proposal execution
+            aToken:                   address(0),  // Mock, as they don't get validated in '_validateReserveConfig'
+            variableDebtToken:        address(0),  // Mock, as they don't get validated in '_validateReserveConfig'
+            stableDebtToken:          address(0),  // Mock, as they don't get validated in '_validateReserveConfig'
             decimals:                 6,
             ltv:                      0,
             liquidationThreshold:     0,
@@ -156,7 +167,7 @@ contract SparkEthereum_20231011Test is SparkEthereumTestBase {
             reserveFactor:            5_00,
             usageAsCollateralEnabled: false,
             borrowingEnabled:         true,
-            interestRateStrategy:     _findReserveConfigBySymbol(allConfigsAfter, 'USDC').interestRateStrategy,
+            interestRateStrategy:     usdcConfigAfter.interestRateStrategy,
             stableBorrowRateEnabled:  false,
             isPaused:                 false,
             isActive:                 true,
@@ -169,10 +180,10 @@ contract SparkEthereum_20231011Test is SparkEthereumTestBase {
             debtCeiling:              0,
             eModeCategory:            2
         });
-        _validateReserveConfig(expectedUSDCConfig, allConfigsAfter);
+        _validateReserveConfig(usdcConfigExpected, allConfigsAfter);
         _validateInterestRateStrategy(
-            _findReserveConfigBySymbol(allConfigsAfter, 'USDC').interestRateStrategy,
-            expectedUSDCConfig.interestRateStrategy,
+            usdcConfigAfter.interestRateStrategy,
+            usdcConfigExpected.interestRateStrategy,
             InterestStrategyValues({
                 addressesProvider:             address(poolAddressesProvider),
                 optimalUsageRatio:             0.95e27,
@@ -190,5 +201,8 @@ contract SparkEthereum_20231011Test is SparkEthereumTestBase {
             SparkEthereum_20231011(payload).USDC(),
             SparkEthereum_20231011(payload).USDC_PRICE_FEED()
         );
+        assertEq(usdcConfigBefore.aToken,            usdcConfigAfter.aToken);
+        assertEq(usdcConfigBefore.variableDebtToken, usdcConfigAfter.variableDebtToken);
+        assertEq(usdcConfigBefore.stableDebtToken,   usdcConfigAfter.stableDebtToken);
     }
 }
