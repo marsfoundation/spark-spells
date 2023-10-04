@@ -540,7 +540,7 @@ contract ProtocolV3TestBase is CommonTestBase {
     address pool = abi.decode(params, (address));
     assertEq(IERC20(asset).balanceOf(address(this)), amount, 'UNDERLYING_NOT_AMOUNT');
     deal(asset, address(this), amount + premium);
-    IERC20(asset).approve(pool, amount + premium);
+    SafeERC20.safeApprove(IERC20(asset), pool, amount + premium);
     return true;
   }
 
@@ -694,7 +694,7 @@ contract ProtocolV3TestBase is CommonTestBase {
     // TODO: Add totalSupply assertions
 
     vm.startPrank(liquidator);
-    IERC20(borrow.underlying).approve(address(pool), amount);
+    SafeERC20.safeApprove(IERC20(borrow.underlying), address(pool), amount);
 
     console.log('LIQUIDATE: Collateral: %s, Debt: %s, Debt Amount: %s', collateral.symbol, borrow.symbol, _formattedAmount(amount, borrow.decimals));
     pool.liquidationCall(collateral.underlying, borrow.underlying, user, amount, false);
