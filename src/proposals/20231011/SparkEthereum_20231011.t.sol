@@ -7,6 +7,13 @@ import { SparkEthereum_20231011 } from './SparkEthereum_20231011.sol';
 
 contract SparkEthereum_20231011Test is SparkEthereumTestBase {
 
+    address public constant USDC            = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+    address public constant USDC_PRICE_FEED = 0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6;
+    address public constant USDT            = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
+    address public constant USDT_PRICE_FEED = 0x3E7d1eAB13ad0104d2750B8863b489D65364e32D;
+
+    uint256 public constant VARIABLE_RATE = 0.044790164207174267760128000e27; // DSR - 0.4% expressed as a yearly APR [RAY]
+
     constructor() {
         id = '20231011';
     }
@@ -98,7 +105,7 @@ contract SparkEthereum_20231011Test is SparkEthereumTestBase {
         ReserveConfig memory usdtConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'USDT');
         ReserveConfig memory usdtConfigExpected = ReserveConfig({
             symbol:                  'USDT',
-            underlying:               SparkEthereum_20231011(payload).USDT(),
+            underlying:               USDT,
             aToken:                   address(0),  // Mock, as they don't get validated in '_validateReserveConfig'
             variableDebtToken:        address(0),  // Mock, as they don't get validated in '_validateReserveConfig'
             stableDebtToken:          address(0),  // Mock, as they don't get validated in '_validateReserveConfig'
@@ -131,18 +138,18 @@ contract SparkEthereum_20231011Test is SparkEthereumTestBase {
                 addressesProvider:             address(poolAddressesProvider),
                 optimalUsageRatio:             0.95e27,
                 optimalStableToTotalDebtRatio: 0,
-                baseStableBorrowRate:          SparkEthereum_20231011(payload).VARIABLE_RATE(),
+                baseStableBorrowRate:          VARIABLE_RATE,
                 stableRateSlope1:              0,
                 stableRateSlope2:              0,
                 baseVariableBorrowRate:        0,
-                variableRateSlope1:            SparkEthereum_20231011(payload).VARIABLE_RATE(),
+                variableRateSlope1:            VARIABLE_RATE,
                 variableRateSlope2:            0.2e27
             })
         );
         _validateAssetSourceOnOracle(
             poolAddressesProvider,
-            SparkEthereum_20231011(payload).USDT(),
-            SparkEthereum_20231011(payload).USDT_PRICE_FEED()
+            USDT,
+            USDT_PRICE_FEED
         );
         assertTrue(usdtConfigAfter.aToken            != address(0));
         assertTrue(usdtConfigAfter.variableDebtToken != address(0));
@@ -155,7 +162,7 @@ contract SparkEthereum_20231011Test is SparkEthereumTestBase {
         ReserveConfig memory usdcConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'USDC');
         ReserveConfig memory usdcConfigExpected = ReserveConfig({
             symbol:                  'USDC',
-            underlying:               SparkEthereum_20231011(payload).USDC(),
+            underlying:               USDC,
             aToken:                   address(0),  // Mock, as they don't get validated in '_validateReserveConfig'
             variableDebtToken:        address(0),  // Mock, as they don't get validated in '_validateReserveConfig'
             stableDebtToken:          address(0),  // Mock, as they don't get validated in '_validateReserveConfig'
@@ -188,18 +195,18 @@ contract SparkEthereum_20231011Test is SparkEthereumTestBase {
                 addressesProvider:             address(poolAddressesProvider),
                 optimalUsageRatio:             0.95e27,
                 optimalStableToTotalDebtRatio: 0,
-                baseStableBorrowRate:          SparkEthereum_20231011(payload).VARIABLE_RATE(),
+                baseStableBorrowRate:          VARIABLE_RATE,
                 stableRateSlope1:              0,
                 stableRateSlope2:              0,
                 baseVariableBorrowRate:        0,
-                variableRateSlope1:            SparkEthereum_20231011(payload).VARIABLE_RATE(),
+                variableRateSlope1:            VARIABLE_RATE,
                 variableRateSlope2:            0.2e27
             })
         );
         _validateAssetSourceOnOracle(
             poolAddressesProvider,
-            SparkEthereum_20231011(payload).USDC(),
-            SparkEthereum_20231011(payload).USDC_PRICE_FEED()
+            USDC,
+            USDC_PRICE_FEED
         );
         assertEq(usdcConfigBefore.aToken,            usdcConfigAfter.aToken);
         assertEq(usdcConfigBefore.variableDebtToken, usdcConfigAfter.variableDebtToken);

@@ -21,17 +21,17 @@ contract SparkEthereum_20231011 is SparkPayloadEthereum {
     address public constant USDT            = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
     address public constant USDT_PRICE_FEED = 0x3E7d1eAB13ad0104d2750B8863b489D65364e32D;
 
-    uint256 public constant VARIABLE_RATE   = 44790164207174267760128000; // DSR - 0.4% expressed as a yearly APR [RAY]
+    uint256 public constant VARIABLE_RATE = 0.044790164207174267760128000e27; // DSR - 0.4% expressed as a yearly APR [RAY]
 
     function _preExecute() internal override {
-        LISTING_ENGINE.POOL_CONFIGURATOR().setEModeCategory(
-            2,
-            91_00,
-            92_00,
-            101_00,
-            address(0),
-            'USD'
-        );
+        LISTING_ENGINE.POOL_CONFIGURATOR().setEModeCategory({
+            categoryId:           2,
+            ltv:                  91_00,
+            liquidationThreshold: 92_00,
+            liquidationBonus:     101_00,
+            oracle:               address(0),
+            label:                'USD'
+        });
     }
 
     function newListings()
