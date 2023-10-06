@@ -19,7 +19,7 @@ else
     extra_params=""
 fi
 
-anvil --fork-url $anvil_fork_url --port ${port} $extra_params &
+anvil --fork-url $anvil_fork_url --port ${port} $extra_params --chain-id 3030 &
 
 sleep 3
 
