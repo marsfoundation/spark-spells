@@ -12,12 +12,12 @@ All non-payload contracts will be constant across deployments, but this can run 
 
 ### Spell simulator
 
-To run a spell against a new anvil fork, run the following command 
+To run a spell against a new anvil fork, run the following command
 ```bash
 sh scripts/fork-and-cast-spell.sh <spellPathOrAddress> <spellExecutor> <forkUrl> <forkBlockNumber> <port>
 ```
 
-Where 
+Where
 ```<forkBlockNumber>``` is optional with latest as default
 ```<port>``` is optional with 8545 as default
 
@@ -32,3 +32,6 @@ or using already deployed spell address
 ```bash
 sh scripts/fork-and-cast-spell.sh 0x1472B7d120ab62D60f60e1D804B3858361c3C475 0xc4218C1127cB24a0D6c1e7D25dc34e10f2625f5A https://rpc.ankr.com/gnosis 30031699
 ```
+
+***
+*The IP in this repository was assigned to Mars SPC Limited in respect of the MarsOne SP*
