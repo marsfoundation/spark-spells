@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.10;
 
-import '../SparkTestBase.sol';
+import '../../SparkTestBase.sol';
 
 import { SparkEthereum_20231115 } from './SparkEthereum_20231115.sol';
 

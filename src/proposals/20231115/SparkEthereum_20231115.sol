@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.10;
 
-import { SparkPayloadEthereum, IEngine, EngineFlags } from '../SparkPayloadEthereum.sol';
+import { SparkPayloadEthereum, IEngine, EngineFlags } from '../../SparkPayloadEthereum.sol';
 
 /**
  * @title  November 15, 2023 Spark Ethereum Proposal -
@@ -15,9 +15,9 @@ contract SparkEthereum_20231115 is SparkPayloadEthereum {
     address public constant WSTETH = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0;
     address public constant DAI    = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
 
-    uint256 constant NEW_RETH_SUPPLY_CAP   = 80_000;
-    uint256 constant NEW_WSTETH_SUPPLY_CAP = 600_000; // TBD
-    uint256 constant NEW_DAI_LTV           = 0;
+    uint256 public constant NEW_RETH_SUPPLY_CAP   = 80_000;
+    uint256 public constant NEW_WSTETH_SUPPLY_CAP = 600_000; // TBD
+    uint256 public constant NEW_DAI_LTV           = 0;
 
     function capsUpdates()
         public pure override returns (IEngine.CapsUpdate[] memory)
