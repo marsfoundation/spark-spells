@@ -16,7 +16,7 @@ contract SparkEthereum_20231115 is SparkPayloadEthereum {
     address public constant DAI    = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
 
     uint256 public constant NEW_RETH_SUPPLY_CAP   = 80_000;
-    uint256 public constant NEW_WSTETH_SUPPLY_CAP = 600_000; // TBD
+    uint256 public constant NEW_WSTETH_SUPPLY_CAP = 800_000;
     uint256 public constant NEW_DAI_LTV           = 0;
 
     function capsUpdates()

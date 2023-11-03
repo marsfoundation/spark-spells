@@ -11,7 +11,7 @@ contract SparkEthereum_20231115Test is SparkEthereumTestBase {
     uint256 public constant NEW_RETH_SUPPLY_CAP = 80_000;
 
     uint256 public constant OLD_WSTETH_SUPPLY_CAP = 400_000;
-    uint256 public constant NEW_WSTETH_SUPPLY_CAP = 600_000; // TBD
+    uint256 public constant NEW_WSTETH_SUPPLY_CAP = 800_000;
 
     uint256 public constant OLD_DAI_LTV = 1;
     uint256 public constant NEW_DAI_LTV = 0;
