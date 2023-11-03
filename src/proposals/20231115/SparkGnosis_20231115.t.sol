@@ -48,7 +48,6 @@ contract SparkGnosis_20231115Test is SparkGnosisTestBase {
 
         wstETHConfigBefore.supplyCap = NEW_WSTETH_SUPPLY_CAP;
         _validateReserveConfig(wstETHConfigBefore, allConfigsAfter);
-
     }
 
 }
