@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.10;
 
-import { SparkPayloadEthereum, IEngine, Rates, EngineFlags } from '../../SparkPayloadEthereum.sol';
+import { Domain, GnosisDomain } from 'xchain-helpers/GnosisDomain.sol';
+
+import { SparkPayloadEthereum, IEngine, Rates, EngineFlags, Address } from '../../SparkPayloadEthereum.sol';
+
+interface IForwarder {
+    function execute(address payload) external;
+}
 
 /**
  * @title  November 15, 2023 Spark Ethereum Proposal -
@@ -11,12 +17,17 @@ import { SparkPayloadEthereum, IEngine, Rates, EngineFlags } from '../../SparkPa
  * Vote:
  */
 contract SparkEthereum_20231115 is SparkPayloadEthereum {
-    address public constant RETH            = 0xae78736Cd615f374D3085123A210448E74Fc6393;
-    address public constant WSTETH          = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0;
-    address public constant DAI             = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
-    address public constant WETH            = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-    address public constant WBTC            = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
-    address public constant WBTC_PRICE_FEED = 0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43;
+
+    using Address for address;
+
+    address public constant RETH             = 0xae78736Cd615f374D3085123A210448E74Fc6393;
+    address public constant WSTETH           = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0;
+    address public constant DAI              = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
+    address public constant WETH             = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    address public constant WBTC             = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
+    address public constant WBTC_PRICE_FEED  = 0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43;
+    address public constant GNOSIS_FORWARDER = 0x44f993EAe9a420Df9ffa5263c55f6C8eF46c0340;
+    address public constant GNOSIS_PAYLOAD   = 0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f;
 
     function capsUpdates()
         public pure override returns (IEngine.CapsUpdate[] memory)
@@ -135,6 +146,13 @@ contract SparkEthereum_20231115 is SparkPayloadEthereum {
         LISTING_ENGINE.POOL_CONFIGURATOR().setReserveFreeze(
             WBTC,
             false
+        );
+
+        GNOSIS_FORWARDER.functionDelegateCall(
+            abi.encodeWithSelector(
+                IForwarder.execute.selector,
+                GNOSIS_PAYLOAD
+            )
         );
     }
 
