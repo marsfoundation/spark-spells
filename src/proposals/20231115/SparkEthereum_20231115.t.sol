@@ -14,9 +14,8 @@ interface IL2BridgeExecutor {
 
 contract SparkEthereum_20231115Test is SparkEthereumTestBase {
 
-    address public constant WBTC            = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
-    address public constant WBTC_PRICE_FEED = 0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43;
-
+    address public constant WBTC                   = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
+    address public constant WBTC_PRICE_FEED        = 0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43;
     address public constant GNOSIS_BRIDGE_EXECUTOR = 0xc4218C1127cB24a0D6c1e7D25dc34e10f2625f5A;
 
     uint256 public constant OLD_RETH_SUPPLY_CAP            = 60_000;
@@ -32,7 +31,6 @@ contract SparkEthereum_20231115Test is SparkEthereumTestBase {
     uint256 public constant NEW_WETH_VARIABLE_RATE_SLOPE_1 = 0.032e27;
     uint256 public constant OLD_WETH_VARIABLE_RATE_SLOPE_2 = 1.200e27;
     uint256 public constant NEW_WETH_VARIABLE_RATE_SLOPE_2 = 1.232e27;
-
     uint256 public constant NEW_WBTC_SUPPLY_CAP            = 3_000;
     uint256 public constant NEW_WBTC_BORROW_CAP            = 2_000;
     uint256 public constant NEW_WBTC_LTV                   = 70_00;
