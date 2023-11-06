@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.10;
 
-import { Domain, GnosisDomain } from 'xchain-helpers/GnosisDomain.sol';
-
 import { SparkPayloadEthereum, IEngine, Rates, EngineFlags, Address } from '../../SparkPayloadEthereum.sol';
 
 interface IForwarder {
@@ -27,7 +25,7 @@ contract SparkEthereum_20231115 is SparkPayloadEthereum {
     address public constant WBTC             = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
     address public constant WBTC_PRICE_FEED  = 0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43;
     address public constant GNOSIS_FORWARDER = 0x44f993EAe9a420Df9ffa5263c55f6C8eF46c0340;
-    address public constant GNOSIS_PAYLOAD   = 0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f;
+    address public constant GNOSIS_PAYLOAD   = 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a;
 
     function capsUpdates()
         public pure override returns (IEngine.CapsUpdate[] memory)

@@ -3,12 +3,21 @@ pragma solidity ^0.8.10;
 
 import '../../SparkTestBase.sol';
 
+import { Domain, GnosisDomain } from 'xchain-helpers/testing/GnosisDomain.sol';
+
 import { SparkEthereum_20231115 } from './SparkEthereum_20231115.sol';
+import { SparkGnosis_20231115 } from   './SparkGnosis_20231115.sol';
+
+interface IL2BridgeExecutor {
+    function execute(uint256 index) external;
+}
 
 contract SparkEthereum_20231115Test is SparkEthereumTestBase {
 
     address public constant WBTC            = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
     address public constant WBTC_PRICE_FEED = 0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43;
+
+    address public constant GNOSIS_BRIDGE_EXECUTOR = 0xc4218C1127cB24a0D6c1e7D25dc34e10f2625f5A;
 
     uint256 public constant OLD_RETH_SUPPLY_CAP            = 60_000;
     uint256 public constant NEW_RETH_SUPPLY_CAP            = 80_000;
@@ -35,12 +44,22 @@ contract SparkEthereum_20231115Test is SparkEthereumTestBase {
     uint256 public constant NEW_WBTC_VARIABLE_RATE_SLOPE_2 = 302_00;
     uint256 public constant NEW_WBTC_RESERVE_FACTOR        = 20_00;
 
+    Domain       mainnet;
+    GnosisDomain gnosis;
+
     constructor() {
         id = '20231115';
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('mainnet').rpcUrl, 18484640);
+        mainnet = new Domain(getChain('mainnet'));
+        gnosis = new GnosisDomain(getChain('gnosis_chain'), mainnet);
+
+        gnosis.selectFork();
+        new SparkGnosis_20231115();
+
+        mainnet.selectFork();
+
         payload = deployPayload();
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
@@ -200,6 +219,14 @@ contract SparkEthereum_20231115Test is SparkEthereumTestBase {
         assertTrue(wbtcConfigAfter.variableDebtToken != address(0));
         assertTrue(wbtcConfigAfter.stableDebtToken   != address(0));
 
+        /******************************/
+        /*** Gnosis Spell Execution ***/
+        /******************************/
+
+        gnosis.relayFromHost(true);
+        skip(2 days);
+
+        IL2BridgeExecutor(GNOSIS_BRIDGE_EXECUTOR).execute(1);
     }
 
 }
