@@ -12,9 +12,17 @@ interface IL2BridgeExecutor {
     function execute(uint256 index) external;
 }
 
+interface D3MHubLike {
+    function exec(bytes32) external;
+}
+
 contract SparkEthereum_20231115Test is SparkEthereumTestBase {
 
     address public constant GNOSIS_BRIDGE_EXECUTOR = 0xc4218C1127cB24a0D6c1e7D25dc34e10f2625f5A;
+    address public constant D3M_JOB                = 0x1Bb799509b0B039345f910dfFb71eEfAc7022323;
+    address public constant D3M_HUB                = 0x12F36cdEA3A28C35aC8C6Cc71D9265c17C74A27F;
+
+    bytes32 public constant DAI_ILK = 0x4449524543542d535041524b2d44414900000000000000000000000000000000;
 
     Domain       mainnet;
     GnosisDomain gnosis;
@@ -200,6 +208,27 @@ contract SparkEthereum_20231115Test is SparkEthereumTestBase {
         skip(2 days);
 
         IL2BridgeExecutor(GNOSIS_BRIDGE_EXECUTOR).execute(1);
+    }
+
+    function testD3MDeposit() public {
+        ReserveConfig[] memory allConfigs = createConfigurationSnapshot('', pool);
+
+        address dai   = _findReserveConfigBySymbol(allConfigs, 'DAI').underlying;
+        address spDai = _findReserveConfigBySymbol(allConfigs, 'DAI').aToken;
+
+        uint256 daiSupplyBefore    = IERC20(dai).totalSupply();
+        uint256 spDaiBalanceBefore = IERC20(dai).balanceOf(spDai);
+
+        vm.prank(D3M_JOB);
+        D3MHubLike(D3M_HUB).exec(DAI_ILK);
+
+        uint256 daiSupplyAfter    = IERC20(dai).totalSupply();
+        uint256 spDaiBalanceAfter = IERC20(dai).balanceOf(spDai);
+
+        assertLt(daiSupplyBefore,    daiSupplyAfter);
+        assertLt(spDaiBalanceBefore, spDaiBalanceAfter);
+
+        assertEq(daiSupplyAfter - daiSupplyBefore, spDaiBalanceAfter - spDaiBalanceBefore);
     }
 
 }
