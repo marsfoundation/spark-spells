@@ -211,6 +211,8 @@ contract SparkEthereum_20231115Test is SparkEthereumTestBase {
     }
 
     function testD3MDeposit() public {
+        GovHelpers.executePayload(vm, payload, executor);
+
         ReserveConfig[] memory allConfigs = createConfigurationSnapshot('', pool);
 
         address dai   = _findReserveConfigBySymbol(allConfigs, 'DAI').underlying;
