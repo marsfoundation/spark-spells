@@ -23,9 +23,8 @@ contract SparkEthereum_20231115 is SparkPayloadEthereum {
     address public constant DAI              = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
     address public constant WETH             = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     address public constant WBTC             = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
-    address public constant WBTC_PRICE_FEED  = 0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43;
     address public constant GNOSIS_FORWARDER = 0x44f993EAe9a420Df9ffa5263c55f6C8eF46c0340;
-    address public constant GNOSIS_PAYLOAD   = 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a;
+    address public constant GNOSIS_PAYLOAD   = 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a; // Temporary test address, to be replaced after deployment
 
     function capsUpdates()
         public pure override returns (IEngine.CapsUpdate[] memory)
@@ -72,9 +71,9 @@ contract SparkEthereum_20231115 is SparkPayloadEthereum {
             ltv:            70_00,
             liqThreshold:   75_00,
             liqBonus:       7_00,
-            debtCeiling:    EngineFlags.KEEP_CURRENT,
-            liqProtocolFee: EngineFlags.KEEP_CURRENT,
-            eModeCategory:  EngineFlags.KEEP_CURRENT
+            debtCeiling:    0,
+            liqProtocolFee: 10_00,
+            eModeCategory:  0
         });
 
         return collateralUpdates;
@@ -92,7 +91,7 @@ contract SparkEthereum_20231115 is SparkPayloadEthereum {
             flashloanable:         EngineFlags.ENABLED,
             stableRateModeEnabled: EngineFlags.DISABLED,
             borrowableInIsolation: EngineFlags.DISABLED,
-            withSiloedBorrowing:   EngineFlags.ENABLED
+            withSiloedBorrowing:   EngineFlags.DISABLED
         });
 
         return borrowsUpdate;
@@ -107,7 +106,7 @@ contract SparkEthereum_20231115 is SparkPayloadEthereum {
             optimalUsageRatio:             _bpsToRay(90_00),
             baseVariableBorrowRate:        0,
             variableRateSlope1:            _bpsToRay(3_20),
-            variableRateSlope2:            _bpsToRay(123_20),
+            variableRateSlope2:            _bpsToRay(120_00),
             stableRateSlope1:              0,
             stableRateSlope2:              0,
             baseStableRateOffset:          0,
@@ -124,7 +123,7 @@ contract SparkEthereum_20231115 is SparkPayloadEthereum {
             optimalUsageRatio:             _bpsToRay(60_00),
             baseVariableBorrowRate:        0,
             variableRateSlope1:            _bpsToRay(2_00),
-            variableRateSlope2:            _bpsToRay(302_00),
+            variableRateSlope2:            _bpsToRay(300_00),
             stableRateSlope1:              0,
             stableRateSlope2:              0,
             baseStableRateOffset:          0,

@@ -38,7 +38,7 @@ contract SparkGnosis_20231115 is SparkPayloadGnosis {
             optimalUsageRatio:             _bpsToRay(90_00),
             baseVariableBorrowRate:        0,
             variableRateSlope1:            _bpsToRay(3_20),
-            variableRateSlope2:            _bpsToRay(123_20),
+            variableRateSlope2:            _bpsToRay(120_00),
             stableRateSlope1:              0,
             stableRateSlope2:              0,
             baseStableRateOffset:          0,
