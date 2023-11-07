@@ -8,11 +8,14 @@ interface IForwarder {
 }
 
 /**
- * @title  November 15, 2023 Spark Ethereum Proposal -
+ * @title  November 15, 2023 Spark Ethereum Proposal - Raise rETH & wstETH supply caps, set DAI LTV to 0, update ETH interest rate model, reactivate WBTC market
  * @author Phoenix Labs
- * @dev
- * Forum:
- * Vote:
+ * @dev This proposal sets rETH and estETH supplyCap, sets DAI ltv param to 0, updades ETH variableRateSlope1 and modifies multiple WBTC market parameters
+ * Forum:              https://forum.makerdao.com/t/proposal-to-adjust-sparklend-parameters/22542
+ * rETH & wstETH Vote: https://vote.makerdao.com/polling/QmRG9qUp
+ * DAI Vote:           https://vote.makerdao.com/polling/QmZwRgr5
+ * ETH Vote:           https://vote.makerdao.com/polling/QmQjKpbU
+ * WBTC Vote:          https://vote.makerdao.com/polling/QmQPrHsm
  */
 contract SparkEthereum_20231115 is SparkPayloadEthereum {
 

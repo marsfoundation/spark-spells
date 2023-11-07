@@ -4,11 +4,12 @@ pragma solidity ^0.8.10;
 import { SparkPayloadGnosis, IEngine, Rates, EngineFlags } from '../../SparkPayloadGnosis.sol';
 
 /**
- * @title  November 15, 2023 Spark Gnosis Proposal -
+ * @title  November 15, 2023 Spark Gnosis Proposal - Update ETH interest rate model, raise wstETH supply cap to 10,000
  * @author Phoenix Labs
- * @dev
- * Forum:
- * Vote:
+ * @dev    This proposal updades ETH variableRateSlope1 and updates wstETH supplyCap
+ * Forum:       https://forum.makerdao.com/t/proposal-to-adjust-sparklend-parameters/22542
+ * ETH Vote:    https://vote.makerdao.com/polling/QmQjKpbU
+ * wstETH Vote: https://vote.makerdao.com/polling/QmaBLbxP
  */
 contract SparkGnosis_20231115 is SparkPayloadGnosis {
 
