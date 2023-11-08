@@ -85,14 +85,14 @@ contract SparkEthereum_20231115Test is SparkEthereumTestBase {
             address(interestRateStrategy),
             InterestStrategyValues({
                 addressesProvider:             address(poolAddressesProvider),
-                optimalUsageRatio:             0.90e27,
+                optimalUsageRatio:             interestRateStrategy.OPTIMAL_USAGE_RATIO(),
                 optimalStableToTotalDebtRatio: interestRateStrategy.OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO(),
                 baseStableBorrowRate:          0.028e27,
                 stableRateSlope1:              interestRateStrategy.getStableRateSlope1(),
                 stableRateSlope2:              interestRateStrategy.getStableRateSlope2(),
                 baseVariableBorrowRate:        0.01e27,
                 variableRateSlope1:            0.028e27,
-                variableRateSlope2:            1.200e27
+                variableRateSlope2:            interestRateStrategy.getVariableRateSlope2()
             })
         );
 
@@ -136,14 +136,14 @@ contract SparkEthereum_20231115Test is SparkEthereumTestBase {
             wethConfigAfter.interestRateStrategy,
             InterestStrategyValues({
                 addressesProvider:             address(poolAddressesProvider),
-                optimalUsageRatio:             0.90e27,
+                optimalUsageRatio:             interestRateStrategy.OPTIMAL_USAGE_RATIO(),
                 optimalStableToTotalDebtRatio: interestRateStrategy.OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO(),
                 baseStableBorrowRate:          0.032e27,
                 stableRateSlope1:              interestRateStrategy.getStableRateSlope1(),
                 stableRateSlope2:              interestRateStrategy.getStableRateSlope2(),
                 baseVariableBorrowRate:        0,
                 variableRateSlope1:            0.032e27,
-                variableRateSlope2:            1.200e27
+                variableRateSlope2:            interestRateStrategy.getVariableRateSlope2()
             })
         );
 
