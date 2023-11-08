@@ -27,7 +27,7 @@ contract SparkEthereum_20231115 is SparkPayloadEthereum {
     address public constant WETH             = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     address public constant WBTC             = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
     address public constant GNOSIS_FORWARDER = 0x44f993EAe9a420Df9ffa5263c55f6C8eF46c0340;
-    address public constant GNOSIS_PAYLOAD   = 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a; // Temporary test address, to be replaced after deployment
+    address public constant GNOSIS_PAYLOAD   = 0x41709f51E59ddbEbF37cE95257b2E4f2884a45F8;
 
     function capsUpdates()
         public pure override returns (IEngine.CapsUpdate[] memory)

@@ -34,11 +34,6 @@ contract SparkEthereum_20231115Test is SparkEthereumTestBase {
     function setUp() public {
         mainnet = new Domain(getChain('mainnet'));
         gnosis = new GnosisDomain(getChain('gnosis_chain'), mainnet);
-
-        gnosis.selectFork();
-        // This will be removed after spell deployment
-        new SparkGnosis_20231115();
-
         mainnet.selectFork();
 
         payload = deployPayload();
