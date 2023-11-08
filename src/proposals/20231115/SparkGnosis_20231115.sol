@@ -29,28 +29,17 @@ contract SparkGnosis_20231115 is SparkPayloadGnosis {
 
         return capsUpdate;
     }
-
     function rateStrategiesUpdates()
-        public pure override returns (IEngine.RateStrategyUpdate[] memory)
+        public view override returns (IEngine.RateStrategyUpdate[] memory)
     {
         IEngine.RateStrategyUpdate[] memory ratesUpdate = new IEngine.RateStrategyUpdate[](1);
 
-        Rates.RateStrategyParams memory wethRateStrategyParams = Rates.RateStrategyParams({
-            optimalUsageRatio:             _bpsToRay(90_00),
-            baseVariableBorrowRate:        0,
-            variableRateSlope1:            _bpsToRay(3_20),
-            variableRateSlope2:            _bpsToRay(120_00),
-            stableRateSlope1:              0,
-            stableRateSlope2:              0,
-            baseStableRateOffset:          0,
-            stableRateExcessOffset:        0,
-            optimalStableToTotalDebtRatio: 0
-        });
+        Rates.RateStrategyParams memory weth = LISTING_ENGINE.RATE_STRATEGIES_FACTORY().getStrategyDataOfAsset(WETH);
 
-        ratesUpdate[0] = IEngine.RateStrategyUpdate({
-            asset:  WETH,
-            params: wethRateStrategyParams
-        });
+        weth.baseVariableBorrowRate = 0;
+        weth.variableRateSlope1     = _bpsToRay(3_20);
+
+        ratesUpdate[0] = IEngine.RateStrategyUpdate({ asset: WETH, params: weth });
 
         return ratesUpdate;
     }

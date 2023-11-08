@@ -101,28 +101,18 @@ contract SparkEthereum_20231115 is SparkPayloadEthereum {
     }
 
     function rateStrategiesUpdates()
-        public pure override returns (IEngine.RateStrategyUpdate[] memory)
+        public view override returns (IEngine.RateStrategyUpdate[] memory)
     {
         IEngine.RateStrategyUpdate[] memory ratesUpdate = new IEngine.RateStrategyUpdate[](2);
 
-        Rates.RateStrategyParams memory wethRateStrategyParams = Rates.RateStrategyParams({
-            optimalUsageRatio:             _bpsToRay(90_00),
-            baseVariableBorrowRate:        0,
-            variableRateSlope1:            _bpsToRay(3_20),
-            variableRateSlope2:            _bpsToRay(120_00),
-            stableRateSlope1:              0,
-            stableRateSlope2:              0,
-            baseStableRateOffset:          0,
-            stableRateExcessOffset:        0,
-            optimalStableToTotalDebtRatio: 0
-        });
+        Rates.RateStrategyParams memory weth = LISTING_ENGINE.RATE_STRATEGIES_FACTORY().getStrategyDataOfAsset(WETH);
 
-        ratesUpdate[0] = IEngine.RateStrategyUpdate({
-            asset:  WETH,
-            params: wethRateStrategyParams
-        });
+        weth.baseVariableBorrowRate = 0;
+        weth.variableRateSlope1     = _bpsToRay(3_20);
 
-        Rates.RateStrategyParams memory wbtcRateStrategyParams = Rates.RateStrategyParams({
+        ratesUpdate[0] = IEngine.RateStrategyUpdate({ asset: WETH, params: weth });
+
+        Rates.RateStrategyParams memory wbtc = Rates.RateStrategyParams({
             optimalUsageRatio:             _bpsToRay(60_00),
             baseVariableBorrowRate:        0,
             variableRateSlope1:            _bpsToRay(2_00),
@@ -134,10 +124,7 @@ contract SparkEthereum_20231115 is SparkPayloadEthereum {
             optimalStableToTotalDebtRatio: 0
         });
 
-        ratesUpdate[1] = IEngine.RateStrategyUpdate({
-            asset:  WBTC,
-            params: wbtcRateStrategyParams
-        });
+        ratesUpdate[1] = IEngine.RateStrategyUpdate({ asset:  WBTC, params: wbtc });
 
         return ratesUpdate;
     }
