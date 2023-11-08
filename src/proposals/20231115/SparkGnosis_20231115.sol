@@ -6,7 +6,7 @@ import { SparkPayloadGnosis, IEngine, Rates, EngineFlags } from '../../SparkPayl
 /**
  * @title  November 15, 2023 Spark Gnosis Proposal - Update ETH interest rate model, raise wstETH supply cap to 10,000
  * @author Phoenix Labs
- * @dev    This proposal updades ETH variableRateSlope1 and updates wstETH supplyCap
+ * @dev    This proposal updates ETH variableRateSlope1 and updates wstETH supplyCap
  * Forum:       https://forum.makerdao.com/t/proposal-to-adjust-sparklend-parameters/22542
  * ETH Vote:    https://vote.makerdao.com/polling/QmQjKpbU
  * wstETH Vote: https://vote.makerdao.com/polling/QmaBLbxP
