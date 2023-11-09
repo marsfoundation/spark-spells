@@ -10,6 +10,7 @@ import { SparkGnosis_20231115 } from   './SparkGnosis_20231115.sol';
 
 interface IL2BridgeExecutor {
     function execute(uint256 index) external;
+    function getActionsSetCount() external view returns (uint256);
 }
 
 interface D3MHubLike {
@@ -202,8 +203,12 @@ contract SparkEthereum_20231115Test is SparkEthereumTestBase {
     function testGnosisSpellExecution() public {
         GovHelpers.executePayload(vm, payload, executor);
 
+        assertEq(IL2BridgeExecutor(GNOSIS_BRIDGE_EXECUTOR).getActionsSetCount(), 1);
+
         gnosis.relayFromHost(true);
         skip(2 days);
+
+        assertEq(IL2BridgeExecutor(GNOSIS_BRIDGE_EXECUTOR).getActionsSetCount(), 2);
 
         IL2BridgeExecutor(GNOSIS_BRIDGE_EXECUTOR).execute(1);
     }
