@@ -203,6 +203,8 @@ contract SparkEthereum_20231115Test is SparkEthereumTestBase {
     function testGnosisSpellExecution() public {
         GovHelpers.executePayload(vm, payload, executor);
 
+        gnosis.selectFork();
+
         assertEq(IL2BridgeExecutor(GNOSIS_BRIDGE_EXECUTOR).getActionsSetCount(), 1);
 
         gnosis.relayFromHost(true);
@@ -210,6 +212,10 @@ contract SparkEthereum_20231115Test is SparkEthereumTestBase {
 
         assertEq(IL2BridgeExecutor(GNOSIS_BRIDGE_EXECUTOR).getActionsSetCount(), 2);
 
+        vm.expectCall(
+            0x41709f51E59ddbEbF37cE95257b2E4f2884a45F8, // Gnosis payload address
+            abi.encodeWithSignature('execute()')
+        );
         IL2BridgeExecutor(GNOSIS_BRIDGE_EXECUTOR).execute(1);
     }
 
