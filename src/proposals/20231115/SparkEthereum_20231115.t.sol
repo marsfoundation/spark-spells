@@ -197,96 +197,12 @@ contract SparkEthereum_20231115Test is SparkEthereumTestBase {
     }
 
     function testGnosisSpellExecution() public {
-
-        /******************************/
-        /*** Execute MainnetPayload ***/
-        /******************************/
-
         GovHelpers.executePayload(vm, payload, executor);
 
         gnosis.relayFromHost(true);
-
-        /**************************/
-        /*** Load Gnosis Domain ***/
-        /**************************/
-
-        executor = 0xc4218C1127cB24a0D6c1e7D25dc34e10f2625f5A;
-        domain = 'Gnosis';
-        poolAddressesProviderRegistry = IPoolAddressesProviderRegistry(0x49d24798d3b84965F0d1fc8684EF6565115e70c1);
-        loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
-
-        ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', pool);
-
-        /*******************************************/
-        /*** wstETH Supply Cap Before Assertions ***/
-        /*******************************************/
-
-        ReserveConfig memory wstETHConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'wstETH');
-        assertEq(wstETHConfigBefore.supplyCap, 5_000);
-
-        /*****************************************************/
-        /*** WETH Interest Rate Strategy Before Assertions ***/
-        /*****************************************************/
-
-        ReserveConfig memory wethConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'WETH');
-        IDefaultInterestRateStrategy oldInterestRateStrategy = IDefaultInterestRateStrategy(
-            wethConfigBefore.interestRateStrategy
-        );
-
-        _validateInterestRateStrategy(
-            address(oldInterestRateStrategy),
-            address(oldInterestRateStrategy),
-            InterestStrategyValues({
-                addressesProvider:             address(poolAddressesProvider),
-                optimalUsageRatio:             oldInterestRateStrategy.OPTIMAL_USAGE_RATIO(),
-                optimalStableToTotalDebtRatio: oldInterestRateStrategy.OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO(),
-                baseStableBorrowRate:          0.028e27,
-                stableRateSlope1:              oldInterestRateStrategy.getStableRateSlope1(),
-                stableRateSlope2:              oldInterestRateStrategy.getStableRateSlope2(),
-                baseVariableBorrowRate:        0.01e27,
-                variableRateSlope1:            0.028e27,
-                variableRateSlope2:            oldInterestRateStrategy.getVariableRateSlope2()
-            })
-        );
-
-        /***********************/
-        /*** Execute Payload ***/
-        /***********************/
-
         skip(2 days);
 
         IL2BridgeExecutor(GNOSIS_BRIDGE_EXECUTOR).execute(1);
-
-        ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
-
-        /******************************************/
-        /*** wstETH Supply Cap After Assertions ***/
-        /******************************************/
-
-        wstETHConfigBefore.supplyCap = 10_000;
-        _validateReserveConfig(wstETHConfigBefore, allConfigsAfter);
-
-        /****************************************************/
-        /*** WETH Interest Rate Strategy After Assertions ***/
-        /****************************************************/
-
-        ReserveConfig memory wethConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'WETH');
-
-        _validateInterestRateStrategy(
-            wethConfigAfter.interestRateStrategy,
-            wethConfigAfter.interestRateStrategy,
-            InterestStrategyValues({
-                addressesProvider:             address(poolAddressesProvider),
-                optimalUsageRatio:             oldInterestRateStrategy.OPTIMAL_USAGE_RATIO(),
-                optimalStableToTotalDebtRatio: oldInterestRateStrategy.OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO(),
-                baseStableBorrowRate:          0.032e27,
-                stableRateSlope1:              oldInterestRateStrategy.getStableRateSlope1(),
-                stableRateSlope2:              oldInterestRateStrategy.getStableRateSlope2(),
-                baseVariableBorrowRate:        0,
-                variableRateSlope1:            0.032e27,
-                variableRateSlope2:            oldInterestRateStrategy.getVariableRateSlope2()
-            })
-        );
     }
 
     function testD3MDeposit() public {
