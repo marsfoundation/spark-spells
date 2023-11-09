@@ -33,11 +33,14 @@ contract SparkEthereum_20231115Test is SparkEthereumTestBase {
 
     function setUp() public {
         mainnet = new Domain(getChain('mainnet'));
-        gnosis = new GnosisDomain(getChain('gnosis_chain'), mainnet);
+        gnosis  = new GnosisDomain(getChain('gnosis_chain'), mainnet);
+
+        mainnet.rollFork(18_534_203);
+        gnosis.rollFork(30_855_038);
+
         mainnet.selectFork();
 
-        payload = deployPayload();
-
+        payload = 0xDa69603384Ef825E52FD5B8bEF656ff62Fe19703;
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
     }
 
