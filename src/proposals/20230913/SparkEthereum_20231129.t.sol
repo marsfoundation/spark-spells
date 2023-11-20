@@ -127,6 +127,7 @@ contract SparkEthereum_20231129Test is SparkEthereumTestBase {
         // Make sure that diff is the same as start of test
         assertApproxEqAbs(_getAssetLiabilityDiff(DAI), startDiff, 1);
 
+        // Simulate 100 days of protocol activity
         for(uint256 i = 0; i < 2400; i++) {
             vm.warp(startingTimestamp + i * 1 hours);
             _supply(DAI, 1e18);
