@@ -5,6 +5,7 @@ import '../../SparkTestBase.sol';
 
 import { IERC20 } from "src/interfaces/IERC20.sol";
 
+import { IAToken } from "lib/aave-v3-core/contracts/interfaces/IAToken.sol";
 import { IPoolDataProvider } from "lib/aave-v3-core/contracts/interfaces/IPoolDataProvider.sol";
 
 import { SparkEthereum_20231129 } from './SparkEthereum_20231129.sol';
@@ -94,8 +95,8 @@ contract SparkEthereum_20231129Test is SparkEthereumTestBase {
         }
 
         // Demonstrate that the asset liability diff would continue to increase over time
-        assertEq(_getAssetLiabilityDiff(DAI),             771_448.289653373654814223 ether);
-        assertEq(_getAssetLiabilityDiff(DAI) - startDiff, 555_263.938288374126089205 ether);
+        assertEq(_getAssetLiabilityDiff(DAI),             771_448.289653373654814224 ether);
+        assertEq(_getAssetLiabilityDiff(DAI) - startDiff, 555_263.938288374126089206 ether);
 
         // Warp back to original timestamp and snapshot
         vm.warp(startingTimestamp);
@@ -145,25 +146,20 @@ contract SparkEthereum_20231129Test is SparkEthereumTestBase {
 
         uint256 totalDebt      = dataProvider.getTotalDebt(asset);
         uint256 totalLiquidity = IERC20(asset).balanceOf(aToken);
-        uint256 totalDeposits  = IERC20(aToken).totalSupply();
+
+        uint256 liquidityIndex    = pool.getReserveNormalizedIncome(asset);
+        uint256 totalDeposits     = IAToken(aToken).scaledTotalSupply() * liquidityIndex / 1e27;
+        uint256 accruedToTreasury = accruedToTreasuryScaled * liquidityIndex / 1e27;
 
         uint256 assets      = totalLiquidity + totalDebt;
-        uint256 liabilities = totalDeposits + accruedToTreasuryScaled;
-
-        // console.log("----------------------------------------");
-        // console.log("totalDebt:               %s", totalDebt);
-        // console.log("totalLiquidity:          %s", totalLiquidity);
-        // console.log("totalDeposits:           %s", totalDeposits);
-        // console.log("accruedToTreasuryScaled: %s", accruedToTreasuryScaled);
-        // console.log("block.timestamp          %s", block.timestamp);
-        // console.log("assets:                  %s", assets);
-        // console.log("liabilities:             %s", liabilities);
-        // console.log("----------------------------------------");
+        uint256 liabilities = totalDeposits + accruedToTreasury;
 
         diff = assets - liabilities;
     }
 
-    function _getRates(address asset) internal view returns (uint256 supplyRate, uint256 variableBorrowRate) {
+    function _getRates(address asset)
+        internal view returns (uint256 supplyRate, uint256 variableBorrowRate)
+    {
         ( ,,,,, supplyRate, variableBorrowRate,,,,, ) = dataProvider.getReserveData(asset);
     }
 

@@ -7,9 +7,7 @@ import { SparkPayloadEthereum } from '../../SparkPayloadEthereum.sol';
  * @title  November 29, 2023 Spark Ethereum Proposal - Set DAI supply spread to 0.5%
  * @author Phoenix Labs
  * @dev    This proposal updates DAI Interest Rate Strategy supplySpread parameter to match borrowSpread parameter.
- * Forum:           TODO
- * DAI Vote:        TODO
- * Flash Loan Vote: TODO
+ * Forum:  https://forum.makerdao.com/t/accounting-discrepancy-in-the-dai-market/22845
  */
 contract SparkEthereum_20231129 is SparkPayloadEthereum {
 
