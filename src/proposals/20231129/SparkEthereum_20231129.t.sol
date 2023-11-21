@@ -27,8 +27,8 @@ contract SparkEthereum_20231129Test is SparkEthereumTestBase {
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('mainnet').rpcUrl, 18_615_540);
-        payload = address(new SparkEthereum_20231129());
+        vm.createSelectFork(getChain('mainnet').rpcUrl, 18_622_106);
+        payload = 0x68a075249fA77173b8d1B92750c9920423997e2B;
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
     }
@@ -84,7 +84,7 @@ contract SparkEthereum_20231129Test is SparkEthereumTestBase {
 
         uint256 startDiff = _getAssetLiabilityDiff(DAI);
 
-        assertEq(startDiff, 216_184.351364999528725018 ether);
+        assertEq(startDiff, 221_232.428488870663797097 ether);
 
         // Take snapshot before simulating protocol activity
         uint256 snapshot = vm.snapshot();
@@ -96,8 +96,8 @@ contract SparkEthereum_20231129Test is SparkEthereumTestBase {
         }
 
         // Demonstrate that the asset liability diff would continue to increase over time
-        assertEq(_getAssetLiabilityDiff(DAI),             771_448.289653373654814224 ether);
-        assertEq(_getAssetLiabilityDiff(DAI) - startDiff, 555_263.938288374126089206 ether);
+        assertEq(_getAssetLiabilityDiff(DAI),             778_319.620039363706458871 ether);
+        assertEq(_getAssetLiabilityDiff(DAI) - startDiff, 557_087.191550493042661774 ether);
 
         // Warp back to original timestamp and snapshot
         vm.warp(startingTimestamp);
@@ -109,7 +109,7 @@ contract SparkEthereum_20231129Test is SparkEthereumTestBase {
         ( uint256 supplyRate1, uint256 variableBorrowRate1 ) = _getRates(DAI);
 
         // Diff should be small since utilization is almost 100%
-        assertEq(supplyRate1,         0.048418992886337042226176019e27);
+        assertEq(supplyRate1,         0.046330401155582341410874849e27);
         assertEq(variableBorrowRate1, 0.053790164207174267760128000e27);
 
         // Supply a small amount of DAI to update rates
@@ -119,12 +119,12 @@ contract SparkEthereum_20231129Test is SparkEthereumTestBase {
 
         // Show that rates have updated
         // Diff is small since utilization is almost 100%
-        assertEq(supplyRate2,         0.053380969243632827980092586e27);
+        assertEq(supplyRate2,         0.051078367754112897710958380e27);
         assertEq(variableBorrowRate2, 0.053790164207174267760128000e27);
 
         // Supply rate change is slightly less than supplySpread update because of utilization
         assertEq(variableBorrowRate2 - variableBorrowRate1, 0);
-        assertEq(supplyRate2 - supplyRate1,                 0.004961976357295785753916567e27);
+        assertEq(supplyRate2 - supplyRate1,                 0.004747966598530556300083531e27);
 
         // Make sure that diff is the same as start of test
         assertApproxEqAbs(_getAssetLiabilityDiff(DAI), startDiff, 1);
@@ -136,8 +136,9 @@ contract SparkEthereum_20231129Test is SparkEthereumTestBase {
         }
 
         // Demonstrate that the asset liability diff would continue to increase over time
-        assertEq(_getAssetLiabilityDiff(DAI),             219_386.337857977243480099 ether);
-        assertEq(_getAssetLiabilityDiff(DAI) - startDiff,   3_201.986492977714755081 ether);
+        // but at a lower rate. This is because the discrepancy itself is accruing value.
+        assertEq(_getAssetLiabilityDiff(DAI),             224_368.281860558479212359 ether);
+        assertEq(_getAssetLiabilityDiff(DAI) - startDiff,   3_135.853371687815415262 ether);
     }
 
     function _getAssetLiabilityDiff(address asset) internal view returns (uint256 diff) {
