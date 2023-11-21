@@ -43,7 +43,8 @@ contract SparkEthereum_20231129Test is SparkEthereumTestBase {
         ReserveConfig memory daiConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'DAI');
         assertEq(daiConfigBefore.interestRateStrategy, OLD_DAI_INTEREST_RATE_STRATEGY);
 
-        IDaiInterestRateStrategy oldStrategy = IDaiInterestRateStrategy(OLD_DAI_INTEREST_RATE_STRATEGY);
+        IDaiInterestRateStrategy oldStrategy
+            = IDaiInterestRateStrategy(OLD_DAI_INTEREST_RATE_STRATEGY);
 
         assertEq(oldStrategy.supplySpread(), OLD_SUPPLY_SPREAD);
 
@@ -144,15 +145,12 @@ contract SparkEthereum_20231129Test is SparkEthereumTestBase {
 
         ( address aToken,, ) = dataProvider.getReserveTokensAddresses(asset);
 
-        uint256 totalDebt      = dataProvider.getTotalDebt(asset);
-        uint256 totalLiquidity = IERC20(asset).balanceOf(aToken);
-
-        uint256 liquidityIndex    = pool.getReserveNormalizedIncome(asset);
-        uint256 totalDeposits     = IAToken(aToken).scaledTotalSupply() * liquidityIndex / 1e27;
-        uint256 accruedToTreasury = accruedToTreasuryScaled * liquidityIndex / 1e27;
+        uint256 totalDebt         = dataProvider.getTotalDebt(asset);
+        uint256 totalLiquidity    = IERC20(asset).balanceOf(aToken);
+        uint256 scaledLiabilities = IAToken(aToken).scaledTotalSupply() + accruedToTreasuryScaled;
 
         uint256 assets      = totalLiquidity + totalDebt;
-        uint256 liabilities = totalDeposits + accruedToTreasury;
+        uint256 liabilities = scaledLiabilities * pool.getReserveNormalizedIncome(asset) / 1e27;
 
         diff = assets - liabilities;
     }
