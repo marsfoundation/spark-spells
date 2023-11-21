@@ -5,7 +5,7 @@ import '../../SparkTestBase.sol';
 
 import { IERC20 } from "src/interfaces/IERC20.sol";
 
-import { IAToken } from "lib/aave-v3-core/contracts/interfaces/IAToken.sol";
+import { IAToken }           from "lib/aave-v3-core/contracts/interfaces/IAToken.sol";
 import { IPoolDataProvider } from "lib/aave-v3-core/contracts/interfaces/IPoolDataProvider.sol";
 
 import { SparkEthereum_20231129 } from './SparkEthereum_20231129.sol';
