@@ -89,15 +89,15 @@ contract SparkEthereum_20231129Test is SparkEthereumTestBase {
         // Take snapshot before simulating protocol activity
         uint256 snapshot = vm.snapshot();
 
-        // Simulate 100 days of protocol activity
-        for (uint256 i = 0; i < 2400; i++) {
+        // Simulate 1 year of protocol activity
+        for (uint256 i = 0; i < (24 * 365); i++) {
             vm.warp(startingTimestamp + i * 1 hours);
             _supply(DAI, 1e18);
         }
 
         // Demonstrate that the asset liability diff would continue to increase over time
-        assertEq(_getAssetLiabilityDiff(DAI),             778_319.620039363706458871 ether);
-        assertEq(_getAssetLiabilityDiff(DAI) - startDiff, 557_087.191550493042661774 ether);
+        assertEq(_getAssetLiabilityDiff(DAI),             2_330_389.091939282711804580 ether);
+        assertEq(_getAssetLiabilityDiff(DAI) - startDiff, 2_109_156.663450412048007483 ether);
 
         // Warp back to original timestamp and snapshot
         vm.warp(startingTimestamp);
@@ -129,16 +129,16 @@ contract SparkEthereum_20231129Test is SparkEthereumTestBase {
         // Make sure that diff is the same as start of test
         assertApproxEqAbs(_getAssetLiabilityDiff(DAI), startDiff, 1);
 
-        // Simulate 100 days of protocol activity
-        for(uint256 i = 0; i < 2400; i++) {
+        // Simulate 1 year of protocol activity
+        for (uint256 i = 0; i < (24 * 365); i++) {
             vm.warp(startingTimestamp + i * 1 hours);
             _supply(DAI, 1e18);
         }
 
         // Demonstrate that the asset liability diff would continue to increase over time
         // but at a lower rate. This is because the discrepancy itself is accruing value.
-        assertEq(_getAssetLiabilityDiff(DAI),             224_368.281860558479212359 ether);
-        assertEq(_getAssetLiabilityDiff(DAI) - startDiff,   3_135.853371687815415262 ether);
+        assertEq(_getAssetLiabilityDiff(DAI),             232_910.005786463415880304 ether);
+        assertEq(_getAssetLiabilityDiff(DAI) - startDiff,  11_677.577297592752083207 ether);
     }
 
     function _getAssetLiabilityDiff(address asset) internal view returns (uint256 diff) {
