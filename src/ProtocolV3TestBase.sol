@@ -197,7 +197,7 @@ contract ProtocolV3TestBase is CommonTestBase {
     address borrowSupplier     = vm.addr(4);
     address liquidator         = vm.addr(5);
 
-    uint256 collateralAmount = _getTokenAmountByDollarValue(pool, collateralConfig, 100_000);
+    uint256 collateralAmount = _getTokenAmountByDollarValue(pool, collateralConfig, 110_000);
     uint256 borrowSeedAmount = _getTokenAmountByDollarValue(pool, borrowConfig,     100_000);
 
     uint256 maxBorrowAmount = _getMaxBorrowAmount(

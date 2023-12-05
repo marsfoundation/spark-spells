@@ -10,7 +10,7 @@ contract SparkEthereum_E2ETest is SparkEthereumTestBase {
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('mainnet').rpcUrl, 18_692_754);
+        vm.createSelectFork(getChain('mainnet').rpcUrl, 18707048);
         payload = 0x68a075249fA77173b8d1B92750c9920423997e2B;
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
