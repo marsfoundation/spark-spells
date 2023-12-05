@@ -5,9 +5,10 @@ import './ProtocolV3TestBase.sol';
 
 import { GovHelpers } from './libraries/GovHelpers.sol';
 
-import { IPool }                          from 'aave-v3-core/contracts/interfaces/IPool.sol';
-import { IPoolAddressesProvider }         from 'aave-v3-core/contracts/interfaces/IPoolAddressesProvider.sol';
-import { IPoolAddressesProviderRegistry } from 'aave-v3-core/contracts/interfaces/IPoolAddressesProviderRegistry.sol';
+import { InitializableAdminUpgradeabilityProxy } from "aave-v3-core/contracts/dependencies/openzeppelin/upgradeability/InitializableAdminUpgradeabilityProxy.sol";
+import { IPool }                                 from 'aave-v3-core/contracts/interfaces/IPool.sol';
+import { IPoolAddressesProvider }                from 'aave-v3-core/contracts/interfaces/IPoolAddressesProvider.sol';
+import { IPoolAddressesProviderRegistry }        from 'aave-v3-core/contracts/interfaces/IPoolAddressesProviderRegistry.sol';
 
 import { IDaiInterestRateStrategy }    from "./interfaces/IDaiInterestRateStrategy.sol";
 import { IDaiJugInterestRateStrategy } from "./interfaces/IDaiJugInterestRateStrategy.sol";
@@ -159,6 +160,35 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
             }
             // Return zero if the bytecode is shorter than two bytes.
         }
+    }
+
+    function testTokenImplementationsMatch() public {
+        // This test is to avoid a footgun where the token implementations are upgraded (possibly in an emergency) and
+        // the config engine is not redeployed to use the new implementation. As a general rule all reserves should
+        // use the same implementation for AToken, StableDebtToken and VariableDebtToken.
+        GovHelpers.executePayload(vm, payload, executor);
+
+        IPoolConfigurator poolConfigurator = IPoolConfigurator(poolAddressesProvider.getPoolConfigurator());
+        address[] memory reserves = pool.getReservesList();
+        assertGt(reserves.length, 0);
+
+        DataTypes.ReserveData memory data = pool.getReserveData(reserves[0]);
+        address aTokenAddress            = getImplementation(address(poolConfigurator), data.aTokenAddress);
+        address stableDebtTokenAddress   = getImplementation(address(poolConfigurator), data.stableDebtTokenAddress);
+        address variableDebtTokenAddress = getImplementation(address(poolConfigurator), data.variableDebtTokenAddress);
+
+        for (uint256 i = 1; i < reserves.length; i++) {
+            DataTypes.ReserveData memory data = pool.getReserveData(reserves[i]);
+
+            assertEq(getImplementation(address(poolConfigurator), data.aTokenAddress),            aTokenAddress);
+            assertEq(getImplementation(address(poolConfigurator), data.stableDebtTokenAddress),   stableDebtTokenAddress);
+            assertEq(getImplementation(address(poolConfigurator), data.variableDebtTokenAddress), variableDebtTokenAddress);
+        }
+    }
+
+    function getImplementation(address admin, address proxy) internal returns (address) {
+        vm.prank(admin);
+        return InitializableAdminUpgradeabilityProxy(payable(proxy)).implementation();
     }
 
     function _writeStrategyConfig(string memory strategiesKey, address _strategy) internal override returns (string memory content) {
