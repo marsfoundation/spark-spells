@@ -173,16 +173,16 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
         assertGt(reserves.length, 0);
 
         DataTypes.ReserveData memory data = pool.getReserveData(reserves[0]);
-        address aTokenAddress            = getImplementation(address(poolConfigurator), data.aTokenAddress);
-        address stableDebtTokenAddress   = getImplementation(address(poolConfigurator), data.stableDebtTokenAddress);
-        address variableDebtTokenAddress = getImplementation(address(poolConfigurator), data.variableDebtTokenAddress);
+        address aTokenImpl            = getImplementation(address(poolConfigurator), data.aTokenAddress);
+        address stableDebtTokenImpl   = getImplementation(address(poolConfigurator), data.stableDebtTokenAddress);
+        address variableDebtTokenImpl = getImplementation(address(poolConfigurator), data.variableDebtTokenAddress);
 
         for (uint256 i = 1; i < reserves.length; i++) {
             DataTypes.ReserveData memory data = pool.getReserveData(reserves[i]);
 
-            assertEq(getImplementation(address(poolConfigurator), data.aTokenAddress),            aTokenAddress);
-            assertEq(getImplementation(address(poolConfigurator), data.stableDebtTokenAddress),   stableDebtTokenAddress);
-            assertEq(getImplementation(address(poolConfigurator), data.variableDebtTokenAddress), variableDebtTokenAddress);
+            assertEq(getImplementation(address(poolConfigurator), data.aTokenAddress),            aTokenImpl);
+            assertEq(getImplementation(address(poolConfigurator), data.stableDebtTokenAddress),   stableDebtTokenImpl);
+            assertEq(getImplementation(address(poolConfigurator), data.variableDebtTokenAddress), variableDebtTokenImpl);
         }
     }
 
