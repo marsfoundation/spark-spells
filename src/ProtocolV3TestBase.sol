@@ -197,7 +197,7 @@ contract ProtocolV3TestBase is CommonTestBase {
     address borrowSupplier     = vm.addr(4);
     address liquidator         = vm.addr(5);
 
-    uint256 collateralAmount = _getTokenAmountByDollarValue(pool, collateralConfig, 100_000);
+    uint256 collateralAmount = _getTokenAmountByDollarValue(pool, collateralConfig, 110_000);
     uint256 borrowSeedAmount = _getTokenAmountByDollarValue(pool, borrowConfig,     100_000);
 
     uint256 maxBorrowAmount = _getMaxBorrowAmount(
@@ -385,7 +385,7 @@ contract ProtocolV3TestBase is CommonTestBase {
 
     // Step 2: Warp to increase interest in system
 
-    vm.warp(block.timestamp + 60 seconds);
+    vm.warp(block.timestamp + 1 hours);
 
     // Step 3: Repay original borrow amount, without accrued interest,
     //         assert updated state of borrow reserve
@@ -394,7 +394,7 @@ contract ProtocolV3TestBase is CommonTestBase {
     _repay(borrowConfig, pool, borrower, amount, stable);
     DataTypes.ReserveData memory afterReserve = pool.getReserveData(borrowConfig.underlying);
 
-    _assertReserveChange(beforeReserve, afterReserve, int256(amount), 60 seconds);
+    _assertReserveChange(beforeReserve, afterReserve, int256(amount), 1 hours);
 
     // Step 4: Try to withdraw all collateral, demonstrate it's not possible without paying back
     //         accrued debt
@@ -415,7 +415,7 @@ contract ProtocolV3TestBase is CommonTestBase {
 
     // Step 6: Warp to increase interest in system
 
-    vm.warp(block.timestamp + 60 seconds);
+    vm.warp(block.timestamp + 1 hours);
 
     // Step 7: Withdraw all collateral, assert updated state of collateral reserves
 
@@ -424,7 +424,7 @@ contract ProtocolV3TestBase is CommonTestBase {
     afterReserve = pool.getReserveData(collateralConfig.underlying);
 
     // If collateral == borrow asset, reserve was updated during repay step
-    uint256 timePassed = collateralConfig.underlying == borrowConfig.underlying ? 60 seconds : 120 seconds;
+    uint256 timePassed = collateralConfig.underlying == borrowConfig.underlying ? 1 hours : 2 hours;
 
     _assertReserveChange(beforeReserve, afterReserve, -int256(amount), timePassed);
   }
