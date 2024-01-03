@@ -11,6 +11,11 @@ import { RewardsDataTypes }   from "aave-v3-periphery/rewards/libraries/RewardsD
 
 import { ISparkLendFreezerMom } from './ISparkLendFreezerMom.sol';
 
+interface IIncentivizedERC20 {
+    function getIncentivesController() external view returns (address);
+    function setIncentivesController(address controller) external;
+}
+
 /**
  * @title  January 10, 2024 Spark Ethereum Proposal
  * @author Phoenix Labs
@@ -32,9 +37,28 @@ contract SparkEthereum_20240110 is SparkPayloadEthereum {
     address constant WETH_ATOKEN        = 0x59cD1C87501baa753d0B5B5Ab5D8416A45cD71DB;
     address constant TRANSFER_STRATEGY  = ;  // TODO deploy
     address constant EMISSION_MANAGER   = 0xf09e48dd4CA8e76F63a57ADd428bB06fee7932a4;
+    address constant REWARDS_CONTROLLER = 0x4370D3b6C9588E02ce9D22e684387859c7Ff5b34;
     address constant REWARDS_OPERATOR   = 0x8076807464DaC94Ac8Aa1f7aF31b58F73bD88A27;  // Operator multi-sig (also custodies the rewards)
     uint256 constant REWARD_AMOUNT      = 20 ether;
     uint256 constant DURATION           = 30 days;
+
+    function _preExecute() internal override () {
+        // --- Set Incentives Controller for all reserves ---
+        IPool pool = LISTING_ENGINE.POOL();
+        address[] memory reserves = pool.getReservesList();
+        for (uint256 i = 0; i < reserves.length; i++) {
+            ReserveData memory reserveData = pool.getReserveData(reserves[i]);
+            if (IIncentivizedERC20(reserveData.atokenAddress).getIncentivesController() == address(0)) {
+                IIncentivizedERC20(reserveData.atokenAddress).setIncentivesController(REWARDS_CONTROLLER);
+            }
+            if (IIncentivizedERC20(reserveData.variableDebtTokenAddress).getIncentivesController() == address(0)) {
+                IIncentivizedERC20(reserveData.variableDebtTokenAddress).setIncentivesController(REWARDS_CONTROLLER);
+            }
+            if (IIncentivizedERC20(reserveData.stableDebtTokenAddress).getIncentivesController() == address(0)) {
+                IIncentivizedERC20(reserveData.stableDebtTokenAddress).setIncentivesController(REWARDS_CONTROLLER);
+            }
+        }
+    }
 
     function priceFeedsUpdates() public view override returns (IEngine.PriceFeedUpdate[] memory) {
         IEngine.PriceFeedUpdate[] memory updates = new IEngine.PriceFeedUpdate[](2);
