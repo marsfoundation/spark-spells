@@ -7,6 +7,7 @@ import { IACLManager } from 'aave-v3-core/contracts/interfaces/IACLManager.sol';
 
 import { IEmissionManager }   from "aave-v3-periphery/rewards/interfaces/IEmissionManager.sol";
 import { IRewardsController } from "aave-v3-periphery/rewards/interfaces/IRewardsController.sol";
+import { RewardsDataTypes }   from "aave-v3-periphery/rewards/libraries/RewardsDataTypes.sol";
 
 import { ISparkLendFreezerMom } from './ISparkLendFreezerMom.sol';
 
@@ -27,10 +28,13 @@ contract SparkEthereum_20240110 is SparkPayloadEthereum {
     address constant WSTETH             = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0;
     address constant WSTETH_ORACLE      = 0x8B6851156023f4f5A66F68BEA80851c3D905Ac93;
     address constant GNO                = 0x6810e776880C02933D47DB1b9fc05908e5386b96;
+    address constant WETH               = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    address constant WETH_ATOKEN        = 0x59cD1C87501baa753d0B5B5Ab5D8416A45cD71DB;
     address constant TRANSFER_STRATEGY  = ;  // TODO deploy
     address constant EMISSION_MANAGER   = 0xf09e48dd4CA8e76F63a57ADd428bB06fee7932a4;
-    address constant REWARDS_CONTROLLER = 0x4370D3b6C9588E02ce9D22e684387859c7Ff5b34;
     address constant REWARDS_OPERATOR   = 0x8076807464DaC94Ac8Aa1f7aF31b58F73bD88A27;  // Operator multi-sig (also custodies the rewards)
+    uint256 constant REWARD_AMOUNT      = 20 ether;
+    uint256 constant DURATION           = 30 days;
 
     function priceFeedsUpdates() public view override returns (IEngine.PriceFeedUpdate[] memory) {
         IEngine.PriceFeedUpdate[] memory updates = new IEngine.PriceFeedUpdate[](2);
@@ -75,7 +79,21 @@ contract SparkEthereum_20240110 is SparkPayloadEthereum {
         IACLManager(ACL_MANAGER).addRiskAdmin(address(freezerMom));
 
         // --- Activate Lido Rewards ---
-        emissionManager.setEmissionAdmin(WSTETH, REWARDS_OPERATOR);
+        IEmissionManager(EMISSION_MANAGER).setEmissionAdmin(WSTETH, REWARDS_OPERATOR);
+
+        RewardsDataTypes.RewardsConfigInput[] memory rewardConfigs = new RewardsDataTypes.RewardsConfigInput[](1);
+
+        configs[0] = RewardsDataTypes.RewardsConfigInput({
+            emissionPerSecond: uint88(REWARD_AMOUNT / DURATION),
+            totalSupply:       0,  // Set by the rewards controller
+            distributionEnd:   uint32(block.timestamp + DURATION),
+            asset:             WETH_ATOKEN,  // Rewards on WETH supplies
+            reward:            WSTETH,
+            transferStrategy:  TRANSFER_STRATEGY,
+            rewardOracle:      WSTETH_ORACLE
+        });
+
+        IEmissionManager(EMISSION_MANAGER).configureAssets(configs);
     }
 
 }
