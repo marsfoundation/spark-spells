@@ -53,7 +53,7 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
         id = '20240110';
     }
 
-    function setUp() public virtual {
+    function setUp() public {
         vm.createSelectFork(getChain('mainnet').rpcUrl, 18934612);  // Jan 4, 2024
         payload = deployPayload();
 
