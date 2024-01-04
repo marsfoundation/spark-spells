@@ -109,6 +109,9 @@ contract SparkEthereum_20240110RewardsE2ETest is SparkEthereum_20240110TestBase 
     address constant WETH_ATOKEN       = 0x59cD1C87501baa753d0B5B5Ab5D8416A45cD71DB;
     address constant TRANSFER_STRATEGY = 0x11aAC1cA5822cf8Ba6d06B0d84901940c0EE36d8;
 
+    address constant WHALE1 = 0xf8dE75c7B95edB6f1E639751318f117663021Cf0;
+    address constant WHALE2 = 0xAA1582084c4f588eF9BE86F5eA1a919F86A3eE57;
+
     IAToken            wethAToken           = IAToken(WETH_ATOKEN);
     IERC20             wsteth               = IERC20(WSTETH);
     IRewardsController incentivesController = IRewardsController(INCENTIVES_CONTROLLER);
@@ -116,6 +119,9 @@ contract SparkEthereum_20240110RewardsE2ETest is SparkEthereum_20240110TestBase 
     uint256 REWARD_AMOUNT = 20 ether;
     uint256 DURATION      = 30 days;
     uint256 STETH_INDEX   = 1.1525e18; // Approximate conversion rate for approx APY calcs
+
+    address claimAddress1 = makeAddr("claimAddress1");
+    address claimAddress2 = makeAddr("claimAddress2");
 
     function setUp() public override {
         super.setUp();
@@ -189,21 +195,15 @@ contract SparkEthereum_20240110RewardsE2ETest is SparkEthereum_20240110TestBase 
     }
 
     function test_claimAllRewards_multiUser() public {
-        address whale1 = 0xf8dE75c7B95edB6f1E639751318f117663021Cf0;
-        address whale2 = 0xAA1582084c4f588eF9BE86F5eA1a919F86A3eE57;
-
-        address claimAddress1 = makeAddr("claimAddress1");
-        address claimAddress2 = makeAddr("claimAddress2");
-
         address[] memory assets = new address[](1);
         assets[0] = WETH_ATOKEN;
 
         // 1. First claim, no balance changes
 
-        vm.prank(whale1);
+        vm.prank(WHALE1);
         incentivesController.claimAllRewards(assets, claimAddress1);
 
-        vm.prank(whale2);
+        vm.prank(WHALE2);
         incentivesController.claimAllRewards(assets, claimAddress2);
 
         assertEq(wsteth.balanceOf(claimAddress1),    0);
@@ -212,8 +212,8 @@ contract SparkEthereum_20240110RewardsE2ETest is SparkEthereum_20240110TestBase 
 
         // 2. Calculate expected rewards
 
-        uint256 expectedTotalRewards1 = _getTotalExpectedRewards(whale1);
-        uint256 expectedTotalRewards2 = _getTotalExpectedRewards(whale2);
+        uint256 expectedTotalRewards1 = _getTotalExpectedRewards(WHALE1);
+        uint256 expectedTotalRewards2 = _getTotalExpectedRewards(WHALE2);
 
         // Sanity check: 6.5 ether * 365 / 30 / 100 ether * 100% * 1.15 conversion = ~0.11% APY
         assertEq(expectedTotalRewards1, 6.488055402975879300 ether);
@@ -221,15 +221,15 @@ contract SparkEthereum_20240110RewardsE2ETest is SparkEthereum_20240110TestBase 
 
         // Sanity check: ~0.11% APY, cache to variable to show that APYs are exactly equal for both users
         uint256 expectedApy = 0.001147261260124086e18;
-        assertEq(expectedTotalRewards1 * STETH_INDEX * 365 / 30 / wethAToken.balanceOf(whale1), expectedApy);
-        assertEq(expectedTotalRewards2 * STETH_INDEX * 365 / 30 / wethAToken.balanceOf(whale2), expectedApy);
+        assertEq(expectedTotalRewards1 * STETH_INDEX * 365 / 30 / wethAToken.balanceOf(WHALE1), expectedApy);
+        assertEq(expectedTotalRewards2 * STETH_INDEX * 365 / 30 / wethAToken.balanceOf(WHALE2), expectedApy);
 
         skip(DURATION / 4);  // 25% of rewards distributed
 
-        vm.prank(whale1);
+        vm.prank(WHALE1);
         incentivesController.claimAllRewards(assets, claimAddress1);
 
-        vm.prank(whale2);
+        vm.prank(WHALE2);
         incentivesController.claimAllRewards(assets, claimAddress2);
 
         assertApproxEqAbs(wsteth.balanceOf(claimAddress1), expectedTotalRewards1 / 4, 100_000);
@@ -249,10 +249,10 @@ contract SparkEthereum_20240110RewardsE2ETest is SparkEthereum_20240110TestBase 
 
         skip(DURATION * 3 / 4);  // Warp to the end, distributing the remaining 75% of rewards
 
-        vm.prank(whale1);
+        vm.prank(WHALE1);
         incentivesController.claimAllRewards(assets, claimAddress1);
 
-        vm.prank(whale2);
+        vm.prank(WHALE2);
         incentivesController.claimAllRewards(assets, claimAddress2);
 
         assertApproxEqAbs(wsteth.balanceOf(claimAddress1), expectedTotalRewards1, 200_000);
@@ -269,6 +269,202 @@ contract SparkEthereum_20240110RewardsE2ETest is SparkEthereum_20240110TestBase 
             ((expectedTotalRewards1) - wsteth.balanceOf(claimAddress1)) + ((expectedTotalRewards2) - wsteth.balanceOf(claimAddress2)),
             wsteth.balanceOf(REWARDS_OPERATOR) - (REWARD_AMOUNT - (expectedTotalRewards1) - (expectedTotalRewards2))
         );
+    }
+
+    // NOTE: For the below tests, they demonstrate that the incentivesController works correctly in context of the
+    //       aToken. If the aToken is not configured correctly, the rewards are given out based on the users CURRENT balance
+    //       and the amount of time since they've accrued the rewards. This means that if a user changes their balance and claims,
+    //       they would get a reward distribution that would be as if they had that balance the whole time since the last update.abi
+    //       The incentivesController updates the state on every balance change so this wouldn't be possible.
+
+    function test_claimAllRewards_transferAfterWarp() external {
+        address[] memory assets = new address[](1);
+        assets[0] = WETH_ATOKEN;
+
+        // 1. Warp halfway through the rewards period
+
+        skip(DURATION / 2);
+
+        // 2. Snapshot state
+
+        uint256 snapshot = vm.snapshot();
+
+        // 3. Claim rewards for whale 1 (without transfer)
+
+        vm.prank(WHALE1);
+        incentivesController.claimAllRewards(assets, claimAddress1);
+
+        uint256 firstClaimAmount = wsteth.balanceOf(claimAddress1);
+
+        // 4. Revert to reset state to before claim
+
+        vm.revertTo(snapshot);
+
+        // 5. Transfer 10% of staked tokens to new address
+
+        address newAddress = makeAddr("newAddress");
+
+        vm.startPrank(WHALE1);
+        wethAToken.transfer(newAddress, wethAToken.balanceOf(WHALE1) / 10);
+        vm.stopPrank();
+
+        // 6. Claim rewards for whale 1 (with transfer)
+
+        vm.prank(WHALE1);
+        incentivesController.claimAllRewards(assets, claimAddress1);
+
+        // 7. Assert that the second claim is the same as before, meaning the transfer updated the
+        //    accrued rewards for the user.
+
+        assertEq(wsteth.balanceOf(claimAddress1), firstClaimAmount);
+
+        // 8. Claim rewards with the new address, this shouldn't have any rewards since no time has
+        //    passed.
+
+        vm.prank(newAddress);
+        incentivesController.claimAllRewards(assets, claimAddress2);
+
+        assertEq(wsteth.balanceOf(claimAddress2), 0);
+    }
+
+    function test_claimAllRewards_transferAfterWarpAndClaim() external {
+        address[] memory assets = new address[](1);
+        assets[0] = WETH_ATOKEN;
+
+        // 1. Warp halfway through the rewards period
+
+        skip(DURATION / 2);
+
+        // 2. Snapshot state
+
+        uint256 snapshot = vm.snapshot();
+
+        // 3. Claim rewards for whale 1 (without transfer)
+
+        vm.prank(WHALE1);
+        incentivesController.claimAllRewards(assets, claimAddress1);
+
+        uint256 firstClaimAmount = wsteth.balanceOf(claimAddress1);
+
+        // 4. Revert to reset state to before claim
+
+        vm.revertTo(snapshot);
+
+        // 5. Claim rewards after 15 days (without transfer)
+
+        vm.prank(WHALE1);
+        incentivesController.claimAllRewards(assets, claimAddress1);
+
+        // 6. Transfer 10% of staked tokens to new address and claim from this address
+
+        address newAddress = makeAddr("newAddress");
+
+        vm.startPrank(WHALE1);
+        wethAToken.transfer(newAddress, wethAToken.balanceOf(WHALE1) / 10);
+        vm.stopPrank();
+
+        // 8. Claim rewards with the new address, this shouldn't have any rewards since no time has
+        //    passed.
+
+        vm.prank(newAddress);
+        incentivesController.claimAllRewards(assets, claimAddress2);
+
+        // Without an update, claimAddress2 would have a non-zero balance and claimAddress1
+        // would have the same amount
+        assertEq(wsteth.balanceOf(claimAddress1), firstClaimAmount);
+        assertEq(wsteth.balanceOf(claimAddress2), 0);
+    }
+
+    // NOTE: `AfterWarpAndClaim` tests don't apply to supply and withdraw, because changing the balance
+    //       after the claim results in a balance change of the SAME user, unlike a transfer. Because of
+    //       this, the accrued rewards state has been updated for the user regardless.
+
+    function test_claimAllRewards_supplyAfterWarp() external {
+        address[] memory assets = new address[](1);
+        assets[0] = WETH_ATOKEN;
+
+        vm.startPrank(WHALE1);
+
+        // 1. Warp halfway through the rewards period
+
+        skip(DURATION / 2);
+
+        // 2. Snapshot state
+
+        uint256 snapshot = vm.snapshot();
+
+        // 3. Claim rewards for whale 1 (without supply)
+
+        incentivesController.claimAllRewards(assets, claimAddress1);
+
+        uint256 firstClaimAmount = wsteth.balanceOf(claimAddress1);
+
+        // 4. Revert to reset state to before claim
+
+        vm.revertTo(snapshot);
+
+        // 5. Supply 10% of more tokens
+
+        vm.startPrank(WHALE1);
+
+        uint256 amount = wethAToken.balanceOf(WHALE1) / 10;
+
+        deal(WETH, WHALE1, amount);
+
+        IERC20(WETH).approve(POOL, amount);
+        IPool(POOL).supply(WETH, amount, WHALE1, 0);
+
+        vm.stopPrank();
+
+        // 6. Claim rewards for whale 1 (with supply)
+
+        vm.prank(WHALE1);
+        incentivesController.claimAllRewards(assets, claimAddress1);
+
+        // 7. Assert that the second claim are is same as before, meaning the mint updated the
+        //    accrued rewards for the user.
+
+        assertEq(wsteth.balanceOf(claimAddress1), firstClaimAmount);
+    }
+
+    function test_claimAllRewards_withdrawAfterWarp() external {
+        address[] memory assets = new address[](1);
+        assets[0] = WETH_ATOKEN;
+
+        vm.startPrank(WHALE1);
+
+        // 1. Warp halfway through the rewards period
+
+        skip(DURATION / 2);
+
+        // 2. Snapshot state
+
+        uint256 snapshot = vm.snapshot();
+
+        // 3. Claim rewards for whale 1 (without withdraw)
+
+        incentivesController.claimAllRewards(assets, claimAddress1);
+
+        uint256 firstClaimAmount = wsteth.balanceOf(claimAddress1);
+
+        // 4. Revert to reset state to before claim
+
+        vm.revertTo(snapshot);
+
+        // 5. Withdraw 10% of tokens
+
+        uint256 amount = wethAToken.balanceOf(WHALE1) / 10;
+
+        IPool(POOL).withdraw(WETH, amount, WHALE1);
+
+        // 6. Claim rewards for whale 1 (with withdraw)
+
+        incentivesController.claimAllRewards(assets, claimAddress1);
+
+        // 7. Assert that the second claim are is same as before, meaning the burn updated the
+        //    accrued rewards for the user.
+
+        assertEq(wsteth.balanceOf(claimAddress1), firstClaimAmount);
     }
 
     function _getTotalExpectedRewards(address user) internal view returns (uint256 expectedTotalRewards) {
