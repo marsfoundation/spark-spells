@@ -16,11 +16,14 @@ import { IAToken } from "lib/aave-v3-core/contracts/interfaces/IAToken.sol";
 import { PullRewardsTransferStrategy } from "lib/aave-v3-periphery/contracts/rewards/transfer-strategies/PullRewardsTransferStrategy.sol";
 import { IRewardsController }          from "lib/aave-v3-periphery/contracts/rewards/interfaces/IRewardsController.sol";
 
-contract SparkEthereum_20240110TestBase is SparkEthereumTestBase {
+contract SparkEthereum_20240110Test is SparkEthereumTestBase {
 
     address constant EMISSION_MANAGER      = 0xf09e48dd4CA8e76F63a57ADd428bB06fee7932a4;
     address constant INCENTIVES_CONTROLLER = 0x4370D3b6C9588E02ce9D22e684387859c7Ff5b34;
+    address constant POOL                  = 0xC13e21B648A5Ee794902342038FF3aDAB66BE987;
     address constant REWARDS_OPERATOR      = 0x8076807464DaC94Ac8Aa1f7aF31b58F73bD88A27;
+    address constant TRANSFER_STRATEGY     = 0x11aAC1cA5822cf8Ba6d06B0d84901940c0EE36d8;
+    address constant WETH_ATOKEN           = 0x59cD1C87501baa753d0B5B5Ab5D8416A45cD71DB;
 
     address constant DAI    = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
     address constant GNO    = 0x6810e776880C02933D47DB1b9fc05908e5386b96;
@@ -31,6 +34,20 @@ contract SparkEthereum_20240110TestBase is SparkEthereumTestBase {
     address constant WBTC   = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
     address constant WETH   = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     address constant WSTETH = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0;
+
+    address constant WHALE1 = 0xf8dE75c7B95edB6f1E639751318f117663021Cf0;
+    address constant WHALE2 = 0xAA1582084c4f588eF9BE86F5eA1a919F86A3eE57;
+
+    IAToken            wethAToken           = IAToken(WETH_ATOKEN);
+    IERC20             wsteth               = IERC20(WSTETH);
+    IRewardsController incentivesController = IRewardsController(INCENTIVES_CONTROLLER);
+
+    uint256 REWARD_AMOUNT = 20 ether;
+    uint256 DURATION      = 30 days;
+    uint256 STETH_INDEX   = 1.1525e18; // Approximate conversion rate for approx APY calcs
+
+    address claimAddress1 = makeAddr("claimAddress1");
+    address claimAddress2 = makeAddr("claimAddress2");
 
     constructor() {
         id = '20240110';
@@ -43,9 +60,14 @@ contract SparkEthereum_20240110TestBase is SparkEthereumTestBase {
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
     }
 
-}
+    function _setUpRewards() internal {
+        GovHelpers.executePayload(vm, payload, executor);
 
-contract SparkEthereum_20240110SpellTest is SparkEthereum_20240110TestBase {
+        deal(WSTETH, REWARDS_OPERATOR, REWARD_AMOUNT);
+
+        vm.prank(REWARDS_OPERATOR);
+        wsteth.approve(TRANSFER_STRATEGY, type(uint256).max);
+    }
 
     function testFreezerMomDeploy() public {
         ISparkLendFreezerMom freezerMom = ISparkLendFreezerMom(SparkEthereum_20240110(payload).FREEZER_MOM());
@@ -101,40 +123,9 @@ contract SparkEthereum_20240110SpellTest is SparkEthereum_20240110TestBase {
         assertIncentivesController(WSTETH, INCENTIVES_CONTROLLER);
     }
 
-}
-
-contract SparkEthereum_20240110RewardsE2ETest is SparkEthereum_20240110TestBase {
-
-    address constant POOL              = 0xC13e21B648A5Ee794902342038FF3aDAB66BE987;
-    address constant WETH_ATOKEN       = 0x59cD1C87501baa753d0B5B5Ab5D8416A45cD71DB;
-    address constant TRANSFER_STRATEGY = 0x11aAC1cA5822cf8Ba6d06B0d84901940c0EE36d8;
-
-    address constant WHALE1 = 0xf8dE75c7B95edB6f1E639751318f117663021Cf0;
-    address constant WHALE2 = 0xAA1582084c4f588eF9BE86F5eA1a919F86A3eE57;
-
-    IAToken            wethAToken           = IAToken(WETH_ATOKEN);
-    IERC20             wsteth               = IERC20(WSTETH);
-    IRewardsController incentivesController = IRewardsController(INCENTIVES_CONTROLLER);
-
-    uint256 REWARD_AMOUNT = 20 ether;
-    uint256 DURATION      = 30 days;
-    uint256 STETH_INDEX   = 1.1525e18; // Approximate conversion rate for approx APY calcs
-
-    address claimAddress1 = makeAddr("claimAddress1");
-    address claimAddress2 = makeAddr("claimAddress2");
-
-    function setUp() public override {
-        super.setUp();
-
-        GovHelpers.executePayload(vm, payload, executor);
-
-        deal(WSTETH, REWARDS_OPERATOR, REWARD_AMOUNT);
-
-        vm.prank(REWARDS_OPERATOR);
-        wsteth.approve(TRANSFER_STRATEGY, type(uint256).max);
-    }
-
     function test_claimAllRewards_singleUser() public {
+        _setUpRewards();
+
         address user = makeAddr("user");
 
         deal(WETH, user, 100 ether);
@@ -195,6 +186,8 @@ contract SparkEthereum_20240110RewardsE2ETest is SparkEthereum_20240110TestBase 
     }
 
     function test_claimAllRewards_multiUser() public {
+        _setUpRewards();
+
         address[] memory assets = new address[](1);
         assets[0] = WETH_ATOKEN;
 
@@ -278,6 +271,8 @@ contract SparkEthereum_20240110RewardsE2ETest is SparkEthereum_20240110TestBase 
     //       The incentivesController updates the state on every balance change so this wouldn't be possible.
 
     function test_claimAllRewards_transferAfterWarp() external {
+        _setUpRewards();
+
         address[] memory assets = new address[](1);
         assets[0] = WETH_ATOKEN;
 
@@ -328,6 +323,8 @@ contract SparkEthereum_20240110RewardsE2ETest is SparkEthereum_20240110TestBase 
     }
 
     function test_claimAllRewards_transferAfterWarpAndClaim() external {
+        _setUpRewards();
+
         address[] memory assets = new address[](1);
         assets[0] = WETH_ATOKEN;
 
@@ -380,6 +377,8 @@ contract SparkEthereum_20240110RewardsE2ETest is SparkEthereum_20240110TestBase 
     //       this, the accrued rewards state has been updated for the user regardless.
 
     function test_claimAllRewards_supplyAfterWarp() external {
+        _setUpRewards();
+
         address[] memory assets = new address[](1);
         assets[0] = WETH_ATOKEN;
 
@@ -428,6 +427,8 @@ contract SparkEthereum_20240110RewardsE2ETest is SparkEthereum_20240110TestBase 
     }
 
     function test_claimAllRewards_withdrawAfterWarp() external {
+        _setUpRewards();
+
         address[] memory assets = new address[](1);
         assets[0] = WETH_ATOKEN;
 
