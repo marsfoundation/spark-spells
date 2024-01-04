@@ -9,6 +9,7 @@ import { InitializableAdminUpgradeabilityProxy } from "aave-v3-core/contracts/de
 import { IPool }                                 from 'aave-v3-core/contracts/interfaces/IPool.sol';
 import { IPoolAddressesProvider }                from 'aave-v3-core/contracts/interfaces/IPoolAddressesProvider.sol';
 import { IPoolAddressesProviderRegistry }        from 'aave-v3-core/contracts/interfaces/IPoolAddressesProviderRegistry.sol';
+import { IPoolConfigurator }                     from 'aave-v3-core/contracts/interfaces/IPoolConfigurator.sol';
 
 import { IDaiInterestRateStrategy }    from "./interfaces/IDaiInterestRateStrategy.sol";
 import { IDaiJugInterestRateStrategy } from "./interfaces/IDaiJugInterestRateStrategy.sol";
@@ -53,10 +54,12 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
     IPoolAddressesProviderRegistry internal poolAddressesProviderRegistry;
     IPoolAddressesProvider         internal poolAddressesProvider;
     IPool                          internal pool;
+    IPoolConfigurator              internal poolConfigurator;
 
     function loadPoolContext(address poolProvider) internal {
         poolAddressesProvider = IPoolAddressesProvider(poolProvider);
         pool                  = IPool(poolAddressesProvider.getPool());
+        poolConfigurator      = IPoolConfigurator(poolAddressesProvider.getPoolConfigurator());
     }
 
     function deployPayload() internal returns (address) {

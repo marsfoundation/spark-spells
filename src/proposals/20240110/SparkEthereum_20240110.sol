@@ -9,7 +9,6 @@ import { DataTypes }   from 'aave-v3-core/contracts/protocol/libraries/types/Dat
 
 import { IEACAggregatorProxy }   from "aave-v3-periphery/misc/interfaces/IEACAggregatorProxy.sol";
 import { IEmissionManager }      from "aave-v3-periphery/rewards/interfaces/IEmissionManager.sol";
-import { IRewardsController }    from "aave-v3-periphery/rewards/interfaces/IRewardsController.sol";
 import { ITransferStrategyBase } from "aave-v3-periphery/rewards/interfaces/ITransferStrategyBase.sol";
 import { RewardsDataTypes }      from "aave-v3-periphery/rewards/libraries/RewardsDataTypes.sol";
 
