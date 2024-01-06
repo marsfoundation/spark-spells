@@ -45,9 +45,14 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
     address constant WHALE1 = 0xf8dE75c7B95edB6f1E639751318f117663021Cf0;
     address constant WHALE2 = 0xAA1582084c4f588eF9BE86F5eA1a919F86A3eE57;
 
-    IAToken            wethAToken           = IAToken(WETH_ATOKEN);
-    IERC20             wsteth               = IERC20(WSTETH);
-    IRewardsController incentivesController = IRewardsController(INCENTIVES_CONTROLLER);
+    address constant CURRENT_HAT = 0x4F09EbaA1A5e52EB95c97f3b9fa3fb398D004698;  // Happens to be the last passed spell
+
+    ISparkLendFreezerMom        freezerMom           = ISparkLendFreezerMom(FREEZER_MOM);
+    IEACAggregatorProxy         daiOracle            = IEACAggregatorProxy(DAI_ORACLE_NEW);
+    PullRewardsTransferStrategy rewardStrategy       = PullRewardsTransferStrategy(TRANSFER_STRATEGY);
+    IAToken                     wethAToken           = IAToken(WETH_ATOKEN);
+    IERC20                      wsteth               = IERC20(WSTETH);
+    IRewardsController          incentivesController = IRewardsController(INCENTIVES_CONTROLLER);
 
     uint256 REWARD_AMOUNT = 20 ether;
     uint256 DURATION      = 30 days;
@@ -70,8 +75,6 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
     // --- Configuration Changes ---
 
     function testFreezerMomDeploy() public {
-        ISparkLendFreezerMom freezerMom = ISparkLendFreezerMom(SparkEthereum_20240110(payload).FREEZER_MOM());
-
         assertEq(freezerMom.poolConfigurator(), address(poolConfigurator));
         assertEq(freezerMom.pool(),             address(pool));
         assertEq(freezerMom.owner(),            executor);
@@ -79,17 +82,13 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
     }
 
     function testDaiOracleDeploy() public {
-        IEACAggregatorProxy oracle = IEACAggregatorProxy(SparkEthereum_20240110(payload).DAI_ORACLE());
-
-        assertEq(oracle.latestAnswer(), 1e8);
+        assertEq(daiOracle.latestAnswer(), 1e8);
     }
 
     function testTransferStrategyDeploy() public {
-        PullRewardsTransferStrategy strategy = PullRewardsTransferStrategy(SparkEthereum_20240110(payload).TRANSFER_STRATEGY());
-
-        assertEq(strategy.getIncentivesController(), INCENTIVES_CONTROLLER);
-        assertEq(strategy.getRewardsAdmin(),         executor);
-        assertEq(strategy.getRewardsVault(),         REWARDS_OPERATOR);
+        assertEq(rewardStrategy.getIncentivesController(), INCENTIVES_CONTROLLER);
+        assertEq(rewardStrategy.getRewardsAdmin(),         executor);
+        assertEq(rewardStrategy.getRewardsVault(),         REWARDS_OPERATOR);
     }
 
     function assertIncentivesController(address asset, address _incentivesController) internal {
@@ -155,7 +154,7 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
         assertEq(aclManager.isRiskAdmin(FREEZER_MOM), true);
     }
 
-    function testEmissionManagerChanges() public {
+    function testRewardsConfiguration() public {
         assertEq(IEmissionManager(EMISSION_MANAGER).getEmissionAdmin(WSTETH), address(0));
         (
             uint256 index,
@@ -553,6 +552,53 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
         uint256 rewardShare = wethAToken.scaledBalanceOf(user) * 1e18 / wethAToken.scaledTotalSupply();
 
         expectedRewards = REWARD_AMOUNT * rewardShare * earningDuration / 1e18 / DURATION;
+    }
+
+    function assertFrozen(string memory assetSymbol, bool frozen) internal {
+        assertEq(_findReserveConfigBySymbol(createConfigurationSnapshot('', pool), assetSymbol).isFrozen, frozen);
+    }
+
+    function assertPaused(string memory assetSymbol, bool paused) internal {
+        assertEq(_findReserveConfigBySymbol(createConfigurationSnapshot('', pool), assetSymbol).isPaused, paused);
+    }
+
+    function testFreezerMomE2E() public {
+        GovHelpers.executePayload(vm, payload, executor);
+
+        // Sanity checks - cannot call Freezer Mom unless you have the hat
+        vm.expectRevert("SparkLendFreezerMom/not-authorized");
+        freezerMom.freezeMarket(DAI, true);
+        vm.expectRevert("SparkLendFreezerMom/not-authorized");
+        freezerMom.freezeAllMarkets(true);
+        vm.expectRevert("SparkLendFreezerMom/not-authorized");
+        freezerMom.pauseMarket(DAI, true);
+        vm.expectRevert("SparkLendFreezerMom/not-authorized");
+        freezerMom.pauseAllMarkets(true);
+
+        // Pretend the hat has logic to freeze
+        assertFrozen('DAI',  false);
+        assertFrozen('WETH', false);
+        vm.prank(CURRENT_HAT);
+        freezerMom.freezeMarket(DAI, true);
+        assertFrozen('DAI',  true);
+        assertFrozen('WETH', false);
+
+        vm.prank(CURRENT_HAT);
+        freezerMom.freezeAllMarkets(true);
+        assertFrozen('DAI',  true);
+        assertFrozen('WETH', true);
+
+        assertPaused('DAI',  false);
+        assertPaused('WETH', false);
+        vm.prank(CURRENT_HAT);
+        freezerMom.pauseMarket(DAI, true);
+        assertPaused('DAI',  true);
+        assertPaused('WETH', false);
+
+        vm.prank(CURRENT_HAT);
+        freezerMom.pauseAllMarkets(true);
+        assertPaused('DAI',  true);
+        assertPaused('WETH', true);
     }
 
 }
