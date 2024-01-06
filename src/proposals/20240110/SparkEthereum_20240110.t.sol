@@ -14,11 +14,13 @@ import {
 import { IAToken } from "lib/aave-v3-core/contracts/interfaces/IAToken.sol";
 
 import { PullRewardsTransferStrategy } from "lib/aave-v3-periphery/contracts/rewards/transfer-strategies/PullRewardsTransferStrategy.sol";
+import { IEmissionManager }            from "lib/aave-v3-periphery/contracts/rewards/interfaces/IEmissionManager.sol";
 import { IRewardsController }          from "lib/aave-v3-periphery/contracts/rewards/interfaces/IRewardsController.sol";
 
 contract SparkEthereum_20240110Test is SparkEthereumTestBase {
 
     address constant EMISSION_MANAGER      = 0xf09e48dd4CA8e76F63a57ADd428bB06fee7932a4;
+    address constant FREEZER_MOM           = 0xFA36c12Bc307b40c701D65d8FE8F88cCEdE2277a;
     address constant INCENTIVES_CONTROLLER = 0x4370D3b6C9588E02ce9D22e684387859c7Ff5b34;
     address constant POOL                  = 0xC13e21B648A5Ee794902342038FF3aDAB66BE987;
     address constant REWARDS_OPERATOR      = 0x8076807464DaC94Ac8Aa1f7aF31b58F73bD88A27;
@@ -34,6 +36,11 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
     address constant WBTC   = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
     address constant WETH   = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     address constant WSTETH = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0;
+
+    address public constant DAI_ORACLE_OLD    = 0xAed0c38402a5d19df6E4c03F4E2DceD6e29c1ee9;
+    address public constant DAI_ORACLE_NEW    = 0x42a03F81dd8A1cEcD746dc262e4d1CD9fD39F777;
+    address public constant WSTETH_ORACLE_OLD = 0xA9F30e6ED4098e9439B2ac8aEA2d3fc26BcEbb45;
+    address public constant WSTETH_ORACLE_NEW = 0x8B6851156023f4f5A66F68BEA80851c3D905Ac93;
 
     address constant WHALE1 = 0xf8dE75c7B95edB6f1E639751318f117663021Cf0;
     address constant WHALE2 = 0xAA1582084c4f588eF9BE86F5eA1a919F86A3eE57;
@@ -60,14 +67,7 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
     }
 
-    function _setUpRewards() internal {
-        GovHelpers.executePayload(vm, payload, executor);
-
-        deal(WSTETH, REWARDS_OPERATOR, REWARD_AMOUNT);
-
-        vm.prank(REWARDS_OPERATOR);
-        wsteth.approve(TRANSFER_STRATEGY, type(uint256).max);
-    }
+    // --- Configuration Changes ---
 
     function testFreezerMomDeploy() public {
         ISparkLendFreezerMom freezerMom = ISparkLendFreezerMom(SparkEthereum_20240110(payload).FREEZER_MOM());
@@ -92,11 +92,11 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
         assertEq(strategy.getRewardsVault(),         REWARDS_OPERATOR);
     }
 
-    function assertIncentivesController(address asset, address incentivesController) internal {
+    function assertIncentivesController(address asset, address _incentivesController) internal {
         DataTypes.ReserveData memory reserveData = pool.getReserveData(asset);
-        assertEq(IIncentivizedERC20(reserveData.aTokenAddress).getIncentivesController(),            incentivesController);
-        assertEq(IIncentivizedERC20(reserveData.variableDebtTokenAddress).getIncentivesController(), incentivesController);
-        assertEq(IIncentivizedERC20(reserveData.stableDebtTokenAddress).getIncentivesController(),   incentivesController);
+        assertEq(IIncentivizedERC20(reserveData.aTokenAddress).getIncentivesController(),            _incentivesController);
+        assertEq(IIncentivizedERC20(reserveData.variableDebtTokenAddress).getIncentivesController(), _incentivesController);
+        assertEq(IIncentivizedERC20(reserveData.stableDebtTokenAddress).getIncentivesController(),   _incentivesController);
     }
 
     function testUpdateRewardsController() public {
@@ -121,6 +121,81 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
         assertIncentivesController(WBTC,   INCENTIVES_CONTROLLER);
         assertIncentivesController(WETH,   INCENTIVES_CONTROLLER);
         assertIncentivesController(WSTETH, INCENTIVES_CONTROLLER);
+    }
+
+    function testMarketConfigChanges() public {
+        ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', pool);
+
+        ReserveConfig memory gnoConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'GNO');
+        assertEq(gnoConfigBefore.ltv,      20_00);
+        assertEq(gnoConfigBefore.isFrozen, false);
+
+        _validateAssetSourceOnOracle(poolAddressesProvider, DAI,    DAI_ORACLE_OLD);
+        _validateAssetSourceOnOracle(poolAddressesProvider, WSTETH, WSTETH_ORACLE_OLD);
+
+        GovHelpers.executePayload(vm, payload, executor);
+
+        ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
+
+        gnoConfigBefore.ltv      = 0;
+        gnoConfigBefore.isFrozen = true;
+        _validateReserveConfig(gnoConfigBefore, allConfigsAfter);
+
+        _validateAssetSourceOnOracle(poolAddressesProvider, DAI,    DAI_ORACLE_NEW);
+        _validateAssetSourceOnOracle(poolAddressesProvider, WSTETH, WSTETH_ORACLE_NEW);
+    }
+
+    function testACLChanges() public {
+        assertEq(aclManager.isEmergencyAdmin(FREEZER_MOM), false);
+        assertEq(aclManager.isRiskAdmin(FREEZER_MOM), false);
+
+        GovHelpers.executePayload(vm, payload, executor);
+
+        assertEq(aclManager.isEmergencyAdmin(FREEZER_MOM), true);
+        assertEq(aclManager.isRiskAdmin(FREEZER_MOM), true);
+    }
+
+    function testEmissionManagerChanges() public {
+        assertEq(IEmissionManager(EMISSION_MANAGER).getEmissionAdmin(WSTETH), address(0));
+        (
+            uint256 index,
+            uint256 emissionPerSecond,
+            uint256 lastUpdateTimestamp,
+            uint256 distributionEnd
+        ) = incentivesController.getRewardsData(WETH_ATOKEN, WSTETH);
+        assertEq(index,                                            0);
+        assertEq(emissionPerSecond,                                0);
+        assertEq(lastUpdateTimestamp,                              0);
+        assertEq(distributionEnd,                                  0);
+        assertEq(incentivesController.getTransferStrategy(WSTETH), address(0));
+        assertEq(incentivesController.getRewardOracle(WSTETH),     address(0));
+
+        GovHelpers.executePayload(vm, payload, executor);
+
+        assertEq(IEmissionManager(EMISSION_MANAGER).getEmissionAdmin(WSTETH), REWARDS_OPERATOR);
+        (
+            index,
+            emissionPerSecond,
+            lastUpdateTimestamp,
+            distributionEnd
+        ) = incentivesController.getRewardsData(WETH_ATOKEN, WSTETH);
+        assertEq(index,                                            0);
+        assertEq(emissionPerSecond,                                REWARD_AMOUNT / DURATION);
+        assertEq(lastUpdateTimestamp,                              block.timestamp);
+        assertEq(distributionEnd,                                  block.timestamp + DURATION);
+        assertEq(incentivesController.getTransferStrategy(WSTETH), TRANSFER_STRATEGY);
+        assertEq(incentivesController.getRewardOracle(WSTETH),     WSTETH_ORACLE_NEW);
+    }
+
+    // --- E2E Testing ---
+
+    function _setUpRewards() internal {
+        GovHelpers.executePayload(vm, payload, executor);
+
+        deal(WSTETH, REWARDS_OPERATOR, REWARD_AMOUNT);
+
+        vm.prank(REWARDS_OPERATOR);
+        wsteth.approve(TRANSFER_STRATEGY, type(uint256).max);
     }
 
     function test_claimAllRewards_singleUser() public {
