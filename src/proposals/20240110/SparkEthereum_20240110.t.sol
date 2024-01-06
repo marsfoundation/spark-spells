@@ -42,8 +42,9 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
     address public constant WSTETH_ORACLE_OLD = 0xA9F30e6ED4098e9439B2ac8aEA2d3fc26BcEbb45;
     address public constant WSTETH_ORACLE_NEW = 0x8B6851156023f4f5A66F68BEA80851c3D905Ac93;
 
-    address constant WHALE1 = 0xf8dE75c7B95edB6f1E639751318f117663021Cf0;
-    address constant WHALE2 = 0xAA1582084c4f588eF9BE86F5eA1a919F86A3eE57;
+    address constant WHALE1   = 0xf8dE75c7B95edB6f1E639751318f117663021Cf0;
+    address constant WHALE2   = 0xAA1582084c4f588eF9BE86F5eA1a919F86A3eE57;
+    address constant GNO_USER = 0xe1d0508d4976Bd4b8552fBe5c31Cc0F023258f0C;  // Has a small GNO position
 
     address constant CURRENT_HAT = 0x4F09EbaA1A5e52EB95c97f3b9fa3fb398D004698;  // Happens to be the last passed spell
 
@@ -599,6 +600,38 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
         freezerMom.pauseAllMarkets(true);
         assertPaused('DAI',  true);
         assertPaused('WETH', true);
+    }
+
+    function testGNODisabledE2E() public {
+        uint256 snapshot = vm.snapshot();
+
+        // User has a dust amount still they can supply
+        vm.startPrank(GNO_USER);
+        pool.supply(GNO, 1, GNO_USER, 0);
+
+        // User can borrow more DAI
+        pool.borrow(DAI, 1, 2, 0, GNO_USER);
+        vm.stopPrank();
+
+        vm.revertTo(snapshot);
+
+        GovHelpers.executePayload(vm, payload, executor);
+
+        // User can no longer supply GNO or borrow against it
+        vm.startPrank(GNO_USER);
+        vm.expectRevert(bytes('28'));  // RESERVE_FROZEN
+        pool.supply(GNO, 1, GNO_USER, 0);
+        vm.expectRevert(bytes('57'));  // LTV_VALIDATION_FAILED
+        pool.borrow(DAI, 1, 2, 0, GNO_USER);
+
+        // User can still close out position
+        deal(DAI, GNO_USER, 1000e18);
+        IERC20(DAI).approve(address(pool), 1000e18);
+        pool.repay(DAI, type(uint256).max, 2, GNO_USER);
+        assertEq(IERC20(GNO).balanceOf(GNO_USER), 4832628897478086);  // Dust amount in the user's wallet
+        pool.withdraw(GNO, type(uint256).max, GNO_USER);
+        assertEq(IERC20(GNO).balanceOf(GNO_USER), 50104832628897478086);
+        vm.stopPrank();
     }
 
 }
