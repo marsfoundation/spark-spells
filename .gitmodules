@@ -13,3 +13,6 @@
 [submodule "lib/aave-v3-periphery"]
 	path = lib/aave-v3-periphery
 	url = https://github.com/aave/aave-v3-periphery
+[submodule "lib/sparklend-advanced"]
+	path = lib/sparklend-advanced
+	url = https://github.com/marsfoundation/sparklend-advanced
