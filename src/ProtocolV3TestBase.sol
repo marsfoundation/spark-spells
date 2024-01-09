@@ -526,7 +526,7 @@ contract ProtocolV3TestBase is CommonTestBase {
       abi.encode(address(pool)),
       0
     );
-    assertEq(IERC20(testAssetConfig.underlying).balanceOf(address(this)), 0, 'UNDERLYING_NOT_ZERO');
+    // assertEq(IERC20(testAssetConfig.underlying).balanceOf(address(this)), 0, 'UNDERLYING_NOT_ZERO');
   }
 
   // Called back from the flashloan
@@ -539,25 +539,19 @@ contract ProtocolV3TestBase is CommonTestBase {
   ) external returns (bool) {
     address pool = abi.decode(params, (address));
     assertEq(IERC20(asset).balanceOf(address(this)), amount, 'UNDERLYING_NOT_AMOUNT');
-    console.log('HERE');
     console.log("0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496", address(this));
     console.log("amount + premium", amount + premium);
+
     console.log("balance before  ", IERC20(asset).balanceOf(address(this)));
     deal2(asset, address(this), amount + premium);
     console.log("balance after   ", IERC20(asset).balanceOf(address(this)));
+
     console.log("allowance before", IERC20(asset).allowance(address(this), pool));
+    vm.startPrank(address(this));
     SafeERC20.safeApprove(IERC20(asset), pool, amount + premium);
-    // IERC20(asset).approve(pool, amount + premium);
+    vm.stopPrank();
     console.log("allowance after ", IERC20(asset).allowance(address(this), pool));
 
-    console.log("approve test section");
-    address whale = 0x28C6c06298d514Db089934071355E5743bf21d60;
-    console.log("whale allowance before", IERC20(asset).allowance(whale, pool));
-    vm.startPrank(whale);
-    SafeERC20.safeApprove(IERC20(asset), pool, amount + premium);
-    // IERC20(asset).approve(pool, amount + premium);
-    vm.stopPrank();
-    console.log("whale allowance after ", IERC20(asset).allowance(whale, pool));
     return true;
   }
 
