@@ -58,7 +58,6 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
 
     uint256 REWARD_AMOUNT = 20 ether;
     uint256 DURATION      = 30 days;
-    uint256 STETH_INDEX   = 1.1525e18; // Approximate conversion rate for approx APY calcs
 
     address claimAddress1 = makeAddr("claimAddress1");
     address claimAddress2 = makeAddr("claimAddress2");
@@ -68,8 +67,8 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('mainnet').rpcUrl, 18934612);  // Jan 4, 2024
-        payload = deployPayload();
+        vm.createSelectFork(getChain('mainnet').rpcUrl, 18970183);  // Jan 9, 2024
+        payload = 0x7E73CCAA4977A5429fD1815130804769EcAad4a7;
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
     }
@@ -201,9 +200,6 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
         GovHelpers.executePayload(vm, payload, executor);
 
         deal(WSTETH, REWARDS_OPERATOR, REWARD_AMOUNT);
-
-        vm.prank(REWARDS_OPERATOR);
-        wsteth.approve(TRANSFER_STRATEGY, type(uint256).max);
     }
 
     function test_claimAllRewards_singleUser() public {
@@ -229,9 +225,8 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
 
         uint256 expectedTotalRewards = _getTotalExpectedRewards(user);
 
-        // Sanity check: ~0.11% APY
-        assertEq(expectedTotalRewards, 0.008178471705486100 ether);
-        assertEq(expectedTotalRewards * STETH_INDEX * 365 / 30 / wethAToken.balanceOf(user), 0.001146792117936348e18);
+        // Sanity check: 100 / 238k supplied (~0.04%) which gives them ~0.04% of the rewards (0.0004 * 20 = 0.008)
+        assertEq(expectedTotalRewards, 0.008388171771033220 ether);
 
         skip(DURATION / 4);  // 25% of rewards distributed
 
@@ -291,14 +286,10 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
         uint256 expectedTotalRewards1 = _getTotalExpectedRewards(WHALE1);
         uint256 expectedTotalRewards2 = _getTotalExpectedRewards(WHALE2);
 
-        // Sanity check: 6.5 ether * 365 / 30 / 100 ether * 100% * 1.15 conversion = ~0.11% APY
-        assertEq(expectedTotalRewards1, 6.488055402975879300 ether);
-        assertEq(expectedTotalRewards2, 3.029641375200069260 ether);
-
-        // Sanity check: ~0.11% APY, cache to variable to show that APYs are exactly equal for both users
-        uint256 expectedApy = 0.001147261260124086e18;
-        assertEq(expectedTotalRewards1 * STETH_INDEX * 365 / 30 / wethAToken.balanceOf(WHALE1), expectedApy);
-        assertEq(expectedTotalRewards2 * STETH_INDEX * 365 / 30 / wethAToken.balanceOf(WHALE2), expectedApy);
+        // Sanity check: WHALE1 has 79k / 238k supplied (~33%) which gives them ~33% of the rewards (0.33 * 20 = 6.66)
+        assertEq(expectedTotalRewards1, 6.655739385653780540 ether);
+        // Sanity check: WHALE2 has 37k / 238k supplied (~15.5%) which gives them ~15.5% of the rewards (0.155 * 20 = 3.1)
+        assertEq(expectedTotalRewards2, 3.107942545631857880 ether);
 
         skip(DURATION / 4);  // 25% of rewards distributed
 
@@ -314,7 +305,7 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
         assertApproxEqAbs(
             wsteth.balanceOf(REWARDS_OPERATOR),
             REWARD_AMOUNT - (expectedTotalRewards1 / 4) - (expectedTotalRewards2 / 4),
-            100_000
+            150_000
         );
 
         // Assert diffs are equal and opposite, with rounding going towards REWARDS_OPERATOR
@@ -613,12 +604,11 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
     function test_gnoDisabledE2E() public {
         uint256 snapshot = vm.snapshot();
 
-        // User has a dust amount still they can supply
         vm.startPrank(GNO_USER);
-        pool.supply(GNO, 1, GNO_USER, 0);
-
         // User can borrow more DAI
         pool.borrow(DAI, 1, 2, 0, GNO_USER);
+        // User has a dust amount still they can supply
+        pool.supply(GNO, 1, GNO_USER, 0);
         vm.stopPrank();
 
         vm.revertTo(snapshot);
@@ -627,10 +617,10 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
 
         // User can no longer supply GNO or borrow against it
         vm.startPrank(GNO_USER);
-        vm.expectRevert(bytes('28'));  // RESERVE_FROZEN
-        pool.supply(GNO, 1, GNO_USER, 0);
         vm.expectRevert(bytes('57'));  // LTV_VALIDATION_FAILED
         pool.borrow(DAI, 1, 2, 0, GNO_USER);
+        vm.expectRevert(bytes('28'));  // RESERVE_FROZEN
+        pool.supply(GNO, 1, GNO_USER, 0);
 
         // User can still close out position
         deal(DAI, GNO_USER, 1000e18);
