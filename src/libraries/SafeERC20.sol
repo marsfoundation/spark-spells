@@ -4,8 +4,6 @@
 
 pragma solidity ^0.8.0;
 
-import 'forge-std/Test.sol';
-
 import { IERC20 }       from "../interfaces/IERC20.sol";
 import { IERC20Permit } from "../interfaces/IERC20Permit.sol";
 
@@ -55,9 +53,6 @@ library SafeERC20 {
         // safeApprove should only be called when setting an initial allowance,
         // or when resetting it to zero. To increase and decrease it, use
         // 'safeIncreaseAllowance' and 'safeDecreaseAllowance'
-
-        console.log("inside safeApprove", msg.sender);
-
         require(
             (value == 0) || (token.allowance(address(this), spender) == 0),
             "SafeERC20: approve from non-zero to non-zero allowance"
