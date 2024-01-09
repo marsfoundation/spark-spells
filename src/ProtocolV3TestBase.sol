@@ -539,8 +539,15 @@ contract ProtocolV3TestBase is CommonTestBase {
   ) external returns (bool) {
     address pool = abi.decode(params, (address));
     assertEq(IERC20(asset).balanceOf(address(this)), amount, 'UNDERLYING_NOT_AMOUNT');
-    deal(asset, address(this), amount + premium);
+
+    // Temporary measure while USDC deal gets fixed, set the balance to amount + premium either way
+    uint256 dealAmount = asset == 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 ? premium : amount + premium;
+    deal2(asset, address(this), dealAmount);
+
+    vm.startPrank(address(this));
     SafeERC20.safeApprove(IERC20(asset), pool, amount + premium);
+    vm.stopPrank();
+
     return true;
   }
 

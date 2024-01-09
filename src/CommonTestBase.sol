@@ -25,7 +25,8 @@ contract CommonTestBase is Test {
 
   address public constant EOA = 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045;
 
-  address public constant LDO_MAINNET = 0x5A98FcBEA516Cf06857215779Fd812CA3beF1B32;
+  address public constant LDO_MAINNET  = 0x5A98FcBEA516Cf06857215779Fd812CA3beF1B32;
+  address public constant USDC_MAINNET = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
 
   /**
    * @notice deal doesn't support amounts stored in a script right now.
@@ -67,6 +68,12 @@ contract CommonTestBase is Test {
         IERC20(asset).transfer(user, amount);
         return true;
       }
+      // USDC
+      if (asset == USDC_MAINNET) {
+        vm.startPrank(0x28C6c06298d514Db089934071355E5743bf21d60);
+        IERC20(asset).transfer(user, amount);
+        return true;
+      }
     }
     if (block.chainid == ChainIds.OPTIMISM) {
       // sUSD
@@ -86,11 +93,9 @@ contract CommonTestBase is Test {
    * @param amount to deal
    */
   function deal2(address asset, address user, uint256 amount) internal {
-    (, address oldSender, ) = vm.readCallers();
     bool patched = _patchedDeal(asset, user, amount);
-    if (patched) {
-      vm.startPrank(oldSender);
-    } else {
+    vm.stopPrank();
+    if (!patched) {
       deal(asset, user, amount);
     }
   }
