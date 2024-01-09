@@ -75,18 +75,18 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
 
     // --- Configuration Changes ---
 
-    function testFreezerMomDeploy() public {
+    function test_freezerMomDeploy() public {
         assertEq(freezerMom.poolConfigurator(), address(poolConfigurator));
         assertEq(freezerMom.pool(),             address(pool));
         assertEq(freezerMom.owner(),            executor);
         assertEq(freezerMom.authority(),        address(0));  // Set in spell
     }
 
-    function testDaiOracleDeploy() public {
+    function test_daiOracleDeploy() public {
         assertEq(daiOracle.latestAnswer(), 1e8);
     }
 
-    function testTransferStrategyDeploy() public {
+    function test_transferStrategyDeploy() public {
         assertEq(rewardStrategy.getIncentivesController(), INCENTIVES_CONTROLLER);
         assertEq(rewardStrategy.getRewardsAdmin(),         executor);
         assertEq(rewardStrategy.getRewardsVault(),         REWARDS_OPERATOR);
@@ -99,7 +99,7 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
         assertEq(IIncentivizedERC20(reserveData.stableDebtTokenAddress).getIncentivesController(),   _incentivesController);
     }
 
-    function testUpdateRewardsController() public {
+    function test_updateRewardsController() public {
         assertIncentivesController(DAI,    address(0));
         assertIncentivesController(GNO,    address(0));
         assertIncentivesController(RETH,   INCENTIVES_CONTROLLER);
@@ -123,7 +123,7 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
         assertIncentivesController(WSTETH, INCENTIVES_CONTROLLER);
     }
 
-    function testMarketConfigChanges() public {
+    function test_marketConfigChanges() public {
         ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', pool);
 
         ReserveConfig memory gnoConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'GNO');
@@ -145,7 +145,7 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
         _validateAssetSourceOnOracle(poolAddressesProvider, WSTETH, WSTETH_ORACLE_NEW);
     }
 
-    function testACLChanges() public {
+    function test_aCLChanges() public {
         assertEq(aclManager.isEmergencyAdmin(FREEZER_MOM), false);
         assertEq(aclManager.isRiskAdmin(FREEZER_MOM), false);
 
@@ -155,7 +155,7 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
         assertEq(aclManager.isRiskAdmin(FREEZER_MOM), true);
     }
 
-    function testRewardsConfiguration() public {
+    function test_rewardsConfiguration() public {
         assertEq(IEmissionManager(EMISSION_MANAGER).getEmissionAdmin(WSTETH), address(0));
         (
             uint256 index,
@@ -563,7 +563,7 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
         assertEq(_findReserveConfigBySymbol(createConfigurationSnapshot('', pool), assetSymbol).isPaused, paused);
     }
 
-    function testFreezerMomE2E() public {
+    function test_freezerMomE2E() public {
         GovHelpers.executePayload(vm, payload, executor);
 
         // Sanity checks - cannot call Freezer Mom unless you have the hat
@@ -602,7 +602,7 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
         assertPaused('WETH', true);
     }
 
-    function testGNODisabledE2E() public {
+    function test_GNODisabledE2E() public {
         uint256 snapshot = vm.snapshot();
 
         // User has a dust amount still they can supply
