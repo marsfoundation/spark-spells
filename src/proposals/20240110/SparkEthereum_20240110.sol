@@ -24,7 +24,12 @@ interface IIncentivizedERC20 {
  * @author Phoenix Labs
  * @dev    Activate Freezer Mom, DAI oracle to hardcoded $1, wstETH oracle assume 1:1 stETH peg, Freeze GNO, Activate Lido Rewards.
  * Forum:  https://forum.makerdao.com/t/spark-spell-proposed-changes/23298
- * Polls:  TODO
+ * Polls:  https://vote.makerdao.com/polling/QmeWioX1#poll-detail
+ *         https://vote.makerdao.com/polling/QmdVy1Uk#poll-detail
+ *         https://vote.makerdao.com/polling/QmXtvu32#poll-detail
+ *         https://vote.makerdao.com/polling/QmRdew4b#poll-detail
+ *         https://vote.makerdao.com/polling/QmRKkMnx#poll-detail
+ *         https://vote.makerdao.com/polling/QmdQSuAc#poll-detail
  */
 contract SparkEthereum_20240110 is SparkPayloadEthereum {
 

@@ -19,6 +19,7 @@ import { IRewardsController }          from "lib/aave-v3-periphery/contracts/rew
 
 contract SparkEthereum_20240110Test is SparkEthereumTestBase {
 
+    address constant AUTHORITY             = 0x0a3f6849f78076aefaDf113F5BED87720274dDC0;
     address constant EMISSION_MANAGER      = 0xf09e48dd4CA8e76F63a57ADd428bB06fee7932a4;
     address constant FREEZER_MOM           = 0xFA36c12Bc307b40c701D65d8FE8F88cCEdE2277a;
     address constant INCENTIVES_CONTROLLER = 0x4370D3b6C9588E02ce9D22e684387859c7Ff5b34;
@@ -75,11 +76,18 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
 
     // --- Configuration Changes ---
 
-    function test_freezerMomDeploy() public {
+    function test_freezerMomDeployAndConfiguration() public {
         assertEq(freezerMom.poolConfigurator(), address(poolConfigurator));
         assertEq(freezerMom.pool(),             address(pool));
         assertEq(freezerMom.owner(),            executor);
         assertEq(freezerMom.authority(),        address(0));  // Set in spell
+
+        GovHelpers.executePayload(vm, payload, executor);
+
+        assertEq(freezerMom.poolConfigurator(), address(poolConfigurator));
+        assertEq(freezerMom.pool(),             address(pool));
+        assertEq(freezerMom.owner(),            executor);
+        assertEq(freezerMom.authority(),        AUTHORITY);
     }
 
     function test_daiOracleDeploy() public {
