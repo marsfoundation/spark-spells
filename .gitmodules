@@ -16,3 +16,6 @@
 [submodule "lib/sparklend-advanced"]
 	path = lib/sparklend-advanced
 	url = https://github.com/marsfoundation/sparklend-advanced
+[submodule "lib/sparklend-freezer"]
+	path = lib/sparklend-freezer
+	url = https://github.com/marsfoundation/sparklend-freezer
