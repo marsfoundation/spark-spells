@@ -145,7 +145,7 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
         _validateAssetSourceOnOracle(poolAddressesProvider, WSTETH, WSTETH_ORACLE_NEW);
     }
 
-    function test_aCLChanges() public {
+    function test_ACLChanges() public {
         assertEq(aclManager.isEmergencyAdmin(FREEZER_MOM), false);
         assertEq(aclManager.isRiskAdmin(FREEZER_MOM), false);
 
