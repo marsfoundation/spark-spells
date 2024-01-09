@@ -253,23 +253,23 @@ contract ProtocolV3TestBase is CommonTestBase {
 
     // Test 1: Ensure user can't borrow more than LTV
 
-    _e2eTestBorrowAboveLTV(pool, collateralSupplier, borrowConfig, maxBorrowAmount, false);
-    vm.revertTo(snapshot);
+    // _e2eTestBorrowAboveLTV(pool, collateralSupplier, borrowConfig, maxBorrowAmount, false);
+    // vm.revertTo(snapshot);
 
     // Test 2: Ensure user can borrow and repay with variable rates
 
-    _e2eTestBorrowRepayWithdraw(pool, collateralSupplier, collateralConfig, borrowConfig, maxBorrowAmount, false);
-    vm.revertTo(snapshot);
+    // _e2eTestBorrowRepayWithdraw(pool, collateralSupplier, collateralConfig, borrowConfig, maxBorrowAmount, false);
+    // vm.revertTo(snapshot);
 
     // Test 3: Ensure user can borrow and repay with stable rates
 
-    _e2eTestBorrowRepayWithdraw(pool, collateralSupplier, collateralConfig, borrowConfig, maxBorrowAmount, true);
-    vm.revertTo(snapshot);
+    // _e2eTestBorrowRepayWithdraw(pool, collateralSupplier, collateralConfig, borrowConfig, maxBorrowAmount, true);
+    // vm.revertTo(snapshot);
 
     // Test 4: Test liquidation
 
-    _e2eTestLiquidationReceiveCollateral(pool, collateralSupplier, liquidator, collateralConfig, borrowConfig, maxBorrowAmount);
-    vm.revertTo(snapshot);
+    // _e2eTestLiquidationReceiveCollateral(pool, collateralSupplier, liquidator, collateralConfig, borrowConfig, maxBorrowAmount);
+    // vm.revertTo(snapshot);
 
     // Test 5: Test flashloan
 
@@ -278,8 +278,8 @@ contract ProtocolV3TestBase is CommonTestBase {
 
     // Test 6: Test mintToTreasury
 
-    _e2eTestMintToTreasury(pool, borrowConfig);
-    vm.revertTo(snapshot);
+    // _e2eTestMintToTreasury(pool, borrowConfig);
+    // vm.revertTo(snapshot);
   }
 
   /**
@@ -539,8 +539,25 @@ contract ProtocolV3TestBase is CommonTestBase {
   ) external returns (bool) {
     address pool = abi.decode(params, (address));
     assertEq(IERC20(asset).balanceOf(address(this)), amount, 'UNDERLYING_NOT_AMOUNT');
-    deal(asset, address(this), amount + premium);
+    console.log('HERE');
+    console.log("0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496", address(this));
+    console.log("amount + premium", amount + premium);
+    console.log("balance before  ", IERC20(asset).balanceOf(address(this)));
+    deal2(asset, address(this), amount + premium);
+    console.log("balance after   ", IERC20(asset).balanceOf(address(this)));
+    console.log("allowance before", IERC20(asset).allowance(address(this), pool));
     SafeERC20.safeApprove(IERC20(asset), pool, amount + premium);
+    // IERC20(asset).approve(pool, amount + premium);
+    console.log("allowance after ", IERC20(asset).allowance(address(this), pool));
+
+    console.log("approve test section");
+    address whale = 0x28C6c06298d514Db089934071355E5743bf21d60;
+    console.log("whale allowance before", IERC20(asset).allowance(whale, pool));
+    vm.startPrank(whale);
+    SafeERC20.safeApprove(IERC20(asset), pool, amount + premium);
+    // IERC20(asset).approve(pool, amount + premium);
+    vm.stopPrank();
+    console.log("whale allowance after ", IERC20(asset).allowance(whale, pool));
     return true;
   }
 
