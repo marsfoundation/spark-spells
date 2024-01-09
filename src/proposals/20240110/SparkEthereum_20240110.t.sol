@@ -632,4 +632,38 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
         vm.stopPrank();
     }
 
+    function test_deployedContracts() public {
+        address expectedPayload = deployPayload();
+        address actualPayload   = payload;
+
+        uint256 expectedBytecodeSize = expectedPayload.code.length;
+        uint256 actualBytecodeSize   = actualPayload.code.length;
+
+        uint256 metadataLength = _getBytecodeMetadataLength(expectedPayload);
+        assertTrue(metadataLength <= expectedBytecodeSize);
+        expectedBytecodeSize -= metadataLength;
+
+        metadataLength = _getBytecodeMetadataLength(actualPayload);
+        assertTrue(metadataLength <= actualBytecodeSize);
+        actualBytecodeSize -= metadataLength;
+
+        assertEq(actualBytecodeSize, expectedBytecodeSize);
+
+        uint256 size = actualBytecodeSize;
+        uint256 expectedHash;
+        uint256 actualHash;
+
+        assembly {
+            let ptr := mload(0x40)
+
+            extcodecopy(expectedPayload, ptr, 0, size)
+            expectedHash := keccak256(ptr, size)
+
+            extcodecopy(actualPayload, ptr, 0, size)
+            actualHash := keccak256(ptr, size)
+        }
+
+        assertEq(actualHash, expectedHash);
+    }
+
 }
