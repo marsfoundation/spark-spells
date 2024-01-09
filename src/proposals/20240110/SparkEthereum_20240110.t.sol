@@ -145,7 +145,7 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
         _validateAssetSourceOnOracle(poolAddressesProvider, WSTETH, WSTETH_ORACLE_NEW);
     }
 
-    function test_ACLChanges() public {
+    function test_aclChanges() public {
         assertEq(aclManager.isEmergencyAdmin(FREEZER_MOM), false);
         assertEq(aclManager.isRiskAdmin(FREEZER_MOM), false);
 
@@ -602,7 +602,7 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
         assertPaused('WETH', true);
     }
 
-    function test_GNODisabledE2E() public {
+    function test_gnoDisabledE2E() public {
         uint256 snapshot = vm.snapshot();
 
         // User has a dust amount still they can supply
