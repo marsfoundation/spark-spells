@@ -341,7 +341,7 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
     // NOTE: For the below tests, they demonstrate that the incentivesController works correctly in context of the
     //       aToken. If the aToken is not configured correctly, the rewards are given out based on the users CURRENT balance
     //       and the amount of time since they've accrued the rewards. This means that if a user changes their balance and claims,
-    //       they would get a reward distribution that would be as if they had that balance the whole time since the last update.abi
+    //       they would get a reward distribution that would be as if they had that balance the whole time since the last update.
     //       The incentivesController updates the state on every balance change so this wouldn't be possible.
 
     function test_claimAllRewards_transferAfterWarp() external {
