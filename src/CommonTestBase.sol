@@ -93,11 +93,9 @@ contract CommonTestBase is Test {
    * @param amount to deal
    */
   function deal2(address asset, address user, uint256 amount) internal {
-    (, address oldSender, ) = vm.readCallers();
     bool patched = _patchedDeal(asset, user, amount);
-    if (patched) {
-      vm.startPrank(oldSender);
-    } else {
+    vm.stopPrank();
+    if (!patched) {
       deal(asset, user, amount);
     }
   }
