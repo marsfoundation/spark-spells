@@ -17,6 +17,18 @@ import { PullRewardsTransferStrategy } from "lib/aave-v3-periphery/contracts/rew
 import { IEmissionManager }            from "lib/aave-v3-periphery/contracts/rewards/interfaces/IEmissionManager.sol";
 import { IRewardsController }          from "lib/aave-v3-periphery/contracts/rewards/interfaces/IRewardsController.sol";
 
+interface IAuthority {
+    function canCall(address src, address dst, bytes4 sig) external view returns (bool);
+    function hat() external view returns (address);
+    function lock(uint256 amount) external;
+    function vote(address[] calldata slate) external;
+    function lift(address target) external;
+}
+
+interface IExecutable {
+    function execute() external;
+}
+
 contract SparkEthereum_20240110Test is SparkEthereumTestBase {
 
     address constant AUTHORITY             = 0x0a3f6849f78076aefaDf113F5BED87720274dDC0;
@@ -27,6 +39,7 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
     address constant REWARDS_OPERATOR      = 0x8076807464DaC94Ac8Aa1f7aF31b58F73bD88A27;
     address constant TRANSFER_STRATEGY     = 0x11aAC1cA5822cf8Ba6d06B0d84901940c0EE36d8;
     address constant WETH_ATOKEN           = 0x59cD1C87501baa753d0B5B5Ab5D8416A45cD71DB;
+    address constant MKR                   = 0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2;
 
     address constant DAI    = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
     address constant GNO    = 0x6810e776880C02933D47DB1b9fc05908e5386b96;
@@ -47,7 +60,10 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
     address constant WHALE2   = 0xAA1582084c4f588eF9BE86F5eA1a919F86A3eE57;
     address constant GNO_USER = 0xe1d0508d4976Bd4b8552fBe5c31Cc0F023258f0C;  // Has a small GNO position
 
-    address constant CURRENT_HAT = 0x4F09EbaA1A5e52EB95c97f3b9fa3fb398D004698;  // Happens to be the last passed spell
+    address constant SPELL_FREEZE_ALL = 0xA67d62f75F8D11395eE120CA8390Ab3bF01f0b8A;
+    address constant SPELL_FREEZE_DAI = 0x0F9149c4d6018A5999AdA5b592E372845cfeC725;
+    address constant SPELL_PAUSE_ALL  = 0x216738c7B1E83cC1A1FFcD3433226B0a3B174484;
+    address constant SPELL_PAUSE_DAI  = 0x1B94E2F3818E1D657bE2A62D37560514b52DB17F;
 
     ISparkLendFreezerMom        freezerMom           = ISparkLendFreezerMom(FREEZER_MOM);
     IEACAggregatorProxy         daiOracle            = IEACAggregatorProxy(DAI_ORACLE_NEW);
@@ -55,6 +71,7 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
     IAToken                     wethAToken           = IAToken(WETH_ATOKEN);
     IERC20                      wsteth               = IERC20(WSTETH);
     IRewardsController          incentivesController = IRewardsController(INCENTIVES_CONTROLLER);
+    IAuthority                  authority            = IAuthority(AUTHORITY);
 
     uint256 REWARD_AMOUNT = 20 ether;
     uint256 DURATION      = 30 days;
@@ -67,7 +84,7 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('mainnet').rpcUrl, 18970183);  // Jan 9, 2024
+        vm.createSelectFork(getChain('mainnet').rpcUrl, 18977281);  // Jan 10, 2024
         payload = 0x7E73CCAA4977A5429fD1815130804769EcAad4a7;
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
@@ -225,8 +242,8 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
 
         uint256 expectedTotalRewards = _getTotalExpectedRewards(user);
 
-        // Sanity check: 100 / 238k supplied (~0.04%) which gives them ~0.04% of the rewards (0.0004 * 20 = 0.008)
-        assertEq(expectedTotalRewards, 0.008388171771033220 ether);
+        // Sanity check: 100 / 251k supplied (~0.04%) which gives them ~0.04% of the rewards (0.0004 * 20 = 0.008)
+        assertEq(expectedTotalRewards, 0.007947610360062180 ether);
 
         skip(DURATION / 4);  // 25% of rewards distributed
 
@@ -286,10 +303,10 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
         uint256 expectedTotalRewards1 = _getTotalExpectedRewards(WHALE1);
         uint256 expectedTotalRewards2 = _getTotalExpectedRewards(WHALE2);
 
-        // Sanity check: WHALE1 has 79k / 238k supplied (~33%) which gives them ~33% of the rewards (0.33 * 20 = 6.66)
-        assertEq(expectedTotalRewards1, 6.655739385653780540 ether);
-        // Sanity check: WHALE2 has 37k / 238k supplied (~15.5%) which gives them ~15.5% of the rewards (0.155 * 20 = 3.1)
-        assertEq(expectedTotalRewards2, 3.107942545631857880 ether);
+        // Sanity check: WHALE1 has 79k / 251k supplied (~31.4%) which gives them ~31.4% of the rewards (0.314 * 20 = 6.3)
+        assertEq(expectedTotalRewards1, 6.306265906213658140 ether);
+        // Sanity check: WHALE2 has 37k / 251k supplied (~14.7%) which gives them ~14.7% of the rewards (0.147 * 20 = 2.9)
+        assertEq(expectedTotalRewards2, 2.944753539514355440 ether);
 
         skip(DURATION / 4);  // 25% of rewards distributed
 
@@ -562,6 +579,32 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
         assertEq(_findReserveConfigBySymbol(createConfigurationSnapshot('', pool), assetSymbol).isPaused, paused);
     }
 
+    function _voteAndCast(address _spell) internal {
+        address mkrWhale = makeAddr("mkrWhale");
+        uint256 amount = 1_000_000 ether;
+
+        deal(MKR, mkrWhale, amount);
+
+        vm.startPrank(mkrWhale);
+        IERC20(MKR).approve(AUTHORITY, amount);
+        authority.lock(amount);
+
+        address[] memory slate = new address[](1);
+        slate[0] = _spell;
+        authority.vote(slate);
+
+        vm.roll(block.number + 1);
+
+        authority.lift(_spell);
+
+        vm.stopPrank();
+
+        assertEq(authority.hat(), _spell);
+
+        vm.prank(makeAddr("randomUser"));
+        IExecutable(_spell).execute();
+    }
+
     function test_freezerMomE2E() public {
         GovHelpers.executePayload(vm, payload, executor);
 
@@ -578,25 +621,21 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
         // Pretend the hat has logic to freeze
         assertFrozen('DAI',  false);
         assertFrozen('WETH', false);
-        vm.prank(CURRENT_HAT);
-        freezerMom.freezeMarket(DAI, true);
+        _voteAndCast(SPELL_FREEZE_DAI);
         assertFrozen('DAI',  true);
         assertFrozen('WETH', false);
 
-        vm.prank(CURRENT_HAT);
-        freezerMom.freezeAllMarkets(true);
+        _voteAndCast(SPELL_FREEZE_ALL);
         assertFrozen('DAI',  true);
         assertFrozen('WETH', true);
 
         assertPaused('DAI',  false);
         assertPaused('WETH', false);
-        vm.prank(CURRENT_HAT);
-        freezerMom.pauseMarket(DAI, true);
+        _voteAndCast(SPELL_PAUSE_DAI);
         assertPaused('DAI',  true);
         assertPaused('WETH', false);
 
-        vm.prank(CURRENT_HAT);
-        freezerMom.pauseAllMarkets(true);
+        _voteAndCast(SPELL_PAUSE_ALL);
         assertPaused('DAI',  true);
         assertPaused('WETH', true);
     }
