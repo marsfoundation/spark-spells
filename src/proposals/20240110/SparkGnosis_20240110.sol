@@ -9,6 +9,7 @@ import { IPoolAddressesProvider } from 'aave-v3-core/contracts/interfaces/IPoolA
  * @title  January 10, 2024 Spark Gnosis Proposal
  * @author Phoenix Labs
  * @dev    Pool Impl Patch.
+ * Forum:  https://forum.makerdao.com/t/jan-11th-2024-expedited-inclusion-of-a-patch-to-spark-pool-implementation/23393
  */
 contract SparkGnosis_20240110 is SparkPayloadGnosis {
 

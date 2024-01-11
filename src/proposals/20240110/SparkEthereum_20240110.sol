@@ -29,6 +29,7 @@ interface IForwarder {
  * @author Phoenix Labs
  * @dev    Activate Freezer Mom, DAI oracle to hardcoded $1, wstETH oracle assume 1:1 stETH peg, Freeze GNO, Activate Lido Rewards, Pool Impl Patch.
  * Forum:  https://forum.makerdao.com/t/spark-spell-proposed-changes/23298
+ *         https://forum.makerdao.com/t/jan-11th-2024-expedited-inclusion-of-a-patch-to-spark-pool-implementation/23393
  * Polls:  https://vote.makerdao.com/polling/QmeWioX1#poll-detail
  *         https://vote.makerdao.com/polling/QmdVy1Uk#poll-detail
  *         https://vote.makerdao.com/polling/QmXtvu32#poll-detail
