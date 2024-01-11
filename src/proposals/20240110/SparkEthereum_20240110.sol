@@ -3,9 +3,10 @@ pragma solidity ^0.8.10;
 
 import { SparkPayloadEthereum, IEngine, EngineFlags } from '../../SparkPayloadEthereum.sol';
 
-import { IACLManager } from 'aave-v3-core/contracts/interfaces/IACLManager.sol';
-import { IPool }       from 'aave-v3-core/contracts/interfaces/IPool.sol';
-import { DataTypes }   from 'aave-v3-core/contracts/protocol/libraries/types/DataTypes.sol';
+import { IACLManager }            from 'aave-v3-core/contracts/interfaces/IACLManager.sol';
+import { IPool }                  from 'aave-v3-core/contracts/interfaces/IPool.sol';
+import { IPoolAddressesProvider } from 'aave-v3-core/contracts/interfaces/IPoolAddressesProvider.sol';
+import { DataTypes }              from 'aave-v3-core/contracts/protocol/libraries/types/DataTypes.sol';
 
 import { IEACAggregatorProxy }   from "aave-v3-periphery/misc/interfaces/IEACAggregatorProxy.sol";
 import { IEmissionManager }      from "aave-v3-periphery/rewards/interfaces/IEmissionManager.sol";
@@ -47,11 +48,16 @@ contract SparkEthereum_20240110 is SparkPayloadEthereum {
     address public constant WETH_ATOKEN           = 0x59cD1C87501baa753d0B5B5Ab5D8416A45cD71DB;
     address public constant WSTETH                = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0;
     address public constant WSTETH_ORACLE         = 0x8B6851156023f4f5A66F68BEA80851c3D905Ac93;
+    address public constant POOL_ADDRESS_PROVIDER = 0x02C3eA4e34C0cBd694D2adFa2c690EECbC1793eE;
+    address public constant POOL_IMPLEMENTATION   = 0xB40f6d584081ac2b0FD84C846dBa3C1417889304;
 
     uint256 public constant DURATION      = 30 days;
     uint256 public constant REWARD_AMOUNT = 20 ether;
 
     function _preExecute() internal override {
+        // Hot fix for Jan 10th issue
+        IPoolAddressesProvider(POOL_ADDRESS_PROVIDER).setPoolImpl(POOL_IMPLEMENTATION);
+
         // --- Set Incentives Controller for all reserves ---
         IPool pool = LISTING_ENGINE.POOL();
         address[] memory reserves = pool.getReservesList();

@@ -65,6 +65,9 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
     address constant SPELL_PAUSE_ALL  = 0x216738c7B1E83cC1A1FFcD3433226B0a3B174484;
     address constant SPELL_PAUSE_DAI  = 0x1B94E2F3818E1D657bE2A62D37560514b52DB17F;
 
+    address constant POOL_IMPLEMENTATION_OLD = 0x8115366Ca7Cf280a760f0bC0F6Db3026e2437115;
+    address constant POOL_IMPLEMENTATION_NEW = 0xB40f6d584081ac2b0FD84C846dBa3C1417889304;
+
     ISparkLendFreezerMom        freezerMom           = ISparkLendFreezerMom(FREEZER_MOM);
     IEACAggregatorProxy         daiOracle            = IEACAggregatorProxy(DAI_ORACLE_NEW);
     PullRewardsTransferStrategy rewardStrategy       = PullRewardsTransferStrategy(TRANSFER_STRATEGY);
@@ -84,8 +87,8 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('mainnet').rpcUrl, 18977281);  // Jan 10, 2024
-        payload = 0x7E73CCAA4977A5429fD1815130804769EcAad4a7;
+        vm.createSelectFork(getChain('mainnet').rpcUrl, 18980579);  // Jan 10, 2024
+        payload = deployPayload();
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
     }
@@ -211,6 +214,16 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
         assertEq(incentivesController.getRewardOracle(WSTETH),     WSTETH_ORACLE_NEW);
     }
 
+    function test_poolUpgrade() public {
+        vm.prank(address(poolAddressesProvider));
+        assertEq(IProxyLike(payable(address(pool))).implementation(), POOL_IMPLEMENTATION_OLD);
+
+        GovHelpers.executePayload(vm, payload, executor);
+
+        vm.prank(address(poolAddressesProvider));
+        assertEq(IProxyLike(payable(address(pool))).implementation(), POOL_IMPLEMENTATION_NEW);
+    }
+
     // --- E2E Testing ---
 
     function _setUpRewards() internal {
@@ -243,7 +256,7 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
         uint256 expectedTotalRewards = _getTotalExpectedRewards(user);
 
         // Sanity check: 100 / 251k supplied (~0.04%) which gives them ~0.04% of the rewards (0.0004 * 20 = 0.008)
-        assertEq(expectedTotalRewards, 0.007947610360062180 ether);
+        assertEq(expectedTotalRewards, 0.007945994087070260 ether);
 
         skip(DURATION / 4);  // 25% of rewards distributed
 
@@ -304,9 +317,9 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
         uint256 expectedTotalRewards2 = _getTotalExpectedRewards(WHALE2);
 
         // Sanity check: WHALE1 has 79k / 251k supplied (~31.4%) which gives them ~31.4% of the rewards (0.314 * 20 = 6.3)
-        assertEq(expectedTotalRewards1, 6.306265906213658140 ether);
+        assertEq(expectedTotalRewards1, 6.305084926070791100 ether);
         // Sanity check: WHALE2 has 37k / 251k supplied (~14.7%) which gives them ~14.7% of the rewards (0.147 * 20 = 2.9)
-        assertEq(expectedTotalRewards2, 2.944753539514355440 ether);
+        assertEq(expectedTotalRewards2, 2.944202072844931100 ether);
 
         skip(DURATION / 4);  // 25% of rewards distributed
 
