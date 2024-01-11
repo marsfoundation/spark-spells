@@ -57,7 +57,7 @@ contract SparkEthereum_20240110 is SparkPayloadEthereum {
     address public constant POOL_ADDRESS_PROVIDER = 0x02C3eA4e34C0cBd694D2adFa2c690EECbC1793eE;
     address public constant POOL_IMPLEMENTATION   = 0xB40f6d584081ac2b0FD84C846dBa3C1417889304;
     address public constant GNOSIS_FORWARDER      = 0x44f993EAe9a420Df9ffa5263c55f6C8eF46c0340;
-    address public constant GNOSIS_PAYLOAD        = 0x4cB851D28aE5C24F839e45E4F07e3888641FBE90;
+    address public constant GNOSIS_PAYLOAD        = 0xB979b79AdC4e5CF5cD43599a8D66C45460870bB4;
 
     uint256 public constant DURATION      = 30 days;
     uint256 public constant REWARD_AMOUNT = 20 ether;
@@ -65,6 +65,10 @@ contract SparkEthereum_20240110 is SparkPayloadEthereum {
     function _preExecute() internal override {
         // Hot fix for Jan 10th issue
         IPoolAddressesProvider(POOL_ADDRESS_PROVIDER).setPoolImpl(POOL_IMPLEMENTATION);
+        // Needs to be set back to 0 after implementation update
+        LISTING_ENGINE.POOL_CONFIGURATOR().updateFlashloanPremiumTotal(
+            0
+        );
 
         // --- Set Incentives Controller for all reserves ---
         IPool pool = LISTING_ENGINE.POOL();

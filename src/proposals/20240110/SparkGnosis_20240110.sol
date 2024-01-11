@@ -25,6 +25,10 @@ contract SparkGnosis_20240110 is SparkPayloadGnosis {
     function _preExecute() internal override {
         // Hot fix for Jan 10th issue
         IPoolAddressesProvider(POOL_ADDRESS_PROVIDER).setPoolImpl(POOL_IMPLEMENTATION);
+        // Needs to be set back to 0 after implementation update
+        LISTING_ENGINE.POOL_CONFIGURATOR().updateFlashloanPremiumTotal(
+            0
+        );
     }
 
 }
