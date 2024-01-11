@@ -17,6 +17,8 @@ import { PullRewardsTransferStrategy } from "lib/aave-v3-periphery/contracts/rew
 import { IEmissionManager }            from "lib/aave-v3-periphery/contracts/rewards/interfaces/IEmissionManager.sol";
 import { IRewardsController }          from "lib/aave-v3-periphery/contracts/rewards/interfaces/IRewardsController.sol";
 
+import { Domain, GnosisDomain } from 'xchain-helpers/testing/GnosisDomain.sol';
+
 interface IAuthority {
     function canCall(address src, address dst, bytes4 sig) external view returns (bool);
     function hat() external view returns (address);
@@ -27,6 +29,11 @@ interface IAuthority {
 
 interface IExecutable {
     function execute() external;
+}
+
+interface IL2BridgeExecutor {
+    function execute(uint256 index) external;
+    function getActionsSetCount() external view returns (uint256);
 }
 
 contract SparkEthereum_20240110Test is SparkEthereumTestBase {
@@ -68,6 +75,9 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
     address constant POOL_IMPLEMENTATION_OLD = 0x8115366Ca7Cf280a760f0bC0F6Db3026e2437115;
     address constant POOL_IMPLEMENTATION_NEW = 0xB40f6d584081ac2b0FD84C846dBa3C1417889304;
 
+    address constant GNOSIS_BRIDGE_EXECUTOR = 0xc4218C1127cB24a0D6c1e7D25dc34e10f2625f5A;
+    address constant GNOSIS_PAYLOAD         = 0xB979b79AdC4e5CF5cD43599a8D66C45460870bB4;
+
     ISparkLendFreezerMom        freezerMom           = ISparkLendFreezerMom(FREEZER_MOM);
     IEACAggregatorProxy         daiOracle            = IEACAggregatorProxy(DAI_ORACLE_NEW);
     PullRewardsTransferStrategy rewardStrategy       = PullRewardsTransferStrategy(TRANSFER_STRATEGY);
@@ -82,14 +92,23 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
     address claimAddress1 = makeAddr("claimAddress1");
     address claimAddress2 = makeAddr("claimAddress2");
 
+    Domain       mainnet;
+    GnosisDomain gnosis;
+
     constructor() {
         id = '20240110';
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('mainnet').rpcUrl, 18980579);  // Jan 10, 2024
-        payload = deployPayload();
+        mainnet = new Domain(getChain('mainnet'));
+        gnosis  = new GnosisDomain(getChain('gnosis_chain'), mainnet);
 
+        mainnet.rollFork(18980579);  // Jan 10, 2024
+        gnosis.rollFork(31886671);   // Jan 10, 2024
+
+        mainnet.selectFork();
+
+        payload = deployPayload();
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
     }
 
@@ -217,11 +236,13 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
     function test_poolUpgrade() public {
         vm.prank(address(poolAddressesProvider));
         assertEq(IProxyLike(payable(address(pool))).implementation(), POOL_IMPLEMENTATION_OLD);
+        assertEq(pool.FLASHLOAN_PREMIUM_TOTAL(), 0);
 
         GovHelpers.executePayload(vm, payload, executor);
 
         vm.prank(address(poolAddressesProvider));
         assertEq(IProxyLike(payable(address(pool))).implementation(), POOL_IMPLEMENTATION_NEW);
+        assertEq(pool.FLASHLOAN_PREMIUM_TOTAL(), 0);
     }
 
     // --- E2E Testing ---
@@ -682,6 +703,25 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
         pool.withdraw(GNO, type(uint256).max, GNO_USER);
         assertEq(IERC20(GNO).balanceOf(GNO_USER), 50104832628897478086);
         vm.stopPrank();
+    }
+
+    function testGnosisSpellExecution() public {
+        GovHelpers.executePayload(vm, payload, executor);
+
+        gnosis.selectFork();
+
+        assertEq(IL2BridgeExecutor(GNOSIS_BRIDGE_EXECUTOR).getActionsSetCount(), 2);
+
+        gnosis.relayFromHost(true);
+        skip(2 days);
+
+        assertEq(IL2BridgeExecutor(GNOSIS_BRIDGE_EXECUTOR).getActionsSetCount(), 3);
+
+        vm.expectCall(
+            GNOSIS_PAYLOAD,
+            abi.encodeWithSignature('execute()')
+        );
+        IL2BridgeExecutor(GNOSIS_BRIDGE_EXECUTOR).execute(2);
     }
 
 }

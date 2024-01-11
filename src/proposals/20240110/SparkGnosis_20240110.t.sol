@@ -24,11 +24,13 @@ contract SparkGnosis_20240110Test is SparkGnosisTestBase {
     function test_poolUpgrade() public {
         vm.prank(address(poolAddressesProvider));
         assertEq(IProxyLike(payable(address(pool))).implementation(), POOL_IMPLEMENTATION_OLD);
+        assertEq(pool.FLASHLOAN_PREMIUM_TOTAL(), 0);
 
         GovHelpers.executePayload(vm, payload, executor);
 
         vm.prank(address(poolAddressesProvider));
         assertEq(IProxyLike(payable(address(pool))).implementation(), POOL_IMPLEMENTATION_NEW);
+        assertEq(pool.FLASHLOAN_PREMIUM_TOTAL(), 0);
     }
 
 }
