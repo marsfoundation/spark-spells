@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.10;
 
-import { SparkPayloadEthereum, IEngine, EngineFlags } from '../../SparkPayloadEthereum.sol';
+import { SparkPayloadEthereum, IEngine, EngineFlags, Address } from '../../SparkPayloadEthereum.sol';
 
 import { IACLManager }            from 'aave-v3-core/contracts/interfaces/IACLManager.sol';
 import { IPool }                  from 'aave-v3-core/contracts/interfaces/IPool.sol';
@@ -20,6 +20,10 @@ interface IIncentivizedERC20 {
     function setIncentivesController(address controller) external;
 }
 
+interface IForwarder {
+    function execute(address payload) external;
+}
+
 /**
  * @title  January 10, 2024 Spark Ethereum Proposal
  * @author Phoenix Labs
@@ -33,6 +37,8 @@ interface IIncentivizedERC20 {
  *         https://vote.makerdao.com/polling/QmdQSuAc#poll-detail
  */
 contract SparkEthereum_20240110 is SparkPayloadEthereum {
+
+    using Address for address;
 
     address public constant ACL_MANAGER           = 0xdA135Cd78A086025BcdC87B038a1C462032b510C;
     address public constant AUTHORITY             = 0x0a3f6849f78076aefaDf113F5BED87720274dDC0;
@@ -50,6 +56,8 @@ contract SparkEthereum_20240110 is SparkPayloadEthereum {
     address public constant WSTETH_ORACLE         = 0x8B6851156023f4f5A66F68BEA80851c3D905Ac93;
     address public constant POOL_ADDRESS_PROVIDER = 0x02C3eA4e34C0cBd694D2adFa2c690EECbC1793eE;
     address public constant POOL_IMPLEMENTATION   = 0xB40f6d584081ac2b0FD84C846dBa3C1417889304;
+    address public constant GNOSIS_FORWARDER      = 0x44f993EAe9a420Df9ffa5263c55f6C8eF46c0340;
+    address public constant GNOSIS_PAYLOAD        = 0x4cB851D28aE5C24F839e45E4F07e3888641FBE90;
 
     uint256 public constant DURATION      = 30 days;
     uint256 public constant REWARD_AMOUNT = 20 ether;
@@ -132,6 +140,13 @@ contract SparkEthereum_20240110 is SparkPayloadEthereum {
 
         IEmissionManager(EMISSION_MANAGER).configureAssets(rewardConfigs);
         IEmissionManager(EMISSION_MANAGER).setEmissionAdmin(WSTETH, REWARDS_OPERATOR);
+
+        GNOSIS_FORWARDER.functionDelegateCall(
+            abi.encodeWithSelector(
+                IForwarder.execute.selector,
+                GNOSIS_PAYLOAD
+            )
+        );
     }
 
 }
