@@ -23,7 +23,7 @@ interface IIncentivizedERC20 {
 /**
  * @title  January 10, 2024 Spark Ethereum Proposal
  * @author Phoenix Labs
- * @dev    Activate Freezer Mom, DAI oracle to hardcoded $1, wstETH oracle assume 1:1 stETH peg, Freeze GNO, Activate Lido Rewards.
+ * @dev    Activate Freezer Mom, DAI oracle to hardcoded $1, wstETH oracle assume 1:1 stETH peg, Freeze GNO, Activate Lido Rewards, Pool Impl Patch.
  * Forum:  https://forum.makerdao.com/t/spark-spell-proposed-changes/23298
  * Polls:  https://vote.makerdao.com/polling/QmeWioX1#poll-detail
  *         https://vote.makerdao.com/polling/QmdVy1Uk#poll-detail
