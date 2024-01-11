@@ -76,7 +76,7 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
     address constant POOL_IMPLEMENTATION_NEW = 0xB40f6d584081ac2b0FD84C846dBa3C1417889304;
 
     address constant GNOSIS_BRIDGE_EXECUTOR = 0xc4218C1127cB24a0D6c1e7D25dc34e10f2625f5A;
-    address constant GNOSIS_PAYLOAD         = 0xB979b79AdC4e5CF5cD43599a8D66C45460870bB4;
+    address constant GNOSIS_PAYLOAD         = 0x670C94430E54D498F4e23BA1F6F2352e735c1d87;
 
     ISparkLendFreezerMom        freezerMom           = ISparkLendFreezerMom(FREEZER_MOM);
     IEACAggregatorProxy         daiOracle            = IEACAggregatorProxy(DAI_ORACLE_NEW);
@@ -103,12 +103,12 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
         mainnet = new Domain(getChain('mainnet'));
         gnosis  = new GnosisDomain(getChain('gnosis_chain'), mainnet);
 
-        mainnet.rollFork(18980579);  // Jan 10, 2024
-        gnosis.rollFork(31886671);   // Jan 10, 2024
+        mainnet.rollFork(18984405);  // Jan 11, 2024
+        gnosis.rollFork(31894743);   // Jan 11, 2024
 
         mainnet.selectFork();
 
-        payload = deployPayload();
+        payload = 0x2f2c514137173bc98B3699A0d291f7593637c596;
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
     }
 
@@ -276,8 +276,8 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
 
         uint256 expectedTotalRewards = _getTotalExpectedRewards(user);
 
-        // Sanity check: 100 / 251k supplied (~0.04%) which gives them ~0.04% of the rewards (0.0004 * 20 = 0.008)
-        assertEq(expectedTotalRewards, 0.007945994087070260 ether);
+        // Sanity check: 100 / 269k supplied (~0.037%) which gives them ~0.037% of the rewards (0.00037 * 20 = 0.0074)
+        assertEq(expectedTotalRewards, 0.007418907391309640 ether);
 
         skip(DURATION / 4);  // 25% of rewards distributed
 
@@ -337,10 +337,10 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
         uint256 expectedTotalRewards1 = _getTotalExpectedRewards(WHALE1);
         uint256 expectedTotalRewards2 = _getTotalExpectedRewards(WHALE2);
 
-        // Sanity check: WHALE1 has 79k / 251k supplied (~31.4%) which gives them ~31.4% of the rewards (0.314 * 20 = 6.3)
-        assertEq(expectedTotalRewards1, 6.305084926070791100 ether);
-        // Sanity check: WHALE2 has 37k / 251k supplied (~14.7%) which gives them ~14.7% of the rewards (0.147 * 20 = 2.9)
-        assertEq(expectedTotalRewards2, 2.944202072844931100 ether);
+        // Sanity check: WHALE1 has 79k / 269k supplied (~29%) which gives them ~29% of the rewards (0.29 * 20 = 5.87)
+        assertEq(expectedTotalRewards1, 5.886793501512513100 ether);
+        // Sanity check: WHALE2 has 40k / 269k supplied (~14.8%) which gives them ~14.8% of the rewards (0.148 * 20 = 2.75)
+        assertEq(expectedTotalRewards2, 2.971530267008340700 ether);
 
         skip(DURATION / 4);  // 25% of rewards distributed
 

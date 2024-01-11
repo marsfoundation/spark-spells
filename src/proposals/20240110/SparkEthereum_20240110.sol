@@ -58,7 +58,7 @@ contract SparkEthereum_20240110 is SparkPayloadEthereum {
     address public constant POOL_ADDRESS_PROVIDER = 0x02C3eA4e34C0cBd694D2adFa2c690EECbC1793eE;
     address public constant POOL_IMPLEMENTATION   = 0xB40f6d584081ac2b0FD84C846dBa3C1417889304;
     address public constant GNOSIS_FORWARDER      = 0x44f993EAe9a420Df9ffa5263c55f6C8eF46c0340;
-    address public constant GNOSIS_PAYLOAD        = 0xB979b79AdC4e5CF5cD43599a8D66C45460870bB4;
+    address public constant GNOSIS_PAYLOAD        = 0x670C94430E54D498F4e23BA1F6F2352e735c1d87;
 
     uint256 public constant DURATION      = 30 days;
     uint256 public constant REWARD_AMOUNT = 20 ether;
