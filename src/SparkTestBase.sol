@@ -6,9 +6,11 @@ import './ProtocolV3TestBase.sol';
 import { GovHelpers } from './libraries/GovHelpers.sol';
 
 import { InitializableAdminUpgradeabilityProxy } from "aave-v3-core/contracts/dependencies/openzeppelin/upgradeability/InitializableAdminUpgradeabilityProxy.sol";
+import { IACLManager }                           from 'aave-v3-core/contracts/interfaces/IACLManager.sol';
 import { IPool }                                 from 'aave-v3-core/contracts/interfaces/IPool.sol';
 import { IPoolAddressesProvider }                from 'aave-v3-core/contracts/interfaces/IPoolAddressesProvider.sol';
 import { IPoolAddressesProviderRegistry }        from 'aave-v3-core/contracts/interfaces/IPoolAddressesProviderRegistry.sol';
+import { IPoolConfigurator }                     from 'aave-v3-core/contracts/interfaces/IPoolConfigurator.sol';
 
 import { IDaiInterestRateStrategy }    from "./interfaces/IDaiInterestRateStrategy.sol";
 import { IDaiJugInterestRateStrategy } from "./interfaces/IDaiJugInterestRateStrategy.sol";
@@ -50,13 +52,17 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
     bool internal disableExportDiff;
     bool internal disableE2E;
 
-    IPoolAddressesProviderRegistry internal poolAddressesProviderRegistry;
-    IPoolAddressesProvider         internal poolAddressesProvider;
+    IACLManager                    internal aclManager;
     IPool                          internal pool;
+    IPoolAddressesProvider         internal poolAddressesProvider;
+    IPoolAddressesProviderRegistry internal poolAddressesProviderRegistry;
+    IPoolConfigurator              internal poolConfigurator;
 
     function loadPoolContext(address poolProvider) internal {
         poolAddressesProvider = IPoolAddressesProvider(poolProvider);
         pool                  = IPool(poolAddressesProvider.getPool());
+        poolConfigurator      = IPoolConfigurator(poolAddressesProvider.getPoolConfigurator());
+        aclManager            = IACLManager(poolAddressesProvider.getACLManager());
     }
 
     function deployPayload() internal returns (address) {
@@ -168,7 +174,6 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
         // use the same implementation for AToken, StableDebtToken and VariableDebtToken.
         GovHelpers.executePayload(vm, payload, executor);
 
-        IPoolConfigurator poolConfigurator = IPoolConfigurator(poolAddressesProvider.getPoolConfigurator());
         address[] memory reserves = pool.getReservesList();
         assertGt(reserves.length, 0);
 

@@ -3,7 +3,8 @@ pragma solidity ^0.8.10;
 
 import '../src/SparkTestBase.sol';
 
-contract SparkEthereum_EmptyTest is SparkEthereumTestBase {
+// Remove abstract to activate
+abstract contract SparkEthereum_EmptyTest is SparkEthereumTestBase {
 
     constructor() {
         id                = 'Empty';
