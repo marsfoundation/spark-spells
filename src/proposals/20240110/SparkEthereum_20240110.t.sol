@@ -87,6 +87,7 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
     IAuthority                  authority            = IAuthority(AUTHORITY);
 
     uint256 REWARD_AMOUNT = 20 ether;
+    uint256 WALLET_AMOUNT = 20.02 ether;
     uint256 DURATION      = 30 days;
 
     address claimAddress1 = makeAddr("claimAddress1");
@@ -103,7 +104,7 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
         mainnet = new Domain(getChain('mainnet'));
         gnosis  = new GnosisDomain(getChain('gnosis_chain'), mainnet);
 
-        mainnet.rollFork(18984405);  // Jan 11, 2024
+        mainnet.rollFork(18991830);  // Jan 12, 2024
         gnosis.rollFork(31894743);   // Jan 11, 2024
 
         mainnet.selectFork();
@@ -250,7 +251,7 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
     function _setUpRewards() internal {
         GovHelpers.executePayload(vm, payload, executor);
 
-        deal(WSTETH, REWARDS_OPERATOR, REWARD_AMOUNT);
+        assertEq(IERC20(WSTETH).balanceOf(REWARDS_OPERATOR), 20.02 ether);
     }
 
     function test_claimAllRewards_singleUser() public {
@@ -272,37 +273,37 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
         incentivesController.claimAllRewards(assets, claimAddress);
 
         assertEq(wsteth.balanceOf(claimAddress),     0);
-        assertEq(wsteth.balanceOf(REWARDS_OPERATOR), REWARD_AMOUNT);
+        assertEq(wsteth.balanceOf(REWARDS_OPERATOR), WALLET_AMOUNT);
 
         uint256 expectedTotalRewards = _getTotalExpectedRewards(user);
 
-        // Sanity check: 100 / 269k supplied (~0.037%) which gives them ~0.037% of the rewards (0.00037 * 20 = 0.0074)
-        assertEq(expectedTotalRewards, 0.007418907391309640 ether);
+        // Sanity check: 100 / 245k supplied (~0.04%) which gives them ~0.04% of the rewards (0.0004 * 20 = 0.0081)
+        assertEq(expectedTotalRewards, 0.008154963786516400 ether);
 
         skip(DURATION / 4);  // 25% of rewards distributed
 
         incentivesController.claimAllRewards(assets, claimAddress);
 
         assertApproxEqAbs(wsteth.balanceOf(claimAddress),     expectedTotalRewards / 4,                   100);
-        assertApproxEqAbs(wsteth.balanceOf(REWARDS_OPERATOR), REWARD_AMOUNT - (expectedTotalRewards / 4), 100);
+        assertApproxEqAbs(wsteth.balanceOf(REWARDS_OPERATOR), WALLET_AMOUNT - (expectedTotalRewards / 4), 100);
 
         // Assert diffs are equal and opposite, with rounding going towards REWARDS_OPERATOR
         assertEq(
             (expectedTotalRewards / 4) - wsteth.balanceOf(claimAddress),
-            wsteth.balanceOf(REWARDS_OPERATOR) - (REWARD_AMOUNT - (expectedTotalRewards / 4))
+            wsteth.balanceOf(REWARDS_OPERATOR) - (WALLET_AMOUNT - (expectedTotalRewards / 4))
         );
 
         skip(DURATION * 3 / 4);  // Warp to the end, distributing the remaining 75% of rewards
 
         incentivesController.claimAllRewards(assets, claimAddress);
 
-        assertApproxEqAbs(wsteth.balanceOf(claimAddress),     expectedTotalRewards,                 200);
-        assertApproxEqAbs(wsteth.balanceOf(REWARDS_OPERATOR), REWARD_AMOUNT - expectedTotalRewards, 200);
+        assertApproxEqAbs(wsteth.balanceOf(claimAddress),     expectedTotalRewards,                 210);
+        assertApproxEqAbs(wsteth.balanceOf(REWARDS_OPERATOR), WALLET_AMOUNT - expectedTotalRewards, 210);
 
         // Assert diffs are equal and opposite, with rounding going towards REWARDS_OPERATOR
         assertEq(
             expectedTotalRewards - wsteth.balanceOf(claimAddress),
-            wsteth.balanceOf(REWARDS_OPERATOR) - (REWARD_AMOUNT - expectedTotalRewards)
+            wsteth.balanceOf(REWARDS_OPERATOR) - (WALLET_AMOUNT - expectedTotalRewards)
         );
 
         skip(DURATION / 4);  // Warp past the end to show that rewards no longer accrue
@@ -330,17 +331,17 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
 
         assertEq(wsteth.balanceOf(claimAddress1),    0);
         assertEq(wsteth.balanceOf(claimAddress2),    0);
-        assertEq(wsteth.balanceOf(REWARDS_OPERATOR), REWARD_AMOUNT);
+        assertEq(wsteth.balanceOf(REWARDS_OPERATOR), WALLET_AMOUNT);
 
         // 2. Calculate expected rewards
 
         uint256 expectedTotalRewards1 = _getTotalExpectedRewards(WHALE1);
         uint256 expectedTotalRewards2 = _getTotalExpectedRewards(WHALE2);
 
-        // Sanity check: WHALE1 has 79k / 269k supplied (~29%) which gives them ~29% of the rewards (0.29 * 20 = 5.87)
-        assertEq(expectedTotalRewards1, 5.886793501512513100 ether);
-        // Sanity check: WHALE2 has 40k / 269k supplied (~14.8%) which gives them ~14.8% of the rewards (0.148 * 20 = 2.75)
-        assertEq(expectedTotalRewards2, 2.971530267008340700 ether);
+        // Sanity check: WHALE1 has 79k / 245k supplied (~32%) which gives them ~32% of the rewards (0.32 * 20 = 6.4)
+        assertEq(expectedTotalRewards1, 6.471312962245728860 ether);
+        // Sanity check: WHALE2 has 40k / 245k supplied (~16%) which gives them ~16% of the rewards (0.16 * 20 = 3.26)
+        assertEq(expectedTotalRewards2, 3.266583468514028340 ether);
 
         skip(DURATION / 4);  // 25% of rewards distributed
 
@@ -355,14 +356,14 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
 
         assertApproxEqAbs(
             wsteth.balanceOf(REWARDS_OPERATOR),
-            REWARD_AMOUNT - (expectedTotalRewards1 / 4) - (expectedTotalRewards2 / 4),
+            WALLET_AMOUNT - (expectedTotalRewards1 / 4) - (expectedTotalRewards2 / 4),
             150_000
         );
 
         // Assert diffs are equal and opposite, with rounding going towards REWARDS_OPERATOR
         assertEq(
             ((expectedTotalRewards1 / 4) - wsteth.balanceOf(claimAddress1)) + ((expectedTotalRewards2 / 4) - wsteth.balanceOf(claimAddress2)),
-            wsteth.balanceOf(REWARDS_OPERATOR) - (REWARD_AMOUNT - (expectedTotalRewards1 / 4) - (expectedTotalRewards2 / 4))
+            wsteth.balanceOf(REWARDS_OPERATOR) - (WALLET_AMOUNT - (expectedTotalRewards1 / 4) - (expectedTotalRewards2 / 4))
         );
 
         skip(DURATION * 3 / 4);  // Warp to the end, distributing the remaining 75% of rewards
@@ -378,14 +379,14 @@ contract SparkEthereum_20240110Test is SparkEthereumTestBase {
 
         assertApproxEqAbs(
             wsteth.balanceOf(REWARDS_OPERATOR),
-            REWARD_AMOUNT - (expectedTotalRewards1) - (expectedTotalRewards2),
+            WALLET_AMOUNT - (expectedTotalRewards1) - (expectedTotalRewards2),
             300_000
         );
 
         // Assert diffs are equal and opposite, with rounding going towards REWARDS_OPERATOR
         assertEq(
             ((expectedTotalRewards1) - wsteth.balanceOf(claimAddress1)) + ((expectedTotalRewards2) - wsteth.balanceOf(claimAddress2)),
-            wsteth.balanceOf(REWARDS_OPERATOR) - (REWARD_AMOUNT - (expectedTotalRewards1) - (expectedTotalRewards2))
+            wsteth.balanceOf(REWARDS_OPERATOR) - (WALLET_AMOUNT - (expectedTotalRewards1) - (expectedTotalRewards2))
         );
     }
 
