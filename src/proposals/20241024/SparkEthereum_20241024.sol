@@ -4,11 +4,11 @@ pragma solidity ^0.8.10;
 import { SparkPayloadEthereum, IEngine, Rates, EngineFlags, Address } from '../../SparkPayloadEthereum.sol';
 
 /**
- * @title  January 24, 2024 Spark Ethereum Proposal - Raise WBTC supply cap
+ * @title  January 24, 2024 Spark Ethereum Proposal - Raise WBTC supply cap, update USDC & USDT oracle to fixed price oracle, update DAI, USDC & USDT IRM to DSR-tracking IRM
  * @author Phoenix Labs
- * @dev This proposal sets WBTC supplyCap
- * Forum:     TBA
- * WBTC Vote: TBA
+ * @dev This proposal sets WBTC supplyCap, USDC & USDT priceFeed and DAI, USDC & USDT reserveInterestRateStrategy
+ * Forum: TBA
+ * Vote:  TBA
  */
 contract SparkEthereum_20241024 is SparkPayloadEthereum {
 
