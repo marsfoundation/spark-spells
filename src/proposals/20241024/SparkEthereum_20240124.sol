@@ -10,7 +10,7 @@ import { SparkPayloadEthereum, IEngine, Rates, EngineFlags, Address } from '../.
  * Forum:        https://forum.makerdao.com/t/jan-10-2024-proposed-changes-to-sparklend-for-upcoming-spell
  * WBTC Vote:    https://vote.makerdao.com/polling/Qmc3NjZA
  * Oracles Vote: https://vote.makerdao.com/polling/QmTauEqL
- * IRM Vote:     https://vote.makerdao.com/polling/QmNrXB9P
+ * IRMs Vote:    https://vote.makerdao.com/polling/QmNrXB9P
  */
 contract SparkEthereum_20240124 is SparkPayloadEthereum {
 
