@@ -35,6 +35,7 @@ contract SparkEthereum_20241024 is SparkPayloadEthereum {
             asset:     USDC,
             priceFeed: FIXED_PRICE_ORACLE
         });
+
         updates[1] = IEngine.PriceFeedUpdate({
             asset:     USDT,
             priceFeed: FIXED_PRICE_ORACLE
