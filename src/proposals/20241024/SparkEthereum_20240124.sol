@@ -12,7 +12,7 @@ import { SparkPayloadEthereum, IEngine, Rates, EngineFlags, Address } from '../.
  * Oracles Vote: https://vote.makerdao.com/polling/QmTauEqL
  * IRM Vote:     https://vote.makerdao.com/polling/QmNrXB9P
  */
-contract SparkEthereum_20241024 is SparkPayloadEthereum {
+contract SparkEthereum_20240124 is SparkPayloadEthereum {
 
     using Address for address;
 

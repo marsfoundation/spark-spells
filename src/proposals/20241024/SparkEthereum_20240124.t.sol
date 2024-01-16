@@ -3,9 +3,9 @@ pragma solidity ^0.8.10;
 
 import '../../SparkTestBase.sol';
 
-import { SparkEthereum_20241024 } from './SparkEthereum_20241024.sol';
+import { SparkEthereum_20240124 } from './SparkEthereum_20240124.sol';
 
-contract SparkEthereum_20241024Test is SparkEthereumTestBase {
+contract SparkEthereum_20240124Test is SparkEthereumTestBase {
 
     address public constant USDC                            = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
     address public constant USDT                            = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
@@ -25,7 +25,7 @@ contract SparkEthereum_20241024Test is SparkEthereumTestBase {
     uint256 public constant NEW_WBTC_SUPPLY_CAP = 5_000;
 
     constructor() {
-        id = '20241024';
+        id = '20240124';
     }
 
     function setUp() public {
