@@ -11,6 +11,7 @@ import { IPool }                                 from 'aave-v3-core/contracts/in
 import { IPoolAddressesProvider }                from 'aave-v3-core/contracts/interfaces/IPoolAddressesProvider.sol';
 import { IPoolAddressesProviderRegistry }        from 'aave-v3-core/contracts/interfaces/IPoolAddressesProviderRegistry.sol';
 import { IPoolConfigurator }                     from 'aave-v3-core/contracts/interfaces/IPoolConfigurator.sol';
+import { IncentivizedERC20 }                     from 'aave-v3-core/contracts/protocol/tokenization/base/IncentivizedERC20.sol';
 import { DataTypes }                             from 'aave-v3-core/contracts/protocol/libraries/types/DataTypes.sol';
 import { ReserveConfiguration }                  from 'aave-v3-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
 
@@ -76,11 +77,14 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
     IAuthority                     internal authority;
     ISparkLendFreezerMom           internal freezerMom;
 
-    address constant AUTHORITY        = 0x0a3f6849f78076aefaDf113F5BED87720274dDC0;
-    address constant FREEZER_MOM      = 0xFA36c12Bc307b40c701D65d8FE8F88cCEdE2277a;
-    address constant DAI              = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
-    address constant WETH             = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-    address constant MKR              = 0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2;
+    address constant AUTHORITY             = 0x0a3f6849f78076aefaDf113F5BED87720274dDC0;
+    address constant FREEZER_MOM           = 0xFA36c12Bc307b40c701D65d8FE8F88cCEdE2277a;
+    address constant INCENTIVES_CONTROLLER = 0x4370D3b6C9588E02ce9D22e684387859c7Ff5b34;
+
+    address constant DAI  = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
+    address constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    address constant MKR  = 0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2;
+
     address constant SPELL_FREEZE_ALL = 0xA67d62f75F8D11395eE120CA8390Ab3bF01f0b8A;
     address constant SPELL_FREEZE_DAI = 0x0F9149c4d6018A5999AdA5b592E372845cfeC725;
     address constant SPELL_PAUSE_ALL  = 0x216738c7B1E83cC1A1FFcD3433226B0a3B174484;
@@ -218,6 +222,31 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
             assertEq(getImplementation(address(poolConfigurator), expectedData.aTokenAddress),            aTokenImpl);
             assertEq(getImplementation(address(poolConfigurator), expectedData.stableDebtTokenAddress),   stableDebtTokenImpl);
             assertEq(getImplementation(address(poolConfigurator), expectedData.variableDebtTokenAddress), variableDebtTokenImpl);
+        }
+    }
+
+    function testRewardsConfiguration() public {
+        uint256 snapshot = vm.snapshot();
+
+        _testRewardsConfiguration();
+
+        vm.revertTo(snapshot);
+        GovHelpers.executePayload(vm, payload, executor);
+
+        _testRewardsConfiguration();
+    }
+
+    function _testRewardsConfiguration() public {
+        GovHelpers.executePayload(vm, payload, executor);
+
+        address[] memory reserves = pool.getReservesList();
+        assertGt(reserves.length, 0);
+
+        for (uint256 i = 1; i < reserves.length; i++) {
+            DataTypes.ReserveData memory reserveData = pool.getReserveData(reserves[i]);
+
+            assertEq(address(IncentivizedERC20(reserveData.aTokenAddress).getIncentivesController()),            INCENTIVES_CONTROLLER);
+            assertEq(address(IncentivizedERC20(reserveData.variableDebtTokenAddress).getIncentivesController()), INCENTIVES_CONTROLLER);
         }
     }
 
