@@ -11,15 +11,31 @@ import { IPool }                                 from 'aave-v3-core/contracts/in
 import { IPoolAddressesProvider }                from 'aave-v3-core/contracts/interfaces/IPoolAddressesProvider.sol';
 import { IPoolAddressesProviderRegistry }        from 'aave-v3-core/contracts/interfaces/IPoolAddressesProviderRegistry.sol';
 import { IPoolConfigurator }                     from 'aave-v3-core/contracts/interfaces/IPoolConfigurator.sol';
+import { DataTypes }                             from 'aave-v3-core/contracts/protocol/libraries/types/DataTypes.sol';
+import { ReserveConfiguration }                  from 'aave-v3-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
 
 import { IDaiInterestRateStrategy }    from "./interfaces/IDaiInterestRateStrategy.sol";
 import { IDaiJugInterestRateStrategy } from "./interfaces/IDaiJugInterestRateStrategy.sol";
+import { ISparkLendFreezerMom }        from './interfaces/ISparkLendFreezerMom.sol';
 
 // REPO ARCHITECTURE TODOs
 // TODO: Investigate if aave-address-book can be removed as dep
 // TODO: Refactor Mock logic for executor to be more realistic, consider fork + prank.
 
+interface IAuthority {
+    function canCall(address src, address dst, bytes4 sig) external view returns (bool);
+    function hat() external view returns (address);
+    function lock(uint256 amount) external;
+    function vote(address[] calldata slate) external;
+    function lift(address target) external;
+}
+
+interface IExecutable {
+    function execute() external;
+}
+
 abstract contract SparkTestBase is ProtocolV3TestBase {
+    using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
     struct DaiInterestStrategyValues {
         address vat;
@@ -57,12 +73,26 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
     IPoolAddressesProvider         internal poolAddressesProvider;
     IPoolAddressesProviderRegistry internal poolAddressesProviderRegistry;
     IPoolConfigurator              internal poolConfigurator;
+    IAuthority                     internal authority;
+    ISparkLendFreezerMom           internal freezerMom;
+
+    address constant AUTHORITY        = 0x0a3f6849f78076aefaDf113F5BED87720274dDC0;
+    address constant FREEZER_MOM      = 0xFA36c12Bc307b40c701D65d8FE8F88cCEdE2277a;
+    address constant DAI              = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
+    address constant WETH             = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    address constant MKR              = 0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2;
+    address constant SPELL_FREEZE_ALL = 0xA67d62f75F8D11395eE120CA8390Ab3bF01f0b8A;
+    address constant SPELL_FREEZE_DAI = 0x0F9149c4d6018A5999AdA5b592E372845cfeC725;
+    address constant SPELL_PAUSE_ALL  = 0x216738c7B1E83cC1A1FFcD3433226B0a3B174484;
+    address constant SPELL_PAUSE_DAI  = 0x1B94E2F3818E1D657bE2A62D37560514b52DB17F;
 
     function loadPoolContext(address poolProvider) internal {
         poolAddressesProvider = IPoolAddressesProvider(poolProvider);
         pool                  = IPool(poolAddressesProvider.getPool());
         poolConfigurator      = IPoolConfigurator(poolAddressesProvider.getPoolConfigurator());
         aclManager            = IACLManager(poolAddressesProvider.getACLManager());
+        authority             = IAuthority(AUTHORITY);
+        freezerMom            = ISparkLendFreezerMom(FREEZER_MOM);
     }
 
     function deployPayload() internal returns (address) {
@@ -189,6 +219,84 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
             assertEq(getImplementation(address(poolConfigurator), expectedData.stableDebtTokenAddress),   stableDebtTokenImpl);
             assertEq(getImplementation(address(poolConfigurator), expectedData.variableDebtTokenAddress), variableDebtTokenImpl);
         }
+    }
+
+    function testFreezerMom() public {
+        uint256 snapshot = vm.snapshot();
+
+        _testFreezerMom();
+
+        vm.revertTo(snapshot);
+        GovHelpers.executePayload(vm, payload, executor);
+
+        _testFreezerMom();
+    }
+
+    function _assertFrozen(address asset, bool frozen) internal {
+        assertEq(pool.getConfiguration(asset).getFrozen(), frozen);
+    }
+
+    function _assertPaused(address asset, bool paused) internal {
+        assertEq(pool.getConfiguration(asset).getPaused(), paused);
+    }
+
+    function _voteAndCast(address _spell) internal {
+        address mkrWhale = makeAddr("mkrWhale");
+        uint256 amount = 1_000_000 ether;
+
+        deal(MKR, mkrWhale, amount);
+
+        vm.startPrank(mkrWhale);
+        IERC20(MKR).approve(AUTHORITY, amount);
+        authority.lock(amount);
+
+        address[] memory slate = new address[](1);
+        slate[0] = _spell;
+        authority.vote(slate);
+
+        vm.roll(block.number + 1);
+
+        authority.lift(_spell);
+
+        vm.stopPrank();
+
+        assertEq(authority.hat(), _spell);
+
+        vm.prank(makeAddr("randomUser"));
+        IExecutable(_spell).execute();
+    }
+
+    function _testFreezerMom() public {
+        // Sanity checks - cannot call Freezer Mom unless you have the hat
+        vm.expectRevert("SparkLendFreezerMom/not-authorized");
+        freezerMom.freezeMarket(DAI, true);
+        vm.expectRevert("SparkLendFreezerMom/not-authorized");
+        freezerMom.freezeAllMarkets(true);
+        vm.expectRevert("SparkLendFreezerMom/not-authorized");
+        freezerMom.pauseMarket(DAI, true);
+        vm.expectRevert("SparkLendFreezerMom/not-authorized");
+        freezerMom.pauseAllMarkets(true);
+
+        // Pretend the hat has logic to freeze
+        _assertFrozen(DAI,  false);
+        _assertFrozen(WETH, false);
+        _voteAndCast(SPELL_FREEZE_DAI);
+        _assertFrozen(DAI,  true);
+        _assertFrozen(WETH, false);
+
+        _voteAndCast(SPELL_FREEZE_ALL);
+        _assertFrozen(DAI,  true);
+        _assertFrozen(WETH, true);
+
+        _assertPaused(DAI,  false);
+        _assertPaused(WETH, false);
+        _voteAndCast(SPELL_PAUSE_DAI);
+        _assertPaused(DAI,  true);
+        _assertPaused(WETH, false);
+
+        _voteAndCast(SPELL_PAUSE_ALL);
+        _assertPaused(DAI,  true);
+        _assertPaused(WETH, true);
     }
 
     function getImplementation(address admin, address proxy) internal returns (address) {

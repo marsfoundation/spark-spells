@@ -42,6 +42,7 @@ interface IOracleLike {
   function description() external view returns (string memory);
   function name() external view returns (string memory);
   function version() external view returns (uint256);
+  function latestAnswer() external view returns (int256);
 }
 
 struct ReserveConfig {
@@ -1534,6 +1535,29 @@ contract ProtocolV3TestBase is CommonTestBase {
     require(
       oracle.getSourceOfAsset(asset) == expectedSource,
       '_validateAssetSourceOnOracle() : INVALID_PRICE_SOURCE'
+    );
+
+    require(
+      IOracleLike(oracle.getSourceOfAsset(asset)).decimals() == 8,
+      '_validateAssetSourceOnOracle() : INVALID_PRICE_SOURCE_DECIMALS'
+    );
+  }
+
+  function _validateAssetSourceLatestAnswerOnOracle(
+    IPoolAddressesProvider addressesProvider,
+    address asset,
+    address expectedSource
+  ) internal view {
+    IAaveOracle oracle = IAaveOracle(addressesProvider.getPriceOracle());
+
+    require(
+      IOracleLike(oracle.getSourceOfAsset(asset)).latestAnswer() >= 1_00000000,
+      '_validateAssetSourceOnOracle() : INVALID_PRICE_TOO_LOW'
+    );
+
+    require(
+      IOracleLike(oracle.getSourceOfAsset(asset)).latestAnswer() <= 1_000_000_00000000,
+      '_validateAssetSourceOnOracle() : INVALID_PRICE_TOO_HIGH'
     );
   }
 
