@@ -15,7 +15,7 @@ contract SparkEthereum_20240124Test is SparkEthereumTestBase {
     address public constant FIXED_PRICE_ORACLE              = 0x42a03F81dd8A1cEcD746dc262e4d1CD9fD39F777;
 
     address public constant OLD_DAI_INTEREST_RATE_STRATEGY  = 0x7d8f2210FAD012E7d260C3ddBeCaCfd48277455F;
-    address public constant NEW_DAI_INTEREST_RATE_STRATEGY  = 0x7d8f2210FAD012E7d260C3ddBeCaCfd48277455F; // TBA (this is a placeholders)
+    address public constant NEW_DAI_INTEREST_RATE_STRATEGY  = 0x512AFEDCF6696d9707dCFECD4bdc73e9902e3c6A;
     address public constant OLD_USDC_INTEREST_RATE_STRATEGY = 0xbc8A68B0ab0617D7c90d15bb1601B25d795Dc4c8;
     address public constant NEW_USDC_INTEREST_RATE_STRATEGY = 0x0F1a9a787b4103eF5929121CD9399224c6455dD6;
     address public constant OLD_USDT_INTEREST_RATE_STRATEGY = 0xbc8A68B0ab0617D7c90d15bb1601B25d795Dc4c8;
