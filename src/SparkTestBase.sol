@@ -237,8 +237,6 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
     }
 
     function _testRewardsConfiguration() public {
-        GovHelpers.executePayload(vm, payload, executor);
-
         address[] memory reserves = pool.getReservesList();
         assertGt(reserves.length, 0);
 
