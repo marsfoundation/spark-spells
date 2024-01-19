@@ -71,7 +71,6 @@ contract SparkEthereum_20240124 is SparkPayloadEthereum {
             USDT,
             USDT_IRM
         );
-
     }
 
 }
