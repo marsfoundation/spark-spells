@@ -3,6 +3,14 @@ pragma solidity ^0.8.10;
 
 import '../../SparkTestBase.sol';
 
+interface IIRM {
+    function RATE_SOURCE() external view returns (address);
+}
+
+interface IRateSource {
+    function getAPR() external view returns (int256);
+}
+
 contract SparkEthereum_20240124Test is SparkEthereumTestBase {
 
     address public constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
@@ -19,8 +27,12 @@ contract SparkEthereum_20240124Test is SparkEthereumTestBase {
     address public constant OLD_USDT_INTEREST_RATE_STRATEGY = 0xbc8A68B0ab0617D7c90d15bb1601B25d795Dc4c8;
     address public constant NEW_USDT_INTEREST_RATE_STRATEGY = 0x0F1a9a787b4103eF5929121CD9399224c6455dD6;
 
-    uint256 public constant OLD_WBTC_SUPPLY_CAP = 3_000;
-    uint256 public constant NEW_WBTC_SUPPLY_CAP = 5_000;
+    uint256 public constant OLD_WBTC_SUPPLY_CAP   = 3_000;
+    uint256 public constant NEW_WBTC_SUPPLY_CAP   = 5_000;
+    uint256 public constant OLD_USDC_USDT_SLOPE_1 = 0.044790164207174267760128000e27;
+
+    int256 public constant USDC_USDT_IRM_SPREAD = -0.004e27;
+    int256 public constant DAI_IRM_SPREAD       =  0.013808977611475523600880000e27;
 
     constructor() {
         id = '20240124';
@@ -56,13 +68,44 @@ contract SparkEthereum_20240124Test is SparkEthereumTestBase {
         /**********************************************/
 
         ReserveConfig memory daiConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'DAI');
+        ReserveConfig memory usdcConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'USDC');
+        ReserveConfig memory usdtConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'USDT');
+
         assertEq(daiConfigBefore.interestRateStrategy, OLD_DAI_INTEREST_RATE_STRATEGY);
 
-        ReserveConfig memory usdcConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'USDC');
-        assertEq(usdcConfigBefore.interestRateStrategy, OLD_USDC_INTEREST_RATE_STRATEGY);
+        assertEq(OLD_USDC_INTEREST_RATE_STRATEGY, OLD_USDT_INTEREST_RATE_STRATEGY);
 
-        ReserveConfig memory usdtConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'USDT');
-        assertEq(usdtConfigBefore.interestRateStrategy, OLD_USDT_INTEREST_RATE_STRATEGY);
+        _validateInterestRateStrategy(
+            usdcConfigBefore.interestRateStrategy,
+            OLD_USDC_INTEREST_RATE_STRATEGY,
+            InterestStrategyValues({
+                addressesProvider:             address(poolAddressesProvider),
+                optimalUsageRatio:             0.95e27,
+                optimalStableToTotalDebtRatio: 0,
+                baseStableBorrowRate:          OLD_USDC_USDT_SLOPE_1,
+                stableRateSlope1:              0,
+                stableRateSlope2:              0,
+                baseVariableBorrowRate:        0,
+                variableRateSlope1:            OLD_USDC_USDT_SLOPE_1,
+                variableRateSlope2:            0.2e27
+            })
+        );
+
+        _validateInterestRateStrategy(
+            usdtConfigBefore.interestRateStrategy,
+            OLD_USDT_INTEREST_RATE_STRATEGY,
+            InterestStrategyValues({
+                addressesProvider:             address(poolAddressesProvider),
+                optimalUsageRatio:             0.95e27,
+                optimalStableToTotalDebtRatio: 0,
+                baseStableBorrowRate:          OLD_USDC_USDT_SLOPE_1,
+                stableRateSlope1:              0,
+                stableRateSlope2:              0,
+                baseVariableBorrowRate:        0,
+                variableRateSlope1:            OLD_USDC_USDT_SLOPE_1,
+                variableRateSlope2:            0.2e27
+            })
+        );
 
         /***********************/
         /*** Execute Payload ***/
@@ -94,6 +137,13 @@ contract SparkEthereum_20240124Test is SparkEthereumTestBase {
         ReserveConfig memory usdcConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'USDC');
         ReserveConfig memory usdtConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'USDT');
 
+        assertEq(IIRM(usdcConfigAfter.interestRateStrategy).RATE_SOURCE(), IIRM(usdtConfigAfter.interestRateStrategy).RATE_SOURCE());
+        assertEq(IIRM(usdcConfigAfter.interestRateStrategy).RATE_SOURCE(), IIRM(daiConfigAfter.interestRateStrategy).RATE_SOURCE());
+        int256 potDsrApr = IRateSource(IIRM(usdcConfigAfter.interestRateStrategy).RATE_SOURCE()).getAPR();
+
+        uint256 expectedDaiBaseVariableBorrowRate = uint256(potDsrApr + DAI_IRM_SPREAD);
+        assertEq(expectedDaiBaseVariableBorrowRate, 0.062599141818649791361008000e27);
+
         _validateInterestRateStrategy(
             daiConfigAfter.interestRateStrategy,
             NEW_DAI_INTEREST_RATE_STRATEGY,
@@ -104,11 +154,15 @@ contract SparkEthereum_20240124Test is SparkEthereumTestBase {
                 baseStableBorrowRate:          0,
                 stableRateSlope1:              0,
                 stableRateSlope2:              0,
-                baseVariableBorrowRate:        0.062599141818649791361008000e27,
+                baseVariableBorrowRate:        expectedDaiBaseVariableBorrowRate,
                 variableRateSlope1:            0,
                 variableRateSlope2:            0
             })
         );
+
+        assertEq(NEW_USDC_INTEREST_RATE_STRATEGY, NEW_USDT_INTEREST_RATE_STRATEGY);
+
+        assertEq(OLD_USDC_USDT_SLOPE_1, uint256(potDsrApr + USDC_USDT_IRM_SPREAD));
 
         _validateInterestRateStrategy(
             usdcConfigAfter.interestRateStrategy,
@@ -117,11 +171,11 @@ contract SparkEthereum_20240124Test is SparkEthereumTestBase {
                 addressesProvider:             address(poolAddressesProvider),
                 optimalUsageRatio:             0.95e27,
                 optimalStableToTotalDebtRatio: 0,
-                baseStableBorrowRate:          0.044790164207174267760128000e27,
+                baseStableBorrowRate:          OLD_USDC_USDT_SLOPE_1,
                 stableRateSlope1:              0,
                 stableRateSlope2:              0,
                 baseVariableBorrowRate:        0,
-                variableRateSlope1:            0.044790164207174267760128000e27,
+                variableRateSlope1:            OLD_USDC_USDT_SLOPE_1,
                 variableRateSlope2:            0.2e27
             })
         );
@@ -133,11 +187,11 @@ contract SparkEthereum_20240124Test is SparkEthereumTestBase {
                 addressesProvider:             address(poolAddressesProvider),
                 optimalUsageRatio:             0.95e27,
                 optimalStableToTotalDebtRatio: 0,
-                baseStableBorrowRate:          0.044790164207174267760128000e27,
+                baseStableBorrowRate:          OLD_USDC_USDT_SLOPE_1,
                 stableRateSlope1:              0,
                 stableRateSlope2:              0,
                 baseVariableBorrowRate:        0,
-                variableRateSlope1:            0.044790164207174267760128000e27,
+                variableRateSlope1:            OLD_USDC_USDT_SLOPE_1,
                 variableRateSlope2:            0.2e27
             })
         );
