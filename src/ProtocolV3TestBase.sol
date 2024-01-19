@@ -493,7 +493,6 @@ contract ProtocolV3TestBase is CommonTestBase {
     this._borrow(borrowConfig, pool, borrower, amount, false);
 
     vm.warp(block.timestamp + 1 hours);
-    uint256 debt = IERC20(borrowConfig.variableDebtToken).balanceOf(borrower);
 
     vm.startPrank(borrower);
     IERC20(borrowConfig.underlying).safeApprove(address(pool), amount);

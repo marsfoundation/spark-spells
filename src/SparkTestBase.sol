@@ -213,7 +213,7 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
 
     function testOracles() public {
         // Uncomment after the Jan 24 spell is executed
-        // This now failis, because old USDT & USDC oracles return values below $1
+        // This now fails, because old USDT & USDC oracles return values below $1
 
         // uint256 snapshot = vm.snapshot();
         // _validateOracles();
@@ -226,17 +226,10 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
 
     function _validateOracles() internal {
         address[] memory reserves = pool.getReservesList();
-        assertGt(reserves.length, 0);
 
-        for (uint256 i = 1; i < reserves.length; i++) {
-            if (pool.getConfiguration(reserves[i]).getFrozen()) {
-                continue;
-            }
-
-            IOracleLike source = IOracleLike(priceOracle.getSourceOfAsset(reserves[i]));
-
-            require(source.latestAnswer() >= 1e8,        '_validateAssetSourceOnOracle() : INVALID_PRICE_TOO_LOW');
-            require(source.latestAnswer() <= 1_000_000e8,'_validateAssetSourceOnOracle() : INVALID_PRICE_TOO_HIGH');
+        for (uint256 i = 0; i < reserves.length; i++) {
+            require(priceOracle.getAssetPrice(reserves[i]) >= 1e8,        '_validateAssetSourceOnOracle() : INVALID_PRICE_TOO_LOW');
+            require(priceOracle.getAssetPrice(reserves[i]) <= 1_000_000e8,'_validateAssetSourceOnOracle() : INVALID_PRICE_TOO_HIGH');
         }
     }
 
@@ -411,9 +404,8 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
 
     function _runRewardsConfigurationTests() internal {
         address[] memory reserves = pool.getReservesList();
-        assertGt(reserves.length, 0);
 
-        for (uint256 i = 1; i < reserves.length; i++) {
+        for (uint256 i = 0; i < reserves.length; i++) {
             DataTypes.ReserveData memory reserveData = pool.getReserveData(reserves[i]);
 
             assertEq(address(IncentivizedERC20(reserveData.aTokenAddress).getIncentivesController()),            INCENTIVES_CONTROLLER);
