@@ -51,9 +51,9 @@ contract SparkEthereum_20240124Test is SparkEthereumTestBase {
         ReserveConfig memory wbtcConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'WBTC');
         assertEq(wbtcConfigBefore.supplyCap, OLD_WBTC_SUPPLY_CAP);
 
-        /*************************************************/
-        /*** DAI, USDC & USDT Oracle Before Assertions ***/
-        /*************************************************/
+        /**********************************************/
+        /*** DAI, USDC & USDT IRM Before Assertions ***/
+        /**********************************************/
 
         ReserveConfig memory daiConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'DAI');
         assertEq(daiConfigBefore.interestRateStrategy, OLD_DAI_INTEREST_RATE_STRATEGY);
@@ -86,9 +86,9 @@ contract SparkEthereum_20240124Test is SparkEthereumTestBase {
         wbtcConfigBefore.supplyCap = NEW_WBTC_SUPPLY_CAP;
         _validateReserveConfig(wbtcConfigBefore, allConfigsAfter);
 
-        /************************************************/
-        /*** DAI, USDC & USDT Oracle After Assertions ***/
-        /************************************************/
+        /*********************************************/
+        /*** DAI, USDC & USDT IRM After Assertions ***/
+        /*********************************************/
 
         ReserveConfig memory daiConfigAfter  = _findReserveConfigBySymbol(allConfigsAfter, 'DAI');
         ReserveConfig memory usdcConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'USDC');
