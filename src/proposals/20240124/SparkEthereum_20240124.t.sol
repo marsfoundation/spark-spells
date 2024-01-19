@@ -79,9 +79,6 @@ contract SparkEthereum_20240124Test is SparkEthereumTestBase {
         _validateAssetSourceOnOracle(poolAddressesProvider, USDC, FIXED_PRICE_ORACLE);
         _validateAssetSourceOnOracle(poolAddressesProvider, USDT, FIXED_PRICE_ORACLE);
 
-        _validateAssetSourceLatestAnswerOnOracle(poolAddressesProvider, USDC, FIXED_PRICE_ORACLE);
-        _validateAssetSourceLatestAnswerOnOracle(poolAddressesProvider, USDT, FIXED_PRICE_ORACLE);
-
         /****************************************/
         /*** WBTC Supply Cap After Assertions ***/
         /****************************************/

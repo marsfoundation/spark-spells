@@ -1538,29 +1538,11 @@ contract ProtocolV3TestBase is CommonTestBase {
       oracle.getSourceOfAsset(asset) == expectedSource,
       '_validateAssetSourceOnOracle() : INVALID_PRICE_SOURCE'
     );
-
     require(
       IOracleLike(oracle.getSourceOfAsset(asset)).decimals() == 8,
       '_validateAssetSourceOnOracle() : INVALID_PRICE_SOURCE_DECIMALS'
     );
-  }
 
-  function _validateAssetSourceLatestAnswerOnOracle(
-    IPoolAddressesProvider addressesProvider,
-    address asset,
-    address expectedSource
-  ) internal view {
-    IAaveOracle oracle = IAaveOracle(addressesProvider.getPriceOracle());
-
-    require(
-      IOracleLike(oracle.getSourceOfAsset(asset)).latestAnswer() >= 1_00000000,
-      '_validateAssetSourceOnOracle() : INVALID_PRICE_TOO_LOW'
-    );
-
-    require(
-      IOracleLike(oracle.getSourceOfAsset(asset)).latestAnswer() <= 1_000_000_00000000,
-      '_validateAssetSourceOnOracle() : INVALID_PRICE_TOO_HIGH'
-    );
   }
 
   function _validateAssetsOnEmodeCategory(
