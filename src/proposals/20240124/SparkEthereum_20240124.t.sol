@@ -5,8 +5,8 @@ import '../../SparkTestBase.sol';
 
 contract SparkEthereum_20240124Test is SparkEthereumTestBase {
 
-    address public constant USDC                            = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
-    address public constant USDT                            = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
+    address public constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+    address public constant USDT = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
 
     address public constant OLD_USDC_ORACLE    = 0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6;
     address public constant OLD_USDT_ORACLE    = 0x3E7d1eAB13ad0104d2750B8863b489D65364e32D;
@@ -90,11 +90,11 @@ contract SparkEthereum_20240124Test is SparkEthereumTestBase {
         /*** DAI, USDC & USDT Oracle After Assertions ***/
         /************************************************/
 
-        ReserveConfig memory daiConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'DAI');
+        ReserveConfig memory daiConfigAfter  = _findReserveConfigBySymbol(allConfigsAfter, 'DAI');
         ReserveConfig memory usdcConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'USDC');
         ReserveConfig memory usdtConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'USDT');
 
-        assertEq(daiConfigAfter.interestRateStrategy, NEW_DAI_INTEREST_RATE_STRATEGY);
+        assertEq(daiConfigAfter.interestRateStrategy,  NEW_DAI_INTEREST_RATE_STRATEGY);
         assertEq(usdcConfigAfter.interestRateStrategy, NEW_USDC_INTEREST_RATE_STRATEGY);
         assertEq(usdtConfigAfter.interestRateStrategy, NEW_USDT_INTEREST_RATE_STRATEGY);
     }

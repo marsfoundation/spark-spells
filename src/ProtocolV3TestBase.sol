@@ -254,7 +254,7 @@ contract ProtocolV3TestBase is CommonTestBase {
 
     // Test 1: Ensure user can't borrow more than LTV
 
-    _e2eTestBorrowAboveLTV(pool, collateralSupplier, borrowConfig, maxBorrowAmount, false);
+    _e2eTestBorrowAboveLTV(pool, collateralSupplier, borrowConfig, maxBorrowAmount);
     vm.revertTo(snapshot);
 
     // Test 2: Ensure user can borrow and repay with variable rates
@@ -348,19 +348,18 @@ contract ProtocolV3TestBase is CommonTestBase {
     IPool pool,
     address borrower,
     ReserveConfig memory config,
-    uint256 maxBorrowAmount,
-    bool stable
+    uint256 maxBorrowAmount
   ) internal {
     // Borrow at exactly theoretical max, and then the smallest unit over
     vm.startPrank(borrower);
-    pool.borrow(config.underlying, maxBorrowAmount, stable ? 1 : 2, 0, borrower);
+    pool.borrow(config.underlying, maxBorrowAmount, 2, 0, borrower);
 
     // Since Chainlink precision is 8 decimals, the additional borrow needs to be at least 1e8
     // precision to trigger the LTV failure condition.
     uint256 minThresholdAmount = 10 ** config.decimals > 1e8 ? 10 ** config.decimals - 1e8 : 1;
 
     vm.expectRevert(bytes("36")); // COLLATERAL_CANNOT_COVER_NEW_BORROW
-    pool.borrow(config.underlying, minThresholdAmount, stable ? 1 : 2, 0, borrower);
+    pool.borrow(config.underlying, minThresholdAmount, 2, 0, borrower);
 
     vm.stopPrank();
   }
@@ -490,6 +489,21 @@ contract ProtocolV3TestBase is CommonTestBase {
   ) internal {
     vm.expectRevert(bytes("31")); // STABLE_BORROWING_NOT_ENABLED
     this._borrow(borrowConfig, pool, borrower, amount, true);
+
+    this._borrow(borrowConfig, pool, borrower, amount, false);
+
+    vm.warp(block.timestamp + 1 hours);
+    uint256 debt = IERC20(borrowConfig.variableDebtToken).balanceOf(borrower);
+
+    vm.startPrank(borrower);
+    IERC20(borrowConfig.underlying).safeApprove(address(pool), amount);
+
+    vm.expectRevert(bytes("39")); // NO_DEBT_OF_SELECTED_TYPE
+    pool.repay(borrowConfig.underlying, amount, 1, borrower);
+
+    pool.repay(borrowConfig.underlying, amount, 2, borrower);
+
+    vm.stopPrank();
   }
 
   function _e2eTestLiquidationReceiveCollateral(
