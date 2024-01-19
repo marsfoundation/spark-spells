@@ -94,9 +94,53 @@ contract SparkEthereum_20240124Test is SparkEthereumTestBase {
         ReserveConfig memory usdcConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'USDC');
         ReserveConfig memory usdtConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'USDT');
 
-        assertEq(daiConfigAfter.interestRateStrategy,  NEW_DAI_INTEREST_RATE_STRATEGY);
-        assertEq(usdcConfigAfter.interestRateStrategy, NEW_USDC_INTEREST_RATE_STRATEGY);
-        assertEq(usdtConfigAfter.interestRateStrategy, NEW_USDT_INTEREST_RATE_STRATEGY);
+        _validateInterestRateStrategy(
+            daiConfigAfter.interestRateStrategy,
+            NEW_DAI_INTEREST_RATE_STRATEGY,
+            InterestStrategyValues({
+                addressesProvider:             address(poolAddressesProvider),
+                optimalUsageRatio:             1e27,
+                optimalStableToTotalDebtRatio: 0,
+                baseStableBorrowRate:          0,
+                stableRateSlope1:              0,
+                stableRateSlope2:              0,
+                baseVariableBorrowRate:        0.062599141818649791361008000e27,
+                variableRateSlope1:            0,
+                variableRateSlope2:            0
+            })
+        );
+
+        _validateInterestRateStrategy(
+            usdcConfigAfter.interestRateStrategy,
+            NEW_USDC_INTEREST_RATE_STRATEGY,
+            InterestStrategyValues({
+                addressesProvider:             address(poolAddressesProvider),
+                optimalUsageRatio:             0.95e27,
+                optimalStableToTotalDebtRatio: 0,
+                baseStableBorrowRate:          0.044790164207174267760128000e27,
+                stableRateSlope1:              0,
+                stableRateSlope2:              0,
+                baseVariableBorrowRate:        0,
+                variableRateSlope1:            0.044790164207174267760128000e27,
+                variableRateSlope2:            0.2e27
+            })
+        );
+
+        _validateInterestRateStrategy(
+            usdtConfigAfter.interestRateStrategy,
+            NEW_USDT_INTEREST_RATE_STRATEGY,
+            InterestStrategyValues({
+                addressesProvider:             address(poolAddressesProvider),
+                optimalUsageRatio:             0.95e27,
+                optimalStableToTotalDebtRatio: 0,
+                baseStableBorrowRate:          0.044790164207174267760128000e27,
+                stableRateSlope1:              0,
+                stableRateSlope2:              0,
+                baseVariableBorrowRate:        0,
+                variableRateSlope1:            0.044790164207174267760128000e27,
+                variableRateSlope2:            0.2e27
+            })
+        );
     }
 
 }
