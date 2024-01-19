@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.10;
 
-import { SparkPayloadEthereum, IEngine, Rates, EngineFlags, Address } from '../../SparkPayloadEthereum.sol';
+import { SparkPayloadEthereum, IEngine, EngineFlags } from '../../SparkPayloadEthereum.sol';
 
 /**
  * @title  January 24, 2024 Spark Ethereum Proposal - Raise WBTC supply cap, update USDC & USDT oracle to fixed price oracle, update DAI, USDC & USDT IRM to DSR-tracking IRM
@@ -13,9 +13,6 @@ import { SparkPayloadEthereum, IEngine, Rates, EngineFlags, Address } from '../.
  * IRMs Vote:    https://vote.makerdao.com/polling/QmNrXB9P
  */
 contract SparkEthereum_20240124 is SparkPayloadEthereum {
-
-    using Address for address;
-
     address public constant DAI                = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
     address public constant USDC               = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
     address public constant USDT               = 0xdAC17F958D2ee523a2206206994597C13D831ec7;

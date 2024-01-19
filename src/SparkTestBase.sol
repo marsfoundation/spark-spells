@@ -228,15 +228,15 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
     function testRewardsConfiguration() public {
         uint256 snapshot = vm.snapshot();
 
-        _testRewardsConfiguration();
+        _assertRewardsConfiguration();
 
         vm.revertTo(snapshot);
         GovHelpers.executePayload(vm, payload, executor);
 
-        _testRewardsConfiguration();
+        _assertRewardsConfiguration();
     }
 
-    function _testRewardsConfiguration() public {
+    function _assertRewardsConfiguration() internal {
         address[] memory reserves = pool.getReservesList();
         assertGt(reserves.length, 0);
 
@@ -251,12 +251,12 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
     function testFreezerMom() public {
         uint256 snapshot = vm.snapshot();
 
-        _testFreezerMom();
+        _assertFreezerMom();
 
         vm.revertTo(snapshot);
         GovHelpers.executePayload(vm, payload, executor);
 
-        _testFreezerMom();
+        _assertFreezerMom();
     }
 
     function _assertFrozen(address asset, bool frozen) internal {
@@ -293,7 +293,7 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
         IExecutable(_spell).execute();
     }
 
-    function _testFreezerMom() public {
+    function _assertFreezerMom() internal {
         // Sanity checks - cannot call Freezer Mom unless you have the hat
         vm.expectRevert("SparkLendFreezerMom/not-authorized");
         freezerMom.freezeMarket(DAI, true);
@@ -304,7 +304,6 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
         vm.expectRevert("SparkLendFreezerMom/not-authorized");
         freezerMom.pauseAllMarkets(true);
 
-        // Pretend the hat has logic to freeze
         _assertFrozen(DAI,  false);
         _assertFrozen(WETH, false);
         _voteAndCast(SPELL_FREEZE_DAI);

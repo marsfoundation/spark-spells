@@ -3,16 +3,14 @@ pragma solidity ^0.8.10;
 
 import '../../SparkTestBase.sol';
 
-import { SparkEthereum_20240124 } from './SparkEthereum_20240124.sol';
-
 contract SparkEthereum_20240124Test is SparkEthereumTestBase {
 
     address public constant USDC                            = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
     address public constant USDT                            = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
 
-    address public constant OLD_USDC_ORACLE                 = 0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6;
-    address public constant OLD_USDT_ORACLE                 = 0x3E7d1eAB13ad0104d2750B8863b489D65364e32D;
-    address public constant FIXED_PRICE_ORACLE              = 0x42a03F81dd8A1cEcD746dc262e4d1CD9fD39F777;
+    address public constant OLD_USDC_ORACLE    = 0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6;
+    address public constant OLD_USDT_ORACLE    = 0x3E7d1eAB13ad0104d2750B8863b489D65364e32D;
+    address public constant FIXED_PRICE_ORACLE = 0x42a03F81dd8A1cEcD746dc262e4d1CD9fD39F777;
 
     address public constant OLD_DAI_INTEREST_RATE_STRATEGY  = 0x7d8f2210FAD012E7d260C3ddBeCaCfd48277455F;
     address public constant NEW_DAI_INTEREST_RATE_STRATEGY  = 0x512AFEDCF6696d9707dCFECD4bdc73e9902e3c6A;
@@ -29,7 +27,7 @@ contract SparkEthereum_20240124Test is SparkEthereumTestBase {
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('mainnet').rpcUrl);
+        vm.createSelectFork(getChain('mainnet').rpcUrl,  19040494);
         payload = deployPayload();
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
@@ -79,8 +77,9 @@ contract SparkEthereum_20240124Test is SparkEthereumTestBase {
         /*******************************************/
 
         _validateAssetSourceOnOracle(poolAddressesProvider, USDC, FIXED_PRICE_ORACLE);
-        _validateAssetSourceLatestAnswerOnOracle(poolAddressesProvider, USDC, FIXED_PRICE_ORACLE);
         _validateAssetSourceOnOracle(poolAddressesProvider, USDT, FIXED_PRICE_ORACLE);
+
+        _validateAssetSourceLatestAnswerOnOracle(poolAddressesProvider, USDC, FIXED_PRICE_ORACLE);
         _validateAssetSourceLatestAnswerOnOracle(poolAddressesProvider, USDT, FIXED_PRICE_ORACLE);
 
         /****************************************/
@@ -95,12 +94,11 @@ contract SparkEthereum_20240124Test is SparkEthereumTestBase {
         /************************************************/
 
         ReserveConfig memory daiConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'DAI');
-        assertEq(daiConfigAfter.interestRateStrategy, NEW_DAI_INTEREST_RATE_STRATEGY);
-
         ReserveConfig memory usdcConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'USDC');
-        assertEq(usdcConfigAfter.interestRateStrategy, NEW_USDC_INTEREST_RATE_STRATEGY);
-
         ReserveConfig memory usdtConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'USDT');
+
+        assertEq(daiConfigAfter.interestRateStrategy, NEW_DAI_INTEREST_RATE_STRATEGY);
+        assertEq(usdcConfigAfter.interestRateStrategy, NEW_USDC_INTEREST_RATE_STRATEGY);
         assertEq(usdtConfigAfter.interestRateStrategy, NEW_USDT_INTEREST_RATE_STRATEGY);
     }
 
