@@ -224,7 +224,7 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
         _validateOracles();
     }
 
-    function _validateOracles() internal {
+    function _validateOracles() internal view {
         address[] memory reserves = pool.getReservesList();
 
         for (uint256 i = 0; i < reserves.length; i++) {
