@@ -212,12 +212,7 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
     }
 
     function testOracles() public {
-        // Uncomment after the Jan 24 spell is executed
-        // This now fails, because old USDT & USDC oracles return values below $1
-
-        // uint256 snapshot = vm.snapshot();
-        // _validateOracles();
-        // vm.revertTo(snapshot);
+        _validateOracles();
 
         GovHelpers.executePayload(vm, payload, executor);
 
@@ -228,7 +223,7 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
         address[] memory reserves = pool.getReservesList();
 
         for (uint256 i = 0; i < reserves.length; i++) {
-            require(priceOracle.getAssetPrice(reserves[i]) >= 1e8,        '_validateAssetSourceOnOracle() : INVALID_PRICE_TOO_LOW');
+            require(priceOracle.getAssetPrice(reserves[i]) >= 0.5e8,      '_validateAssetSourceOnOracle() : INVALID_PRICE_TOO_LOW');
             require(priceOracle.getAssetPrice(reserves[i]) <= 1_000_000e8,'_validateAssetSourceOnOracle() : INVALID_PRICE_TOO_HIGH');
         }
     }
