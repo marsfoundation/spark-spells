@@ -26,6 +26,8 @@ contract SparkEthereum_20240124Test is SparkEthereumTestBase {
     address public constant NEW_USDC_INTEREST_RATE_STRATEGY = 0x0F1a9a787b4103eF5929121CD9399224c6455dD6;
     address public constant OLD_USDT_INTEREST_RATE_STRATEGY = 0xbc8A68B0ab0617D7c90d15bb1601B25d795Dc4c8;
     address public constant NEW_USDT_INTEREST_RATE_STRATEGY = 0x0F1a9a787b4103eF5929121CD9399224c6455dD6;
+    address public constant POT_RATE_SOURCE                 = 0x62b122a1d1ea2082c47c3fb70e788c168e96afd8;
+
 
     uint256 public constant OLD_WBTC_SUPPLY_CAP   = 3_000;
     uint256 public constant NEW_WBTC_SUPPLY_CAP   = 5_000;
@@ -137,6 +139,7 @@ contract SparkEthereum_20240124Test is SparkEthereumTestBase {
         ReserveConfig memory usdcConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'USDC');
         ReserveConfig memory usdtConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'USDT');
 
+        assertEq(IIRM(usdcConfigAfter.interestRateStrategy).RATE_SOURCE(), POT_RATE_SOURCE);
         assertEq(IIRM(usdcConfigAfter.interestRateStrategy).RATE_SOURCE(), IIRM(usdtConfigAfter.interestRateStrategy).RATE_SOURCE());
         assertEq(IIRM(usdcConfigAfter.interestRateStrategy).RATE_SOURCE(), IIRM(daiConfigAfter.interestRateStrategy).RATE_SOURCE());
         int256 potDsrApr = IRateSource(IIRM(usdcConfigAfter.interestRateStrategy).RATE_SOURCE()).getAPR();
