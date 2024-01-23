@@ -40,37 +40,37 @@ contract CommonTestBase is Test {
     if (block.chainid == ChainIds.MAINNET) {
       // GUSD
       if (asset == AaveV2EthereumAssets.GUSD_UNDERLYING) {
-        vm.startPrank(0x22FFDA6813f4F34C520bf36E5Ea01167bC9DF159);
+        vm.prank(0x22FFDA6813f4F34C520bf36E5Ea01167bC9DF159);
         IERC20(asset).transfer(user, amount);
         return true;
       }
       // LDO
       if (asset == LDO_MAINNET) {
-        vm.startPrank(0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c);
+        vm.prank(0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c);
         IERC20(asset).transfer(user, amount);
         return true;
       }
       // SNX
       if (asset == AaveV2EthereumAssets.SNX_UNDERLYING) {
-        vm.startPrank(0xAc86855865CbF31c8f9FBB68C749AD5Bd72802e3);
+        vm.prank(0xAc86855865CbF31c8f9FBB68C749AD5Bd72802e3);
         IERC20(asset).transfer(user, amount);
         return true;
       }
       // sUSD
       if (asset == AaveV2EthereumAssets.sUSD_UNDERLYING) {
-        vm.startPrank(0x99F4176EE457afedFfCB1839c7aB7A030a5e4A92);
+        vm.prank(0x99F4176EE457afedFfCB1839c7aB7A030a5e4A92);
         IERC20(asset).transfer(user, amount);
         return true;
       }
       // stETH
       if (asset == AaveV2EthereumAssets.stETH_UNDERLYING) {
-        vm.startPrank(0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0);
+        vm.prank(0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0);
         IERC20(asset).transfer(user, amount);
         return true;
       }
       // USDC
       if (asset == USDC_MAINNET) {
-        vm.startPrank(0x28C6c06298d514Db089934071355E5743bf21d60);
+        vm.prank(0x28C6c06298d514Db089934071355E5743bf21d60);
         IERC20(asset).transfer(user, amount);
         return true;
       }
@@ -78,7 +78,7 @@ contract CommonTestBase is Test {
     if (block.chainid == ChainIds.OPTIMISM) {
       // sUSD
       if (asset == AaveV3OptimismAssets.sUSD_UNDERLYING) {
-        vm.startPrank(AaveV3OptimismAssets.sUSD_A_TOKEN);
+        vm.prank(AaveV3OptimismAssets.sUSD_A_TOKEN);
         IERC20(asset).transfer(user, amount);
         return true;
       }
@@ -94,7 +94,6 @@ contract CommonTestBase is Test {
    */
   function deal2(address asset, address user, uint256 amount) internal {
     bool patched = _patchedDeal(asset, user, amount);
-    vm.stopPrank();
     if (!patched) {
       deal(asset, user, amount);
     }

@@ -42,6 +42,7 @@ interface IOracleLike {
   function description() external view returns (string memory);
   function name() external view returns (string memory);
   function version() external view returns (uint256);
+  function latestAnswer() external view returns (int256);
 }
 
 struct ReserveConfig {
@@ -253,17 +254,17 @@ contract ProtocolV3TestBase is CommonTestBase {
 
     // Test 1: Ensure user can't borrow more than LTV
 
-    _e2eTestBorrowAboveLTV(pool, collateralSupplier, borrowConfig, maxBorrowAmount, false);
+    _e2eTestBorrowAboveLTV(pool, collateralSupplier, borrowConfig, maxBorrowAmount);
     vm.revertTo(snapshot);
 
     // Test 2: Ensure user can borrow and repay with variable rates
 
-    _e2eTestBorrowRepayWithdraw(pool, collateralSupplier, collateralConfig, borrowConfig, maxBorrowAmount, false);
+    _e2eTestBorrowRepayWithdraw(pool, collateralSupplier, collateralConfig, borrowConfig, maxBorrowAmount);
     vm.revertTo(snapshot);
 
-    // Test 3: Ensure user can borrow and repay with stable rates
+    // Test 3: Ensure user cannot borrow with stable rates
 
-    _e2eTestBorrowRepayWithdraw(pool, collateralSupplier, collateralConfig, borrowConfig, maxBorrowAmount, true);
+    _e2eTestStableBorrowDisabled(pool, collateralSupplier, borrowConfig, maxBorrowAmount);
     vm.revertTo(snapshot);
 
     // Test 4: Test liquidation
@@ -347,19 +348,18 @@ contract ProtocolV3TestBase is CommonTestBase {
     IPool pool,
     address borrower,
     ReserveConfig memory config,
-    uint256 maxBorrowAmount,
-    bool stable
+    uint256 maxBorrowAmount
   ) internal {
     // Borrow at exactly theoretical max, and then the smallest unit over
     vm.startPrank(borrower);
-    pool.borrow(config.underlying, maxBorrowAmount, stable ? 1 : 2, 0, borrower);
+    pool.borrow(config.underlying, maxBorrowAmount, 2, 0, borrower);
 
     // Since Chainlink precision is 8 decimals, the additional borrow needs to be at least 1e8
     // precision to trigger the LTV failure condition.
     uint256 minThresholdAmount = 10 ** config.decimals > 1e8 ? 10 ** config.decimals - 1e8 : 1;
 
     vm.expectRevert(bytes("36")); // COLLATERAL_CANNOT_COVER_NEW_BORROW
-    pool.borrow(config.underlying, minThresholdAmount, stable ? 1 : 2, 0, borrower);
+    pool.borrow(config.underlying, minThresholdAmount, 2, 0, borrower);
 
     vm.stopPrank();
   }
@@ -369,19 +369,11 @@ contract ProtocolV3TestBase is CommonTestBase {
     address borrower,
     ReserveConfig memory collateralConfig,
     ReserveConfig memory borrowConfig,
-    uint256 amount,
-    bool stable
+    uint256 amount
   ) internal {
-    if (stable && !borrowConfig.stableBorrowRateEnabled) {
-      console.log('Skip: %s, stable borrow not enabled', borrowConfig.symbol);
-      return;
-    }
-
-    address debtToken = stable ? borrowConfig.stableDebtToken : borrowConfig.variableDebtToken;
-
     // Step 1: Borrow against collateral
 
-    this._borrow(borrowConfig, pool, borrower, amount, stable);
+    this._borrow(borrowConfig, pool, borrower, amount, false);
 
     // Step 2: Warp to increase interest in system
 
@@ -391,7 +383,7 @@ contract ProtocolV3TestBase is CommonTestBase {
     //         assert updated state of borrow reserve
 
     DataTypes.ReserveData memory beforeReserve = pool.getReserveData(borrowConfig.underlying);
-    _repay(borrowConfig, pool, borrower, amount, stable);
+    _repay(borrowConfig, pool, borrower, amount, false);
     DataTypes.ReserveData memory afterReserve = pool.getReserveData(borrowConfig.underlying);
 
     _assertReserveChange(beforeReserve, afterReserve, int256(amount), 1 hours);
@@ -400,7 +392,7 @@ contract ProtocolV3TestBase is CommonTestBase {
     //         accrued debt
 
     uint256 totalCollateral = IERC20(collateralConfig.aToken).balanceOf(borrower);
-    uint256 remainingDebt   = IERC20(debtToken).balanceOf(borrower);
+    uint256 remainingDebt   = IERC20(borrowConfig.variableDebtToken).balanceOf(borrower);
 
     // Handle edge case for for low LTV collaterals at under 1% causing rounding errors here, preventing failure.
     if (collateralConfig.ltv > 100) {
@@ -411,7 +403,7 @@ contract ProtocolV3TestBase is CommonTestBase {
 
     // Step 5: Pay back remaining debt
 
-    _repay(borrowConfig, pool, borrower, remainingDebt, stable);
+    _repay(borrowConfig, pool, borrower, remainingDebt, false);
 
     // Step 6: Warp to increase interest in system
 
@@ -487,6 +479,30 @@ contract ProtocolV3TestBase is CommonTestBase {
 
   function _isAboveSupplyCap(ReserveConfig memory config, uint256 supplyAmount) internal view returns (bool) {
     return IERC20(config.aToken).totalSupply() + supplyAmount > (config.supplyCap * 10 ** config.decimals);
+  }
+
+  function _e2eTestStableBorrowDisabled(
+    IPool pool,
+    address borrower,
+    ReserveConfig memory borrowConfig,
+    uint256 amount
+  ) internal {
+    vm.expectRevert(bytes("31")); // STABLE_BORROWING_NOT_ENABLED
+    this._borrow(borrowConfig, pool, borrower, amount, true);
+
+    this._borrow(borrowConfig, pool, borrower, amount, false);
+
+    vm.warp(block.timestamp + 1 hours);
+
+    vm.startPrank(borrower);
+    IERC20(borrowConfig.underlying).safeApprove(address(pool), amount);
+
+    vm.expectRevert(bytes("39")); // NO_DEBT_OF_SELECTED_TYPE
+    pool.repay(borrowConfig.underlying, amount, 1, borrower);
+
+    pool.repay(borrowConfig.underlying, amount, 2, borrower);
+
+    vm.stopPrank();
   }
 
   function _e2eTestLiquidationReceiveCollateral(
@@ -1535,6 +1551,11 @@ contract ProtocolV3TestBase is CommonTestBase {
       oracle.getSourceOfAsset(asset) == expectedSource,
       '_validateAssetSourceOnOracle() : INVALID_PRICE_SOURCE'
     );
+    require(
+      IOracleLike(oracle.getSourceOfAsset(asset)).decimals() == 8,
+      '_validateAssetSourceOnOracle() : INVALID_PRICE_SOURCE_DECIMALS'
+    );
+
   }
 
   function _validateAssetsOnEmodeCategory(
