@@ -26,7 +26,7 @@ contract SparkEthereum_20240124Test is SparkEthereumTestBase {
     address public constant NEW_USDC_INTEREST_RATE_STRATEGY = 0x0F1a9a787b4103eF5929121CD9399224c6455dD6;
     address public constant OLD_USDT_INTEREST_RATE_STRATEGY = 0xbc8A68B0ab0617D7c90d15bb1601B25d795Dc4c8;
     address public constant NEW_USDT_INTEREST_RATE_STRATEGY = 0x0F1a9a787b4103eF5929121CD9399224c6455dD6;
-    address public constant POT_RATE_SOURCE                 = 0x62b122a1d1ea2082c47c3fb70e788c168e96afd8;
+    address public constant POT_RATE_SOURCE                 = 0x62B122A1D1ea2082c47c3Fb70e788C168E96afD8;
 
 
     uint256 public constant OLD_WBTC_SUPPLY_CAP   = 3_000;
