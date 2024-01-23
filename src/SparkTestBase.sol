@@ -112,7 +112,6 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
                 pool
             );
 
-            disableExportDiff = true;  // Remove this to generate the diff report
             if (!disableExportDiff) {
                 diffReports(
                     string(abi.encodePacked(prefix, '-', vm.toString(address(pool)), '-pre')),
@@ -372,8 +371,10 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
     address SPELL_PAUSE_DAI  = 0x1B94E2F3818E1D657bE2A62D37560514b52DB17F;
 
     constructor() {
-        executor = 0x3300f198988e4C9C63F75dF86De36421f06af8c4;
-        domain = 'Ethereum';
+        executor          = 0x3300f198988e4C9C63F75dF86De36421f06af8c4;
+        domain            = 'Ethereum';
+        disableExportDiff = true;  // Remove this to generate the diff report
+
         poolAddressesProviderRegistry = IPoolAddressesProviderRegistry(0x03cFa0C4622FF84E50E75062683F44c9587e6Cc1);
         authority                     = IAuthority(0x0a3f6849f78076aefaDf113F5BED87720274dDC0);
         freezerMom                    = ISparkLendFreezerMom(0xFA36c12Bc307b40c701D65d8FE8F88cCEdE2277a);
@@ -481,7 +482,8 @@ abstract contract SparkGoerliTestBase is SparkTestBase {
 
     constructor() {
         executor = 0x4e847915D8a9f2Ab0cDf2FC2FD0A30428F25665d;
-        domain = 'Goerli';
+        domain   = 'Goerli';
+
         poolAddressesProviderRegistry = IPoolAddressesProviderRegistry(0x1ad570fDEA255a3c1d8Cf56ec76ebA2b7bFDFfea);
     }
 
@@ -491,7 +493,8 @@ abstract contract SparkGnosisTestBase is SparkTestBase {
 
     constructor() {
         executor = 0xc4218C1127cB24a0D6c1e7D25dc34e10f2625f5A;
-        domain = 'Gnosis';
+        domain   = 'Gnosis';
+
         poolAddressesProviderRegistry = IPoolAddressesProviderRegistry(0x49d24798d3b84965F0d1fc8684EF6565115e70c1);
     }
 
