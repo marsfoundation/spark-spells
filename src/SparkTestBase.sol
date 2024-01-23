@@ -112,6 +112,7 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
                 pool
             );
 
+            disableExportDiff = true;  // Remove this to generate the diff report
             if (!disableExportDiff) {
                 diffReports(
                     string(abi.encodePacked(prefix, '-', vm.toString(address(pool)), '-pre')),
