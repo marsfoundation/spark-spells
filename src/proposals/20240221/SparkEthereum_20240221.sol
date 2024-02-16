@@ -20,7 +20,6 @@ contract SparkEthereum_20240221 is SparkPayloadEthereum {
     // bc -l <<< 'scale=27; (e( l(1.067)/(60 * 60 * 24 * 365) ) - 1) * 60 * 60 * 24 * 365 - 0.048790164207174267760128000'
     address public constant DAI_IRM = 0x3C4B090b5b479402e2270C66461D6a62B2054198;
 
-
     function capsUpdates()
         public pure override returns (IEngine.CapsUpdate[] memory)
     {

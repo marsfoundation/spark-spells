@@ -13,13 +13,13 @@ interface IRateSource {
 
 contract SparkEthereum_20240221Test is SparkEthereumTestBase {
 
-    address public constant OLD_DAI_INTEREST_RATE_STRATEGY  = 0x512AFEDCF6696d9707dCFECD4bdc73e9902e3c6A;
-    address public constant NEW_DAI_INTEREST_RATE_STRATEGY  = 0x3C4B090b5b479402e2270C66461D6a62B2054198;
+    address public constant OLD_DAI_INTEREST_RATE_STRATEGY = 0x512AFEDCF6696d9707dCFECD4bdc73e9902e3c6A;
+    address public constant NEW_DAI_INTEREST_RATE_STRATEGY = 0x3C4B090b5b479402e2270C66461D6a62B2054198;
 
-    int256 public constant DAI_IRM_SPREAD =  0.016060808179122167684448000e27;
+    int256 public constant DAI_IRM_SPREAD = 0.016060808179122167684448000e27;
 
-    uint256 public constant WSTETH_SUPPLY_CAP_OLD = 800_000;
-    uint256 public constant WSTETH_SUPPLY_CAP_NEW = 1_200_000;
+    uint256 public constant OLD_WSTETH_SUPPLY_CAP = 800_000;
+    uint256 public constant NEW_WSTETH_SUPPLY_CAP = 1_200_000;
 
     constructor() {
         id = '20240221';
@@ -39,15 +39,18 @@ contract SparkEthereum_20240221Test is SparkEthereumTestBase {
         ReserveConfig memory wstethConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'wstETH');
 
         assertEq(daiConfigBefore.interestRateStrategy, OLD_DAI_INTEREST_RATE_STRATEGY);
-        assertEq(wstethConfigBefore.supplyCap, WSTETH_SUPPLY_CAP_OLD);
+        assertEq(wstethConfigBefore.supplyCap, OLD_WSTETH_SUPPLY_CAP);
 
         GovHelpers.executePayload(vm, payload, executor);
 
         ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
 
-        ReserveConfig memory daiConfigAfter     = _findReserveConfigBySymbol(allConfigsAfter, 'DAI');
+        ReserveConfig memory daiConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'DAI');
 
-        int256 potDsrApr = IRateSource(IIRM(daiConfigAfter.interestRateStrategy).RATE_SOURCE()).getAPR();
+        address rateSource = IIRM(daiConfigAfter.interestRateStrategy).RATE_SOURCE();
+        assertEq(rateSource, IIRM(OLD_DAI_INTEREST_RATE_STRATEGY).RATE_SOURCE());  // Same rate source as before
+
+        int256 potDsrApr = IRateSource(rateSource).getAPR();
 
         uint256 expectedDaiBaseVariableBorrowRate = uint256(potDsrApr + DAI_IRM_SPREAD);
         assertEq(expectedDaiBaseVariableBorrowRate, 0.064850972386296435444576000e27);
@@ -68,7 +71,7 @@ contract SparkEthereum_20240221Test is SparkEthereumTestBase {
             })
         );
 
-        wstethConfigBefore.supplyCap = WSTETH_SUPPLY_CAP_NEW;
+        wstethConfigBefore.supplyCap = NEW_WSTETH_SUPPLY_CAP;
         _validateReserveConfig(wstethConfigBefore, allConfigsAfter);
     }
 
