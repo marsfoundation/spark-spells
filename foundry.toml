@@ -9,5 +9,8 @@ fs_permissions = [
 solc = "0.8.10"
 optimizer = true
 ffi = true
+remappings = [
+    "openzeppelin-contracts/=lib/openzeppelin-contracts/contracts/",
+]
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
