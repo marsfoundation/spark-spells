@@ -860,7 +860,7 @@ contract ProtocolV3TestBase is CommonTestBase {
     vm.writeJson(output, path);
   }
 
-  function _writeStrategyConfig(string memory strategiesKey, address _strategy) internal virtual returns (string memory content) {
+  function _writeStrategyConfig(string memory strategiesKey, address _strategy) internal returns (string memory content) {
     string memory key = vm.toString(_strategy);
     IDefaultInterestRateStrategy strategy = IDefaultInterestRateStrategy(
       _strategy

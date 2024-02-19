@@ -15,8 +15,6 @@ import { IncentivizedERC20 }                     from 'aave-v3-core/contracts/pr
 import { DataTypes }                             from 'aave-v3-core/contracts/protocol/libraries/types/DataTypes.sol';
 import { ReserveConfiguration }                  from 'aave-v3-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
 
-import { IDaiInterestRateStrategy }    from "./interfaces/IDaiInterestRateStrategy.sol";
-import { IDaiJugInterestRateStrategy } from "./interfaces/IDaiJugInterestRateStrategy.sol";
 import { ISparkLendFreezerMom }        from './interfaces/ISparkLendFreezerMom.sol';
 
 // REPO ARCHITECTURE TODOs
@@ -38,28 +36,6 @@ interface IExecutable {
 abstract contract SparkTestBase is ProtocolV3TestBase {
 
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
-
-    struct DaiInterestStrategyValues {
-        address vat;
-        address pot;
-        bytes32 ilk;
-        uint256 baseRateConversion;
-        uint256 borrowSpread;
-        uint256 supplySpread;
-        uint256 maxRate;
-        uint256 performanceBonus;
-    }
-
-    struct DaiJugInterestStrategyValues {
-        address vat;
-        address jug;
-        bytes32 ilk;
-        uint256 baseRateConversion;
-        uint256 borrowSpread;
-        uint256 supplySpread;
-        uint256 maxRate;
-        uint256 performanceBonus;
-    }
 
     address internal executor;
     address internal payload;
@@ -233,123 +209,6 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
         return InitializableAdminUpgradeabilityProxy(payable(proxy)).implementation();
     }
 
-    function _writeStrategyConfig(string memory strategiesKey, address _strategy) internal override returns (string memory content) {
-        try IDefaultInterestRateStrategy(_strategy).getBaseStableBorrowRate() {
-            // Default IRS
-            content = super._writeStrategyConfig(strategiesKey, _strategy);
-        } catch {
-            // DAI IRS
-            string memory key = vm.toString(_strategy);
-
-            IDaiInterestRateStrategy strategy = IDaiInterestRateStrategy(_strategy);
-
-            vm.serializeUint(key, 'baseRateConversion', strategy.baseRateConversion());
-            vm.serializeUint(key, 'borrowSpread',       strategy.borrowSpread());
-            vm.serializeUint(key, 'supplySpread',       strategy.supplySpread());
-            vm.serializeUint(key, 'maxRate',            strategy.maxRate());
-
-            string memory object = vm.serializeUint(key, 'performanceBonus', strategy.performanceBonus());
-
-            content = vm.serializeString(strategiesKey, key, object);
-        }
-    }
-
-    function _validateDaiInterestRateStrategy(
-        address interestRateStrategyAddress,
-        address expectedStrategy,
-        DaiInterestStrategyValues memory expectedStrategyValues
-    ) internal view {
-        IDaiInterestRateStrategy strategy = IDaiInterestRateStrategy(
-            interestRateStrategyAddress
-        );
-
-        require(
-            address(strategy) == expectedStrategy,
-            '_validateDaiInterestRateStrategy() : INVALID_STRATEGY_ADDRESS'
-        );
-
-        require(
-            strategy.vat() == expectedStrategyValues.vat,
-            '_validateDaiInterestRateStrategy() : INVALID_VAT'
-        );
-        require(
-            strategy.pot() == expectedStrategyValues.pot,
-            '_validateDaiInterestRateStrategy() : INVALID_POT'
-        );
-        require(
-            strategy.ilk() == expectedStrategyValues.ilk,
-            '_validateDaiInterestRateStrategy() : INVALID_ILK'
-        );
-        require(
-            strategy.baseRateConversion() == expectedStrategyValues.baseRateConversion,
-            '_validateDaiInterestRateStrategy() : INVALID_BASE_RATE_CONVERSION'
-        );
-        require(
-            strategy.borrowSpread() == expectedStrategyValues.borrowSpread,
-            '_validateDaiInterestRateStrategy() : INVALID_BORROW_SPREAD'
-        );
-        require(
-            strategy.supplySpread() == expectedStrategyValues.supplySpread,
-            '_validateDaiInterestRateStrategy() : INVALID_SUPPLY_SPREAD'
-        );
-        require(
-            strategy.maxRate() == expectedStrategyValues.maxRate,
-            '_validateDaiInterestRateStrategy() : INVALID_MAX_RATE'
-        );
-        require(
-            strategy.performanceBonus() == expectedStrategyValues.performanceBonus,
-            '_validateDaiInterestRateStrategy() : INVALID_PERFORMANCE_BONUS'
-        );
-    }
-
-    function _validateDaiJugInterestRateStrategy(
-        address interestRateStrategyAddress,
-        address expectedStrategy,
-        DaiJugInterestStrategyValues memory expectedStrategyValues
-    ) internal view {
-        IDaiJugInterestRateStrategy strategy = IDaiJugInterestRateStrategy(
-            interestRateStrategyAddress
-        );
-
-        require(
-            address(strategy) == expectedStrategy,
-            '_validateDaiInterestRateStrategy() : INVALID_STRATEGY_ADDRESS'
-        );
-
-        require(
-            strategy.vat() == expectedStrategyValues.vat,
-            '_validateDaiInterestRateStrategy() : INVALID_VAT'
-        );
-        require(
-            strategy.jug() == expectedStrategyValues.jug,
-            '_validateDaiInterestRateStrategy() : INVALID_JUG'
-        );
-        require(
-            strategy.ilk() == expectedStrategyValues.ilk,
-            '_validateDaiInterestRateStrategy() : INVALID_ILK'
-        );
-        require(
-            strategy.baseRateConversion() == expectedStrategyValues.baseRateConversion,
-            '_validateDaiInterestRateStrategy() : INVALID_BASE_RATE_CONVERSION'
-        );
-        require(
-            strategy.borrowSpread() == expectedStrategyValues.borrowSpread,
-            '_validateDaiInterestRateStrategy() : INVALID_BORROW_SPREAD'
-        );
-        require(
-            strategy.supplySpread() == expectedStrategyValues.supplySpread,
-            '_validateDaiInterestRateStrategy() : INVALID_SUPPLY_SPREAD'
-        );
-        require(
-            strategy.maxRate() == expectedStrategyValues.maxRate,
-            '_validateDaiInterestRateStrategy() : INVALID_MAX_RATE'
-        );
-        require(
-            strategy.performanceBonus() == expectedStrategyValues.performanceBonus,
-            '_validateDaiInterestRateStrategy() : INVALID_PERFORMANCE_BONUS'
-        );
-    }
-
 }
 
 abstract contract SparkEthereumTestBase is SparkTestBase {
@@ -373,7 +232,6 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
     constructor() {
         executor          = 0x3300f198988e4C9C63F75dF86De36421f06af8c4;
         domain            = 'Ethereum';
-        disableExportDiff = true;  // Remove this to generate the diff report
 
         poolAddressesProviderRegistry = IPoolAddressesProviderRegistry(0x03cFa0C4622FF84E50E75062683F44c9587e6Cc1);
         authority                     = IAuthority(0x0a3f6849f78076aefaDf113F5BED87720274dDC0);
