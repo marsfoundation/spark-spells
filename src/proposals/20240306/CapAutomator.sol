@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.13;
 
 import { Ownable } from "openzeppelin-contracts/access/Ownable.sol";
 import { ERC20 }   from "openzeppelin-contracts/token/ERC20/ERC20.sol";
@@ -12,7 +12,7 @@ import { IPool }                  from "aave-v3-core/contracts/interfaces/IPool.
 import { IPoolConfigurator }      from "aave-v3-core/contracts/interfaces/IPoolConfigurator.sol";
 import { IScaledBalanceToken }    from "aave-v3-core/contracts/interfaces/IScaledBalanceToken.sol";
 
-import { ICapAutomator } from "../../interfaces/ICapAutomator.sol";
+import { ICapAutomator } from "./interfaces/ICapAutomator.sol";
 
 contract CapAutomator is ICapAutomator, Ownable {
 

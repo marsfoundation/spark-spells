@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.13;
 
 import { IPool }             from "aave-v3-core/contracts/interfaces/IPool.sol";
 import { IPoolConfigurator } from "aave-v3-core/contracts/interfaces/IPoolConfigurator.sol";
