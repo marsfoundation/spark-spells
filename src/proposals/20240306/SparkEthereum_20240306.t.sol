@@ -5,4 +5,6 @@ import '../../SparkTestBase.sol';
 
 contract SparkEthereum_20240110Test is SparkEthereumTestBase {
 
+    address public constant CAP_AUTOMATOR = 0x2276f52afba7Cf2525fd0a050DF464AC8532d0ef;
+
 }
