@@ -8,9 +8,10 @@ import { ICapAutomator } from '../../interfaces/ICapAutomator.sol';
 import { SparkPayloadEthereum, IEngine, EngineFlags } from '../../SparkPayloadEthereum.sol';
 
 /**
- * @title  March 06, 2024 Spark Ethereum Proposal - Activate Cap Automator
+ * @title  March 06, 2024 Spark Ethereum Proposal - Activate Cap Automator, update ETH eMode, update collateral parameters for multiple markets
  * @author Phoenix Labs
- * @dev    This proposal activates the Cap Automator
+ * @dev    This proposal adds the Cap Automator as a risk admin to the Pool and sets supply and borrow cap configs for rETH, sDAI, USDC, USDT, WBTC, WETH and wstETH markets;
+ *         sets ETH eMode to 93% ltv, 95% liqThreshold and 101% liqBonus and updates ltv, liqThreshold and liqBonus for rETH, sDAI, WBTC, WETH and wstETH markets.
  * Forum:  TODO
  * Vote:   TODO
  */
