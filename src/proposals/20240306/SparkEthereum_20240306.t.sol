@@ -1,13 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.10;
 
+import { DataTypes }            from "aave-v3-core/contracts/protocol/libraries/types/DataTypes.sol";
+import { IScaledBalanceToken }  from "aave-v3-core/contracts/interfaces/IScaledBalanceToken.sol";
+import { ReserveConfiguration } from "aave-v3-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol";
+import { WadRayMath }           from "aave-v3-core/contracts/protocol/libraries/math/WadRayMath.sol";
+
+import { IERC20 } from '../../interfaces/IERC20.sol';
+
 import '../../SparkTestBase.sol';
 
 interface IOwnable {
     function owner() external view returns (address);
 }
 
+interface IERC20WithDecimals is IERC20 {
+    function decimals() external view returns (uint256);
+}
+
 contract SparkEthereum_20240306Test is SparkEthereumTestBase {
+
+    using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
+    using WadRayMath for uint256;
 
     constructor() {
         id = '20240306';
@@ -47,18 +61,18 @@ contract SparkEthereum_20240306Test is SparkEthereumTestBase {
         assertEq(rETHConfigBefore.liquidationBonus,     107_00);
 
         ReserveConfig memory sDAIConfigBefore   = _findReserveConfigBySymbol(allConfigsBefore, 'sDAI');
-        assertEq(sDAIConfigBefore.ltv,                  75_00);
-        assertEq(sDAIConfigBefore.liquidationThreshold, 80_00);
-        assertEq(sDAIConfigBefore.liquidationBonus,     105_00);
+        assertEq(sDAIConfigBefore.ltv,                  74_00);
+        assertEq(sDAIConfigBefore.liquidationThreshold, 76_00);
+        assertEq(sDAIConfigBefore.liquidationBonus,     104_50);
 
         ReserveConfig memory WBTCConfigBefore   = _findReserveConfigBySymbol(allConfigsBefore, 'WBTC');
-        assertEq(WBTCConfigBefore.ltv,                  68_50);
-        assertEq(WBTCConfigBefore.liquidationThreshold, 78_50);
+        assertEq(WBTCConfigBefore.ltv,                  70_00);
+        assertEq(WBTCConfigBefore.liquidationThreshold, 75_00);
         assertEq(WBTCConfigBefore.liquidationBonus,     107_00);
 
         ReserveConfig memory WETHConfigBefore   = _findReserveConfigBySymbol(allConfigsBefore, 'WETH');
         assertEq(WETHConfigBefore.ltv,                  80_00);
-        assertEq(WETHConfigBefore.liquidationThreshold, 85_00);
+        assertEq(WETHConfigBefore.liquidationThreshold, 82_50);
         assertEq(WETHConfigBefore.liquidationBonus,     105_00);
 
         ReserveConfig memory wstETHConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'wstETH');
@@ -246,6 +260,62 @@ contract SparkEthereum_20240306Test is SparkEthereumTestBase {
             gap:              100,
             increaseCooldown: 12 hours
         });
+    }
+
+    function testCapAutomatorCapUpdates() public {
+        GovHelpers.executePayload(vm, payload, executor);
+
+        _assertAutomatedCapUpdate(RETH);
+        _assertAutomatedCapUpdate(SDAI);
+        _assertAutomatedCapUpdate(USDC);
+        _assertAutomatedCapUpdate(USDT);
+        _assertAutomatedCapUpdate(WBTC);
+        _assertAutomatedCapUpdate(WETH);
+        _assertAutomatedCapUpdate(WSTETH);
+    }
+
+    function _assertAutomatedCapUpdate(address asset) internal {
+        DataTypes.ReserveData memory reserveDataBefore = pool.getReserveData(asset);
+
+        uint256 supplyCapBefore = reserveDataBefore.configuration.getSupplyCap();
+        uint256 borrowCapBefore = reserveDataBefore.configuration.getBorrowCap();
+
+        capAutomator.exec(asset);
+
+        DataTypes.ReserveData memory reserveDataAfter = pool.getReserveData(asset);
+        uint256 supplyCapAfter = reserveDataAfter.configuration.getSupplyCap();
+        uint256 borrowCapAfter = reserveDataAfter.configuration.getBorrowCap();
+
+        uint48 max;
+        uint48 gap;
+
+        (max, gap,,,) = capAutomator.supplyCapConfigs(asset);
+
+        if (max > 0) {
+            uint256 currentSupply = (IScaledBalanceToken(reserveDataAfter.aTokenAddress).scaledTotalSupply() + uint256(reserveDataAfter.accruedToTreasury))
+                .rayMul(reserveDataAfter.liquidityIndex)
+                / 10 ** IERC20WithDecimals(reserveDataAfter.aTokenAddress).decimals();
+            uint256 expectedSupplyCap = uint256(max) < currentSupply + uint256(gap)
+                ? uint256(max)
+                : currentSupply + uint256(gap);
+
+            assertEq(supplyCapAfter, expectedSupplyCap);
+        } else {
+            assertEq(supplyCapAfter, supplyCapBefore);
+        }
+
+        (max, gap,,,) = capAutomator.borrowCapConfigs(asset);
+
+        if (max > 0) {
+            uint256 currentBorrows = IERC20(reserveDataAfter.variableDebtTokenAddress).totalSupply() / 10 ** IERC20WithDecimals(reserveDataAfter.variableDebtTokenAddress).decimals();
+            uint256 expectedBorrowCap = uint256(max) < currentBorrows + uint256(gap)
+                ? uint256(max)
+                : currentBorrows + uint256(gap);
+
+            assertEq(borrowCapAfter, expectedBorrowCap);
+        } else {
+            assertEq(borrowCapAfter, borrowCapBefore);
+        }
     }
 
 }
