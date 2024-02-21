@@ -351,10 +351,10 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
     }
 
     function _assertBorrowCapConfigNotSet(address asset) internal {
-        (uint256 max, uint256 gap, uint256 increaseCooldown,,) = capAutomator.borrowCapConfigs(asset);
-        assertEq(max, 0);
-        assertEq(gap, 0);
-        assertEq(increaseCooldown, 0);
+        (uint256 _max, uint256 _gap, uint256 _increaseCooldown,,) = capAutomator.borrowCapConfigs(asset);
+        assertEq(_max,              0);
+        assertEq(_gap,              0);
+        assertEq(_increaseCooldown, 0);
     }
 
     function _assertSupplyCapConfig(address asset, uint256 max, uint256 gap, uint256 increaseCooldown) internal {
@@ -365,10 +365,10 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
     }
 
     function _assertSupplyCapConfigNotSet(address asset) internal {
-        (uint256 max, uint256 gap, uint256 increaseCooldown,,) = capAutomator.supplyCapConfigs(asset);
-        assertEq(max, 0);
-        assertEq(gap, 0);
-        assertEq(increaseCooldown, 0);
+        (uint256 _max, uint256 _gap, uint256 _increaseCooldown,,) = capAutomator.supplyCapConfigs(asset);
+        assertEq(_max,              0);
+        assertEq(_gap,              0);
+        assertEq(_increaseCooldown, 0);
     }
 
 }

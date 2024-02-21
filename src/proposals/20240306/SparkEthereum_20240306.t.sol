@@ -84,35 +84,35 @@ contract SparkEthereum_20240306Test is SparkEthereumTestBase {
 
         ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
 
-        ReserveConfig memory rETHConfig = rETHConfigBefore;
-        rETHConfig.ltv                  = 74_50;
-        rETHConfig.liquidationThreshold = 77_00;
-        rETHConfig.liquidationBonus     = 107_50;
-        _validateReserveConfig(rETHConfig, allConfigsAfter);
+        ReserveConfig memory rETHConfigAfter = rETHConfigBefore;
+        rETHConfigAfter.ltv                  = 74_50;
+        rETHConfigAfter.liquidationThreshold = 77_00;
+        rETHConfigAfter.liquidationBonus     = 107_50;
+        _validateReserveConfig(rETHConfigAfter, allConfigsAfter);
 
-        ReserveConfig memory sDAIConfig = sDAIConfigBefore;
-        sDAIConfig.ltv                  = 77_00;
-        sDAIConfig.liquidationThreshold = 80_00;
-        sDAIConfig.liquidationBonus     = 104_50;
-        _validateReserveConfig(sDAIConfig, allConfigsAfter);
+        ReserveConfig memory sDAIConfigAfter = sDAIConfigBefore;
+        sDAIConfigAfter.ltv                  = 77_00;
+        sDAIConfigAfter.liquidationThreshold = 80_00;
+        sDAIConfigAfter.liquidationBonus     = 104_50;
+        _validateReserveConfig(sDAIConfigAfter, allConfigsAfter);
 
-        ReserveConfig memory WBTCConfig = WBTCConfigBefore;
-        WBTCConfig.ltv                  = 73_00;
-        WBTCConfig.liquidationThreshold = 78_00;
-        WBTCConfig.liquidationBonus     = 105_00;
-        _validateReserveConfig(WBTCConfig, allConfigsAfter);
+        ReserveConfig memory WBTCConfigAfter = WBTCConfigBefore;
+        WBTCConfigAfter.ltv                  = 73_00;
+        WBTCConfigAfter.liquidationThreshold = 78_00;
+        WBTCConfigAfter.liquidationBonus     = 105_00;
+        _validateReserveConfig(WBTCConfigAfter, allConfigsAfter);
 
-        ReserveConfig memory WETHConfig = WETHConfigBefore;
-        WETHConfig.ltv                  = 80_50;
-        WETHConfig.liquidationThreshold = 83_00;
-        WETHConfig.liquidationBonus     = 105_00;
-        _validateReserveConfig(WETHConfig, allConfigsAfter);
+        ReserveConfig memory WETHConfigAfter = WETHConfigBefore;
+        WETHConfigAfter.ltv                  = 80_50;
+        WETHConfigAfter.liquidationThreshold = 83_00;
+        WETHConfigAfter.liquidationBonus     = 105_00;
+        _validateReserveConfig(WETHConfigAfter, allConfigsAfter);
 
-        ReserveConfig memory wstETHConfig = wstETHConfigBefore;
-        wstETHConfig.ltv                  = 78_50;
-        wstETHConfig.liquidationThreshold = 81_00;
-        wstETHConfig.liquidationBonus     = 106_00;
-        _validateReserveConfig(wstETHConfig, allConfigsAfter);
+        ReserveConfig memory wstETHConfigAfter = wstETHConfigBefore;
+        wstETHConfigAfter.ltv                  = 78_50;
+        wstETHConfigAfter.liquidationThreshold = 81_00;
+        wstETHConfigAfter.liquidationBonus     = 106_00;
+        _validateReserveConfig(wstETHConfigAfter, allConfigsAfter);
     }
 
     function testCapAutomatorDeploy() public {
@@ -265,16 +265,16 @@ contract SparkEthereum_20240306Test is SparkEthereumTestBase {
     function testCapAutomatorCapUpdates() public {
         GovHelpers.executePayload(vm, payload, executor);
 
-        _assertAutomatedCapUpdate(RETH);
-        _assertAutomatedCapUpdate(SDAI);
-        _assertAutomatedCapUpdate(USDC);
-        _assertAutomatedCapUpdate(USDT);
-        _assertAutomatedCapUpdate(WBTC);
-        _assertAutomatedCapUpdate(WETH);
-        _assertAutomatedCapUpdate(WSTETH);
+        _assertAutomatedCapsUpdate(RETH);
+        _assertAutomatedCapsUpdate(SDAI);
+        _assertAutomatedCapsUpdate(USDC);
+        _assertAutomatedCapsUpdate(USDT);
+        _assertAutomatedCapsUpdate(WBTC);
+        _assertAutomatedCapsUpdate(WETH);
+        _assertAutomatedCapsUpdate(WSTETH);
     }
 
-    function _assertAutomatedCapUpdate(address asset) internal {
+    function _assertAutomatedCapsUpdate(address asset) internal {
         DataTypes.ReserveData memory reserveDataBefore = pool.getReserveData(asset);
 
         uint256 supplyCapBefore = reserveDataBefore.configuration.getSupplyCap();
@@ -283,6 +283,7 @@ contract SparkEthereum_20240306Test is SparkEthereumTestBase {
         capAutomator.exec(asset);
 
         DataTypes.ReserveData memory reserveDataAfter = pool.getReserveData(asset);
+
         uint256 supplyCapAfter = reserveDataAfter.configuration.getSupplyCap();
         uint256 borrowCapAfter = reserveDataAfter.configuration.getBorrowCap();
 
@@ -295,6 +296,7 @@ contract SparkEthereum_20240306Test is SparkEthereumTestBase {
             uint256 currentSupply = (IScaledBalanceToken(reserveDataAfter.aTokenAddress).scaledTotalSupply() + uint256(reserveDataAfter.accruedToTreasury))
                 .rayMul(reserveDataAfter.liquidityIndex)
                 / 10 ** IERC20WithDecimals(reserveDataAfter.aTokenAddress).decimals();
+
             uint256 expectedSupplyCap = uint256(max) < currentSupply + uint256(gap)
                 ? uint256(max)
                 : currentSupply + uint256(gap);
@@ -308,6 +310,7 @@ contract SparkEthereum_20240306Test is SparkEthereumTestBase {
 
         if (max > 0) {
             uint256 currentBorrows = IERC20(reserveDataAfter.variableDebtTokenAddress).totalSupply() / 10 ** IERC20WithDecimals(reserveDataAfter.variableDebtTokenAddress).decimals();
+
             uint256 expectedBorrowCap = uint256(max) < currentBorrows + uint256(gap)
                 ? uint256(max)
                 : currentBorrows + uint256(gap);
