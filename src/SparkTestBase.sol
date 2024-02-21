@@ -15,7 +15,8 @@ import { IncentivizedERC20 }                     from 'aave-v3-core/contracts/pr
 import { DataTypes }                             from 'aave-v3-core/contracts/protocol/libraries/types/DataTypes.sol';
 import { ReserveConfiguration }                  from 'aave-v3-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
 
-import { ISparkLendFreezerMom }        from './interfaces/ISparkLendFreezerMom.sol';
+import { ISparkLendFreezerMom } from './interfaces/ISparkLendFreezerMom.sol';
+import { ICapAutomator }        from './interfaces/ICapAutomator.sol';
 
 // REPO ARCHITECTURE TODOs
 // TODO: Investigate if aave-address-book can be removed as dep
@@ -217,12 +218,19 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
 
     IAuthority           internal authority;
     ISparkLendFreezerMom internal freezerMom;
+    ICapAutomator        internal capAutomator;
 
     address INCENTIVES_CONTROLLER = 0x4370D3b6C9588E02ce9D22e684387859c7Ff5b34;
 
-    address DAI  = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
-    address WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-    address MKR  = 0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2;
+    address DAI    = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
+    address MKR    = 0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2;
+    address RETH   = 0xae78736Cd615f374D3085123A210448E74Fc6393;
+    address SDAI   = 0x83F20F44975D03b1b09e64809B757c47f942BEeA;
+    address USDC   = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+    address USDT   = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
+    address WBTC   = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
+    address WETH   = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    address WSTETH = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0;
 
     address SPELL_FREEZE_ALL = 0xA67d62f75F8D11395eE120CA8390Ab3bF01f0b8A;
     address SPELL_FREEZE_DAI = 0x0F9149c4d6018A5999AdA5b592E372845cfeC725;
@@ -230,12 +238,13 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
     address SPELL_PAUSE_DAI  = 0x1B94E2F3818E1D657bE2A62D37560514b52DB17F;
 
     constructor() {
-        executor          = 0x3300f198988e4C9C63F75dF86De36421f06af8c4;
-        domain            = 'Ethereum';
+        executor = 0x3300f198988e4C9C63F75dF86De36421f06af8c4;
+        domain   = 'Ethereum';
 
         poolAddressesProviderRegistry = IPoolAddressesProviderRegistry(0x03cFa0C4622FF84E50E75062683F44c9587e6Cc1);
         authority                     = IAuthority(0x0a3f6849f78076aefaDf113F5BED87720274dDC0);
         freezerMom                    = ISparkLendFreezerMom(0xFA36c12Bc307b40c701D65d8FE8F88cCEdE2277a);
+        capAutomator                  = ICapAutomator(0x2276f52afba7Cf2525fd0a050DF464AC8532d0ef);
     }
 
     function testFreezerMom() public {
@@ -332,6 +341,34 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
         _voteAndCast(SPELL_PAUSE_ALL);
         _assertPaused(DAI,  true);
         _assertPaused(WETH, true);
+    }
+
+    function _assertBorrowCapConfig(address asset, uint256 max, uint256 gap, uint256 increaseCooldown) internal {
+        (uint256 _max, uint256 _gap, uint256 _increaseCooldown,,) = capAutomator.borrowCapConfigs(asset);
+        assertEq(_max,              max);
+        assertEq(_gap,              gap);
+        assertEq(_increaseCooldown, increaseCooldown);
+    }
+
+    function _assertBorrowCapConfigNotSet(address asset) internal {
+        (uint256 max, uint256 gap, uint256 increaseCooldown,,) = capAutomator.borrowCapConfigs(asset);
+        assertEq(max, 0);
+        assertEq(gap, 0);
+        assertEq(increaseCooldown, 0);
+    }
+
+    function _assertSupplyCapConfig(address asset, uint256 max, uint256 gap, uint256 increaseCooldown) internal {
+        (uint256 _max, uint256 _gap, uint256 _increaseCooldown,,) = capAutomator.supplyCapConfigs(asset);
+        assertEq(_max,              max);
+        assertEq(_gap,              gap);
+        assertEq(_increaseCooldown, increaseCooldown);
+    }
+
+    function _assertSupplyCapConfigNotSet(address asset) internal {
+        (uint256 max, uint256 gap, uint256 increaseCooldown,,) = capAutomator.supplyCapConfigs(asset);
+        assertEq(max, 0);
+        assertEq(gap, 0);
+        assertEq(increaseCooldown, 0);
     }
 
 }
