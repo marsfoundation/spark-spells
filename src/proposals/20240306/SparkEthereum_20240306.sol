@@ -8,10 +8,11 @@ import { ICapAutomator } from '../../interfaces/ICapAutomator.sol';
 import { EngineFlags, IEngine,  Rates, SparkPayloadEthereum } from '../../SparkPayloadEthereum.sol';
 
 /**
- * @title  March 06, 2024 Spark Ethereum Proposal - Activate Cap Automator, update ETH eMode, update collateral parameters for multiple markets
+ * @title  March 06, 2024 Spark Ethereum Proposal - Activate Cap Automator, update ETH eMode, update interest rates for WETH and rETH, update collateral parameters for multiple markets
  * @author Phoenix Labs
  * @dev    This proposal adds the Cap Automator as a risk admin to the Pool and sets supply and borrow cap configs for rETH, sDAI, USDC, USDT, WBTC, WETH and wstETH markets;
- *         sets ETH eMode to 93% ltv, 95% liqThreshold and 101% liqBonus and updates ltv, liqThreshold and liqBonus for rETH, sDAI, WBTC, WETH and wstETH markets.
+ *         sets ETH eMode to 93% ltv, 95% liqThreshold and 101% liqBonus; updates rETH baseVariableBorrowRate to 0.25% and WETH variableRateSlope1 to 2.8%;
+ *         updates ltv, liqThreshold and liqBonus for rETH, sDAI, WBTC, WETH and wstETH markets.
  * Forum:  TODO
  * Vote:   TODO
  */
@@ -103,6 +104,16 @@ contract SparkEthereum_20240306 is SparkPayloadEthereum {
         public view override returns (IEngine.RateStrategyUpdate[] memory)
     {
         IEngine.RateStrategyUpdate[] memory ratesUpdate = new IEngine.RateStrategyUpdate[](2);
+        Rates.RateStrategyParams memory rethParams = LISTING_ENGINE
+            .RATE_STRATEGIES_FACTORY()
+            .getStrategyDataOfAsset(RETH);
+
+        rethParams.baseVariableBorrowRate = _bpsToRay(25);
+
+        ratesUpdate[0] = IEngine.RateStrategyUpdate({
+            asset:  RETH,
+            params: rethParams
+        });
 
         Rates.RateStrategyParams memory wethParams = LISTING_ENGINE
             .RATE_STRATEGIES_FACTORY()
@@ -110,21 +121,11 @@ contract SparkEthereum_20240306 is SparkPayloadEthereum {
 
         wethParams.variableRateSlope1 = _bpsToRay(2_80);
 
-        ratesUpdate[0] = IEngine.RateStrategyUpdate({
+        ratesUpdate[1] = IEngine.RateStrategyUpdate({
             asset:  WETH,
             params: wethParams
         });
 
-        Rates.RateStrategyParams memory rethParams = LISTING_ENGINE
-            .RATE_STRATEGIES_FACTORY()
-            .getStrategyDataOfAsset(RETH);
-
-        rethParams.baseVariableBorrowRate = _bpsToRay(25);
-
-        ratesUpdate[1] = IEngine.RateStrategyUpdate({
-            asset:  RETH,
-            params: rethParams
-        });
 
         return ratesUpdate;
     }

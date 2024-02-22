@@ -17,7 +17,6 @@ import { ReserveConfiguration }                  from 'aave-v3-core/contracts/pr
 
 import { ISparkLendFreezerMom } from './interfaces/ISparkLendFreezerMom.sol';
 import { ICapAutomator }        from './interfaces/ICapAutomator.sol';
-import { ISparkLendFreezerMom } from './interfaces/ISparkLendFreezerMom.sol';
 
 // REPO ARCHITECTURE TODOs
 // TODO: Investigate if aave-address-book can be removed as dep
