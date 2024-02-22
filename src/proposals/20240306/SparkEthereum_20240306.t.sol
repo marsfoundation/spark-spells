@@ -37,6 +37,7 @@ contract SparkEthereum_20240306Test is SparkEthereumTestBase {
 
     function testEModeUpdate() public {
         DataTypes.EModeCategory memory eModeBefore = pool.getEModeCategoryData(1);
+
         assertEq(eModeBefore.ltv,                  90_00);
         assertEq(eModeBefore.liquidationThreshold, 93_00);
         assertEq(eModeBefore.liquidationBonus,     101_00);
@@ -46,6 +47,7 @@ contract SparkEthereum_20240306Test is SparkEthereumTestBase {
         GovHelpers.executePayload(vm, payload, executor);
 
         DataTypes.EModeCategory memory eModeAfter = pool.getEModeCategoryData(1);
+
         assertEq(eModeAfter.ltv,                  92_00);
         assertEq(eModeAfter.liquidationThreshold, eModeBefore.liquidationThreshold);
         assertEq(eModeAfter.liquidationBonus,     eModeBefore.liquidationBonus);
