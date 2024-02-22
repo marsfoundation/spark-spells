@@ -13,7 +13,7 @@ import { EngineFlags, IEngine,  Rates, SparkPayloadEthereum } from '../../SparkP
  * @dev    This proposal adds the Cap Automator as a risk admin to the Pool and sets supply and borrow cap configs for rETH, sDAI, USDC, USDT, WBTC, WETH and wstETH markets;
  *         sets ETH eMode to 93% ltv, 95% liqThreshold and 101% liqBonus; updates rETH baseVariableBorrowRate to 0.25% and WETH variableRateSlope1 to 2.8%;
  *         updates ltv, liqThreshold and liqBonus for rETH, sDAI, WBTC, WETH and wstETH markets.
- * Forum:  TODO
+ * Forum:  https://forum.makerdao.com/t/feb-22-2024-proposed-changes-to-sparklend-for-upcoming-spell/23739
  * Vote:   TODO
  */
 contract SparkEthereum_20240306 is SparkPayloadEthereum {
@@ -125,7 +125,6 @@ contract SparkEthereum_20240306 is SparkPayloadEthereum {
             asset:  WETH,
             params: wethParams
         });
-
 
         return ratesUpdate;
     }
