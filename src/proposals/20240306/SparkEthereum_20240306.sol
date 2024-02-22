@@ -99,8 +99,6 @@ contract SparkEthereum_20240306 is SparkPayloadEthereum {
         return collateralUpdates;
     }
 
-
-
     function rateStrategiesUpdates()
         public view override returns (IEngine.RateStrategyUpdate[] memory)
     {
