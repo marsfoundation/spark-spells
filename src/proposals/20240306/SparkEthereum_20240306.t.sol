@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.10;
 
-import { DataTypes }            from "aave-v3-core/contracts/protocol/libraries/types/DataTypes.sol";
-import { IScaledBalanceToken }  from "aave-v3-core/contracts/interfaces/IScaledBalanceToken.sol";
-import { ReserveConfiguration } from "aave-v3-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol";
-import { WadRayMath }           from "aave-v3-core/contracts/protocol/libraries/math/WadRayMath.sol";
+import { DataTypes }                    from "aave-v3-core/contracts/protocol/libraries/types/DataTypes.sol";
+import { IDefaultInterestRateStrategy } from "aave-v3-core/contracts/interfaces/IDefaultInterestRateStrategy.sol";
+import { IScaledBalanceToken }          from "aave-v3-core/contracts/interfaces/IScaledBalanceToken.sol";
+import { ReserveConfiguration }         from "aave-v3-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol";
+import { WadRayMath }                   from "aave-v3-core/contracts/protocol/libraries/math/WadRayMath.sol";
 
 import { IERC20 } from '../../interfaces/IERC20.sol';
 
@@ -45,81 +46,201 @@ contract SparkEthereum_20240306Test is SparkEthereumTestBase {
         GovHelpers.executePayload(vm, payload, executor);
 
         DataTypes.EModeCategory memory eModeAfter = pool.getEModeCategoryData(1);
-        assertEq(eModeAfter.ltv,                  93_00);
-        assertEq(eModeAfter.liquidationThreshold, 95_00);
+        assertEq(eModeAfter.ltv,                  92_00);
+        assertEq(eModeAfter.liquidationThreshold, eModeBefore.liquidationThreshold);
         assertEq(eModeAfter.liquidationBonus,     eModeBefore.liquidationBonus);
         assertEq(eModeAfter.priceSource,          eModeBefore.priceSource);
         assertEq(eModeAfter.label,                eModeBefore.label);
     }
 
-    function testCollateralUpdates() public {
+    function testMarketUpdates() public {
         ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', pool);
 
-        ReserveConfig memory rETHConfigBefore   = _findReserveConfigBySymbol(allConfigsBefore, 'rETH');
-        assertEq(rETHConfigBefore.ltv,                  68_50);
-        assertEq(rETHConfigBefore.liquidationThreshold, 79_50);
-        assertEq(rETHConfigBefore.liquidationBonus,     107_00);
+        /*******************/
+        /*** rETH Before ***/
+        /*******************/
 
-        ReserveConfig memory sDAIConfigBefore   = _findReserveConfigBySymbol(allConfigsBefore, 'sDAI');
-        assertEq(sDAIConfigBefore.ltv,                  74_00);
-        assertEq(sDAIConfigBefore.liquidationThreshold, 76_00);
-        assertEq(sDAIConfigBefore.liquidationBonus,     104_50);
+        ReserveConfig memory rethConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'rETH');
 
-        ReserveConfig memory WBTCConfigBefore   = _findReserveConfigBySymbol(allConfigsBefore, 'WBTC');
-        assertEq(WBTCConfigBefore.ltv,                  70_00);
-        assertEq(WBTCConfigBefore.liquidationThreshold, 75_00);
-        assertEq(WBTCConfigBefore.liquidationBonus,     107_00);
+        assertEq(rethConfigBefore.ltv,                  68_50);
+        assertEq(rethConfigBefore.liquidationThreshold, 79_50);
+        assertEq(rethConfigBefore.liquidationBonus,     107_00);
 
-        ReserveConfig memory WETHConfigBefore   = _findReserveConfigBySymbol(allConfigsBefore, 'WETH');
-        assertEq(WETHConfigBefore.ltv,                  80_00);
-        assertEq(WETHConfigBefore.liquidationThreshold, 82_50);
-        assertEq(WETHConfigBefore.liquidationBonus,     105_00);
+        IDefaultInterestRateStrategy rethIRSBefore = IDefaultInterestRateStrategy(
+            rethConfigBefore.interestRateStrategy
+        );
 
-        ReserveConfig memory wstETHConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'wstETH');
-        assertEq(wstETHConfigBefore.ltv,                  68_50);
-        assertEq(wstETHConfigBefore.liquidationThreshold, 79_50);
-        assertEq(wstETHConfigBefore.liquidationBonus,     107_00);
+        _validateInterestRateStrategy(
+            address(rethIRSBefore),
+            address(rethIRSBefore),
+            InterestStrategyValues({
+                addressesProvider:             address(poolAddressesProvider),
+                optimalUsageRatio:             rethIRSBefore.OPTIMAL_USAGE_RATIO(),
+                optimalStableToTotalDebtRatio: rethIRSBefore.OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO(),
+                baseStableBorrowRate:          0.070e27,
+                stableRateSlope1:              rethIRSBefore.getStableRateSlope1(),
+                stableRateSlope2:              rethIRSBefore.getStableRateSlope2(),
+                baseVariableBorrowRate:        0,
+                variableRateSlope1:            0.070e27,
+                variableRateSlope2:            3.000e27
+            })
+        );
+
+        /*******************/
+        /*** sDAI Before ***/
+        /*******************/
+
+        ReserveConfig memory sdaiConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'sDAI');
+
+        assertEq(sdaiConfigBefore.ltv,                  74_00);
+        assertEq(sdaiConfigBefore.liquidationThreshold, 76_00);
+        assertEq(sdaiConfigBefore.liquidationBonus,     104_50);
+
+        /*******************/
+        /*** WBTC Before ***/
+        /*******************/
+
+        ReserveConfig memory wbtcConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'WBTC');
+
+        assertEq(wbtcConfigBefore.ltv,                  70_00);
+        assertEq(wbtcConfigBefore.liquidationThreshold, 75_00);
+        assertEq(wbtcConfigBefore.liquidationBonus,     107_00);
+
+        /*******************/
+        /*** WETH Before ***/
+        /*******************/
+
+        ReserveConfig memory wethConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'WETH');
+
+        assertEq(wethConfigBefore.ltv,                  80_00);
+        assertEq(wethConfigBefore.liquidationThreshold, 82_50);
+        assertEq(wethConfigBefore.liquidationBonus,     105_00);
+
+        IDefaultInterestRateStrategy wethIRSBefore = IDefaultInterestRateStrategy(
+            wethConfigBefore.interestRateStrategy
+        );
+
+        _validateInterestRateStrategy(
+            address(wethIRSBefore),
+            address(wethIRSBefore),
+            InterestStrategyValues({
+                addressesProvider:             address(poolAddressesProvider),
+                optimalUsageRatio:             wethIRSBefore.OPTIMAL_USAGE_RATIO(),
+                optimalStableToTotalDebtRatio: wethIRSBefore.OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO(),
+                baseStableBorrowRate:          0.032e27,
+                stableRateSlope1:              wethIRSBefore.getStableRateSlope1(),
+                stableRateSlope2:              wethIRSBefore.getStableRateSlope2(),
+                baseVariableBorrowRate:        0,
+                variableRateSlope1:            0.032e27,
+                variableRateSlope2:            1.200e27
+            })
+        );
+
+        /*********************/
+        /*** wstETH Before ***/
+        /*********************/
+
+        ReserveConfig memory wstethConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'wstETH');
+
+        assertEq(wstethConfigBefore.ltv,                  68_50);
+        assertEq(wstethConfigBefore.liquidationThreshold, 79_50);
+        assertEq(wstethConfigBefore.liquidationBonus,     107_00);
+
+        /***********************/
+        /*** Execute Payload ***/
+        /***********************/
 
         GovHelpers.executePayload(vm, payload, executor);
 
         ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
 
-        ReserveConfig memory rETHConfigAfter = rETHConfigBefore;
-        rETHConfigAfter.ltv                  = 74_50;
-        rETHConfigAfter.liquidationThreshold = 77_00;
-        rETHConfigAfter.liquidationBonus     = 107_50;
-        _validateReserveConfig(rETHConfigAfter, allConfigsAfter);
+        /*******************/
+        /*** rETH After ****/
+        /*******************/
 
-        ReserveConfig memory sDAIConfigAfter = sDAIConfigBefore;
-        sDAIConfigAfter.ltv                  = 77_00;
-        sDAIConfigAfter.liquidationThreshold = 80_00;
-        sDAIConfigAfter.liquidationBonus     = 104_50;
-        _validateReserveConfig(sDAIConfigAfter, allConfigsAfter);
+        ReserveConfig memory rethConfigAfter = rethConfigBefore;
 
-        ReserveConfig memory WBTCConfigAfter = WBTCConfigBefore;
-        WBTCConfigAfter.ltv                  = 73_00;
-        WBTCConfigAfter.liquidationThreshold = 78_00;
-        WBTCConfigAfter.liquidationBonus     = 105_00;
-        _validateReserveConfig(WBTCConfigAfter, allConfigsAfter);
+        rethConfigAfter.interestRateStrategy = _findReserveConfigBySymbol(allConfigsAfter, 'rETH').interestRateStrategy;
 
-        ReserveConfig memory WETHConfigAfter = WETHConfigBefore;
-        WETHConfigAfter.ltv                  = 80_50;
-        WETHConfigAfter.liquidationThreshold = 83_00;
-        WETHConfigAfter.liquidationBonus     = 105_00;
-        _validateReserveConfig(WETHConfigAfter, allConfigsAfter);
+        rethConfigAfter.ltv                  = 79_00;
+        rethConfigAfter.liquidationThreshold = 80_00;
 
-        ReserveConfig memory wstETHConfigAfter = wstETHConfigBefore;
-        wstETHConfigAfter.ltv                  = 78_50;
-        wstETHConfigAfter.liquidationThreshold = 81_00;
-        wstETHConfigAfter.liquidationBonus     = 106_00;
-        _validateReserveConfig(wstETHConfigAfter, allConfigsAfter);
+        _validateReserveConfig(rethConfigAfter, allConfigsAfter);
+
+        IDefaultInterestRateStrategy rethIRSAfter = IDefaultInterestRateStrategy(
+            rethConfigAfter.interestRateStrategy
+        );
+
+        _validateInterestRateStrategy(
+            address(rethIRSAfter),
+            address(rethIRSAfter),
+            InterestStrategyValues({
+                addressesProvider:             address(poolAddressesProvider),
+                optimalUsageRatio:             rethIRSBefore.OPTIMAL_USAGE_RATIO(),
+                optimalStableToTotalDebtRatio: rethIRSBefore.OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO(),
+                baseStableBorrowRate:          rethIRSBefore.getBaseStableBorrowRate(),
+                stableRateSlope1:              rethIRSBefore.getStableRateSlope1(),
+                stableRateSlope2:              rethIRSBefore.getStableRateSlope2(),
+                baseVariableBorrowRate:        0.0025e27,
+                variableRateSlope1:            rethIRSBefore.getVariableRateSlope1(),
+                variableRateSlope2:            rethIRSBefore.getVariableRateSlope2()
+            })
+        );
+
+        /*******************/
+        /*** sDAI After ****/
+        /*******************/
+
+        ReserveConfig memory sdaiConfigAfter = sdaiConfigBefore;
+
+        sdaiConfigAfter.ltv                  = 79_00;
+        sdaiConfigAfter.liquidationThreshold = 80_00;
+        sdaiConfigAfter.liquidationBonus     = 105_00;
+
+        _validateReserveConfig(sdaiConfigAfter, allConfigsAfter);
+
+        /*******************/
+        /*** WBTC After ****/
+        /*******************/
+
+        ReserveConfig memory wbtcConfigAfter = wbtcConfigBefore;
+
+        wbtcConfigAfter.ltv = 74_00;
+
+        _validateReserveConfig(wbtcConfigAfter, allConfigsAfter);
+
+        /*******************/
+        /*** WETH After ****/
+        /*******************/
+
+        ReserveConfig memory wethConfigAfter = wethConfigBefore;
+
+        wethConfigAfter.interestRateStrategy = _findReserveConfigBySymbol(allConfigsAfter, 'WETH').interestRateStrategy;
+
+        wethConfigAfter.ltv                  = 82_00;
+        wethConfigAfter.liquidationThreshold = 83_00;
+
+        _validateReserveConfig(wethConfigAfter, allConfigsAfter);
+
+        /*********************/
+        /*** wstETH After ****/
+        /*********************/
+
+        ReserveConfig memory wstethConfigAfter = wstethConfigBefore;
+
+        wstethConfigAfter.ltv                  = 79_00;
+        wstethConfigAfter.liquidationThreshold = 80_00;
+
+        _validateReserveConfig(wstethConfigAfter, allConfigsAfter);
     }
 
     function testCapAutomatorDeploy() public {
-        assertEq(address(capAutomator),                    0x2276f52afba7Cf2525fd0a050DF464AC8532d0ef);
+        assertEq(address(capAutomator), 0x2276f52afba7Cf2525fd0a050DF464AC8532d0ef);
+
         assertEq(address(capAutomator.poolConfigurator()), address(poolConfigurator));
         assertEq(address(capAutomator.pool()),             address(pool));
-        assertEq(IOwnable(address(capAutomator)).owner(),  executor);
+
+        assertEq(IOwnable(address(capAutomator)).owner(), executor);
     }
 
     function testCapAutomatorConfiguration() public {

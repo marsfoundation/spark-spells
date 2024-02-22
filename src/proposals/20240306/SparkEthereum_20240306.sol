@@ -5,7 +5,7 @@ import { IACLManager } from 'aave-v3-core/contracts/interfaces/IACLManager.sol';
 
 import { ICapAutomator } from '../../interfaces/ICapAutomator.sol';
 
-import { SparkPayloadEthereum, IEngine, EngineFlags } from '../../SparkPayloadEthereum.sol';
+import { EngineFlags, IEngine,  Rates, SparkPayloadEthereum } from '../../SparkPayloadEthereum.sol';
 
 /**
  * @title  March 06, 2024 Spark Ethereum Proposal - Activate Cap Automator, update ETH eMode, update collateral parameters for multiple markets
@@ -33,8 +33,8 @@ contract SparkEthereum_20240306 is SparkPayloadEthereum {
     {
         LISTING_ENGINE.POOL_CONFIGURATOR().setEModeCategory(
             1,
+            92_00,
             93_00,
-            95_00,
             101_00,
             address(0),
             'ETH'
@@ -48,9 +48,9 @@ contract SparkEthereum_20240306 is SparkPayloadEthereum {
 
         collateralUpdates[0] = IEngine.CollateralUpdate({
             asset:          RETH,
-            ltv:            74_50,
-            liqThreshold:   77_00,
-            liqBonus:       7_50,
+            ltv:            79_00,
+            liqThreshold:   80_00,
+            liqBonus:       EngineFlags.KEEP_CURRENT,
             debtCeiling:    EngineFlags.KEEP_CURRENT,
             liqProtocolFee: EngineFlags.KEEP_CURRENT,
             eModeCategory:  EngineFlags.KEEP_CURRENT
@@ -58,9 +58,9 @@ contract SparkEthereum_20240306 is SparkPayloadEthereum {
 
         collateralUpdates[1] = IEngine.CollateralUpdate({
             asset:          SDAI,
-            ltv:            77_00,
+            ltv:            79_00,
             liqThreshold:   80_00,
-            liqBonus:       4_50,
+            liqBonus:       5_00,
             debtCeiling:    EngineFlags.KEEP_CURRENT,
             liqProtocolFee: EngineFlags.KEEP_CURRENT,
             eModeCategory:  EngineFlags.KEEP_CURRENT
@@ -68,9 +68,9 @@ contract SparkEthereum_20240306 is SparkPayloadEthereum {
 
         collateralUpdates[2] = IEngine.CollateralUpdate({
             asset:          WBTC,
-            ltv:            73_00,
-            liqThreshold:   78_00,
-            liqBonus:       5_00,
+            ltv:            74_00,
+            liqThreshold:   EngineFlags.KEEP_CURRENT,
+            liqBonus:       EngineFlags.KEEP_CURRENT,
             debtCeiling:    EngineFlags.KEEP_CURRENT,
             liqProtocolFee: EngineFlags.KEEP_CURRENT,
             eModeCategory:  EngineFlags.KEEP_CURRENT
@@ -78,9 +78,9 @@ contract SparkEthereum_20240306 is SparkPayloadEthereum {
 
         collateralUpdates[3] = IEngine.CollateralUpdate({
             asset:          WETH,
-            ltv:            80_50,
+            ltv:            82_00,
             liqThreshold:   83_00,
-            liqBonus:       5_00,
+            liqBonus:       EngineFlags.KEEP_CURRENT,
             debtCeiling:    EngineFlags.KEEP_CURRENT,
             liqProtocolFee: EngineFlags.KEEP_CURRENT,
             eModeCategory:  EngineFlags.KEEP_CURRENT
@@ -88,15 +88,47 @@ contract SparkEthereum_20240306 is SparkPayloadEthereum {
 
         collateralUpdates[4] = IEngine.CollateralUpdate({
             asset:          WSTETH,
-            ltv:            78_50,
-            liqThreshold:   81_00,
-            liqBonus:       6_00,
+            ltv:            79_00,
+            liqThreshold:   80_00,
+            liqBonus:       EngineFlags.KEEP_CURRENT,
             debtCeiling:    EngineFlags.KEEP_CURRENT,
             liqProtocolFee: EngineFlags.KEEP_CURRENT,
             eModeCategory:  EngineFlags.KEEP_CURRENT
         });
 
         return collateralUpdates;
+    }
+
+
+
+    function rateStrategiesUpdates()
+        public view override returns (IEngine.RateStrategyUpdate[] memory)
+    {
+        IEngine.RateStrategyUpdate[] memory ratesUpdate = new IEngine.RateStrategyUpdate[](2);
+
+        Rates.RateStrategyParams memory wethParams = LISTING_ENGINE
+            .RATE_STRATEGIES_FACTORY()
+            .getStrategyDataOfAsset(WETH);
+
+        wethParams.variableRateSlope1 = _bpsToRay(2_80);
+
+        ratesUpdate[0] = IEngine.RateStrategyUpdate({
+            asset:  WETH,
+            params: wethParams
+        });
+
+        Rates.RateStrategyParams memory rethParams = LISTING_ENGINE
+            .RATE_STRATEGIES_FACTORY()
+            .getStrategyDataOfAsset(RETH);
+
+        rethParams.baseVariableBorrowRate = _bpsToRay(25);
+
+        ratesUpdate[1] = IEngine.RateStrategyUpdate({
+            asset:  RETH,
+            params: rethParams
+        });
+
+        return ratesUpdate;
     }
 
     function _postExecute()
