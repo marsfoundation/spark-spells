@@ -343,29 +343,29 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
         _assertPaused(WETH, true);
     }
 
-    function _assertBorrowCapConfig(address asset, uint256 max, uint256 gap, uint256 increaseCooldown) internal {
-        (uint256 _max, uint256 _gap, uint256 _increaseCooldown,,) = capAutomator.borrowCapConfigs(asset);
+    function _assertBorrowCapConfig(address asset, uint48 max, uint48 gap, uint48 increaseCooldown) internal {
+        (uint48 _max, uint48 _gap, uint48 _increaseCooldown,,) = capAutomator.borrowCapConfigs(asset);
         assertEq(_max,              max);
         assertEq(_gap,              gap);
         assertEq(_increaseCooldown, increaseCooldown);
     }
 
     function _assertBorrowCapConfigNotSet(address asset) internal {
-        (uint256 _max, uint256 _gap, uint256 _increaseCooldown,,) = capAutomator.borrowCapConfigs(asset);
+        (uint48 _max, uint48 _gap, uint48 _increaseCooldown,,) = capAutomator.borrowCapConfigs(asset);
         assertEq(_max,              0);
         assertEq(_gap,              0);
         assertEq(_increaseCooldown, 0);
     }
 
-    function _assertSupplyCapConfig(address asset, uint256 max, uint256 gap, uint256 increaseCooldown) internal {
-        (uint256 _max, uint256 _gap, uint256 _increaseCooldown,,) = capAutomator.supplyCapConfigs(asset);
+    function _assertSupplyCapConfig(address asset, uint48 max, uint48 gap, uint48 increaseCooldown) internal {
+        (uint48 _max, uint48 _gap, uint48 _increaseCooldown,,) = capAutomator.supplyCapConfigs(asset);
         assertEq(_max,              max);
         assertEq(_gap,              gap);
         assertEq(_increaseCooldown, increaseCooldown);
     }
 
     function _assertSupplyCapConfigNotSet(address asset) internal {
-        (uint256 _max, uint256 _gap, uint256 _increaseCooldown,,) = capAutomator.supplyCapConfigs(asset);
+        (uint48 _max, uint48 _gap, uint48 _increaseCooldown,,) = capAutomator.supplyCapConfigs(asset);
         assertEq(_max,              0);
         assertEq(_gap,              0);
         assertEq(_increaseCooldown, 0);
