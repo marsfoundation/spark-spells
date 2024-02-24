@@ -169,11 +169,9 @@ contract SparkEthereum_20240306Test is SparkEthereumTestBase {
 
         _validateReserveConfig(rethConfigAfter, allConfigsAfter);
 
-        address rethIRSAfter = rethConfigAfter.interestRateStrategy;
-
         _validateInterestRateStrategy(
-            rethIRSAfter,
-            rethIRSAfter,
+            rethConfigAfter.interestRateStrategy,
+            rethConfigAfter.interestRateStrategy,
             InterestStrategyValues({
                 addressesProvider:             address(poolAddressesProvider),
                 optimalUsageRatio:             rethIRSBefore.OPTIMAL_USAGE_RATIO(),
@@ -222,11 +220,9 @@ contract SparkEthereum_20240306Test is SparkEthereumTestBase {
 
         _validateReserveConfig(wethConfigAfter, allConfigsAfter);
 
-        address wethIRSAfter = wethConfigAfter.interestRateStrategy;
-
         _validateInterestRateStrategy(
-            wethIRSAfter,
-            wethIRSAfter,
+            wethConfigAfter.interestRateStrategy,
+            wethConfigAfter.interestRateStrategy,
             InterestStrategyValues({
                 addressesProvider:             address(poolAddressesProvider),
                 optimalUsageRatio:             wethIRSBefore.OPTIMAL_USAGE_RATIO(),
