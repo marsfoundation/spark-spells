@@ -169,13 +169,11 @@ contract SparkEthereum_20240306Test is SparkEthereumTestBase {
 
         _validateReserveConfig(rethConfigAfter, allConfigsAfter);
 
-        IDefaultInterestRateStrategy rethIRSAfter = IDefaultInterestRateStrategy(
-            rethConfigAfter.interestRateStrategy
-        );
+        address rethIRSAfter = rethConfigAfter.interestRateStrategy;
 
         _validateInterestRateStrategy(
-            address(rethIRSAfter),
-            address(rethIRSAfter),
+            rethIRSAfter,
+            rethIRSAfter,
             InterestStrategyValues({
                 addressesProvider:             address(poolAddressesProvider),
                 optimalUsageRatio:             rethIRSBefore.OPTIMAL_USAGE_RATIO(),
@@ -223,6 +221,24 @@ contract SparkEthereum_20240306Test is SparkEthereumTestBase {
         wethConfigAfter.liquidationThreshold = 83_00;
 
         _validateReserveConfig(wethConfigAfter, allConfigsAfter);
+
+        address wethIRSAfter = wethConfigAfter.interestRateStrategy;
+
+        _validateInterestRateStrategy(
+            wethIRSAfter,
+            wethIRSAfter,
+            InterestStrategyValues({
+                addressesProvider:             address(poolAddressesProvider),
+                optimalUsageRatio:             wethIRSBefore.OPTIMAL_USAGE_RATIO(),
+                optimalStableToTotalDebtRatio: wethIRSBefore.OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO(),
+                baseStableBorrowRate:          0.028e27,
+                stableRateSlope1:              wethIRSBefore.getStableRateSlope1(),
+                stableRateSlope2:              wethIRSBefore.getStableRateSlope2(),
+                baseVariableBorrowRate:        wethIRSBefore.getBaseVariableBorrowRate(),
+                variableRateSlope1:            0.028e27,
+                variableRateSlope2:            wethIRSBefore.getVariableRateSlope2()
+            })
+        );
 
         /*********************/
         /*** wstETH After ****/
