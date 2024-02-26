@@ -14,7 +14,8 @@ import { EngineFlags, IEngine,  Rates, SparkPayloadEthereum } from '../../SparkP
  *         sets ETH eMode to 93% ltv, 95% liqThreshold and 101% liqBonus; updates rETH baseVariableBorrowRate to 0.25% and WETH variableRateSlope1 to 2.8%;
  *         updates ltv, liqThreshold and liqBonus for rETH, sDAI, WBTC, WETH and wstETH markets.
  * Forum:  https://forum.makerdao.com/t/feb-22-2024-proposed-changes-to-sparklend-for-upcoming-spell/23739
- * Vote:   TODO
+ * Votes:  https://vote.makerdao.com/polling/QmUE5xr8#poll-detail
+ *         https://vote.makerdao.com/polling/QmRU6mmi#poll-detail
  */
 contract SparkEthereum_20240306 is SparkPayloadEthereum {
 
