@@ -400,13 +400,27 @@ contract SparkEthereum_20240306Test is SparkEthereumTestBase {
     function testCapAutomatorCapUpdates() public {
         GovHelpers.executePayload(vm, payload, executor);
 
-        _assertAutomatedCapsUpdate(RETH);
-        _assertAutomatedCapsUpdate(SDAI);
-        _assertAutomatedCapsUpdate(USDC);
-        _assertAutomatedCapsUpdate(USDT);
-        _assertAutomatedCapsUpdate(WBTC);
-        _assertAutomatedCapsUpdate(WETH);
-        _assertAutomatedCapsUpdate(WSTETH);
+        address[] memory reserves = pool.getReservesList();
+        for (uint256 i = 0; i < reserves.length; i++) {
+            _assertAutomatedCapsUpdate(reserves[i]);
+        }
+
+        assertEq(pool.getReserveData(RETH).configuration.getSupplyCap(),   53_437);
+        assertEq(pool.getReserveData(RETH).configuration.getBorrowCap(),   111);
+        assertEq(pool.getReserveData(SDAI).configuration.getSupplyCap(),   130_322_469);
+        assertEq(pool.getReserveData(SDAI).configuration.getBorrowCap(),   0);
+        assertEq(pool.getReserveData(USDC).configuration.getSupplyCap(),   60_000_000);
+        assertEq(pool.getReserveData(USDC).configuration.getBorrowCap(),   6_636_877);
+        assertEq(pool.getReserveData(USDT).configuration.getSupplyCap(),   30_000_000);
+        assertEq(pool.getReserveData(USDT).configuration.getBorrowCap(),   3_098_915);
+        assertEq(pool.getReserveData(WBTC).configuration.getSupplyCap(),   5_000);
+        assertEq(pool.getReserveData(WBTC).configuration.getBorrowCap(),   182);
+        assertEq(pool.getReserveData(WETH).configuration.getSupplyCap(),   389_229);
+        assertEq(pool.getReserveData(WETH).configuration.getBorrowCap(),   126_809);
+        assertEq(pool.getReserveData(WSTETH).configuration.getSupplyCap(), 735_128);
+        assertEq(pool.getReserveData(WSTETH).configuration.getBorrowCap(), 207);
+        assertEq(pool.getReserveData(DAI).configuration.getSupplyCap(),    0);
+        assertEq(pool.getReserveData(DAI).configuration.getBorrowCap(),    0);
     }
 
     function _assertAutomatedCapsUpdate(address asset) internal {
