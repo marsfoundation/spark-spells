@@ -29,8 +29,8 @@ contract SparkEthereum_20240306Test is SparkEthereumTestBase {
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('mainnet').rpcUrl, 19270337);
-        payload = deployPayload();
+        vm.createSelectFork(getChain('mainnet').rpcUrl, 19313423);  // Feb 26, 2024
+        payload = 0xf3449d6D5827F0F6e0eE4a941f058307056D3736;
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
     }
@@ -405,20 +405,20 @@ contract SparkEthereum_20240306Test is SparkEthereumTestBase {
             _assertAutomatedCapsUpdate(reserves[i]);
         }
 
-        assertEq(pool.getReserveData(RETH).configuration.getSupplyCap(),   53_437);
-        assertEq(pool.getReserveData(RETH).configuration.getBorrowCap(),   111);
-        assertEq(pool.getReserveData(SDAI).configuration.getSupplyCap(),   130_322_469);
+        assertEq(pool.getReserveData(RETH).configuration.getSupplyCap(),   54_089);
+        assertEq(pool.getReserveData(RETH).configuration.getBorrowCap(),   112);
+        assertEq(pool.getReserveData(SDAI).configuration.getSupplyCap(),   133_736_696);
         assertEq(pool.getReserveData(SDAI).configuration.getBorrowCap(),   0);
         assertEq(pool.getReserveData(USDC).configuration.getSupplyCap(),   60_000_000);
-        assertEq(pool.getReserveData(USDC).configuration.getBorrowCap(),   6_636_877);
+        assertEq(pool.getReserveData(USDC).configuration.getBorrowCap(),   6_705_942);
         assertEq(pool.getReserveData(USDT).configuration.getSupplyCap(),   30_000_000);
-        assertEq(pool.getReserveData(USDT).configuration.getBorrowCap(),   3_098_915);
+        assertEq(pool.getReserveData(USDT).configuration.getBorrowCap(),   3_108_977);
         assertEq(pool.getReserveData(WBTC).configuration.getSupplyCap(),   5_000);
-        assertEq(pool.getReserveData(WBTC).configuration.getBorrowCap(),   182);
-        assertEq(pool.getReserveData(WETH).configuration.getSupplyCap(),   389_229);
-        assertEq(pool.getReserveData(WETH).configuration.getBorrowCap(),   126_809);
-        assertEq(pool.getReserveData(WSTETH).configuration.getSupplyCap(), 735_128);
-        assertEq(pool.getReserveData(WSTETH).configuration.getBorrowCap(), 207);
+        assertEq(pool.getReserveData(WBTC).configuration.getBorrowCap(),   181);
+        assertEq(pool.getReserveData(WETH).configuration.getSupplyCap(),   389_811);
+        assertEq(pool.getReserveData(WETH).configuration.getBorrowCap(),   144_646);
+        assertEq(pool.getReserveData(WSTETH).configuration.getSupplyCap(), 742_823);
+        assertEq(pool.getReserveData(WSTETH).configuration.getBorrowCap(), 214);
         assertEq(pool.getReserveData(DAI).configuration.getSupplyCap(),    0);
         assertEq(pool.getReserveData(DAI).configuration.getBorrowCap(),    0);
     }
