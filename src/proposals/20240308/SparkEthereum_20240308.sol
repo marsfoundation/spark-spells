@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.10;
 
-import { SparkPayloadEthereum, IEngine, EngineFlags } from '../../SparkPayloadEthereum.sol';
+import { SparkPayloadEthereum } from '../../SparkPayloadEthereum.sol';
 
 /**
  * @title  March 08, 2024 Spark Ethereum Proposal - Increase DAI interest rate
