@@ -6,7 +6,7 @@ import { SparkPayloadEthereum, IEngine, EngineFlags } from '../../SparkPayloadEt
 /**
  * @title  March 08, 2024 Spark Ethereum Proposal - Increase DAI interest rate
  * @author Phoenix Labs
- * @dev    This proposal increases the DAI borrow interest rate to 20%  by setting a new interest rate strategy
+ * @dev    This proposal increases the DAI borrow interest rate to X%  by setting a new interest rate strategy
  * Forum:  TODO
  * Vote:   TODO
  */
