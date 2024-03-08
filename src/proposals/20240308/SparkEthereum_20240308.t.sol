@@ -11,22 +11,34 @@ interface IRateSource {
     function getAPR() external view returns (int256);
 }
 
+interface PotLike {
+    function file(bytes32 what, uint256 data) external;
+    function drip() external;
+}
+
 contract SparkEthereum_20240308Test is SparkEthereumTestBase {
 
     address public constant OLD_DAI_INTEREST_RATE_STRATEGY = 0x3C4B090b5b479402e2270C66461D6a62B2054198;
-    address public constant NEW_DAI_INTEREST_RATE_STRATEGY = 0x3C4B090b5b479402e2270C66461D6a62B2054198;  // Add an actual NEW address here
+    address public constant NEW_DAI_INTEREST_RATE_STRATEGY = 0x7949a8Ef09c49506cCB1cB983317272dcf4170Dd;
+    address public constant POT                            = 0x197E90f9FAD81970bA7976f33CbD77088E5D7cf7;
+    address public constant PAUSE_PROXY                    = 0xBE8E3e3618f7474F8cB1d074A26afFef007E98FB;
 
-    int256 public constant DAI_IRM_SPREAD = 0; // Add an actual NEW spread here
+    int256 public constant DAI_IRM_SPREAD = 0.008658062782674090146928000e27;
 
     constructor() {
         id = '20240308';
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('mainnet').rpcUrl);  // Pin after the deployment
+        vm.createSelectFork(getChain('mainnet').rpcUrl);
         payload = deployPayload();
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
+
+        vm.startPrank(PAUSE_PROXY);
+        PotLike(POT).drip();
+        PotLike(POT).file('dsr', 1000000004431822129783699001);
+        vm.stopPrank();
     }
 
     function testSpellSpecifics() public {
@@ -48,7 +60,7 @@ contract SparkEthereum_20240308Test is SparkEthereumTestBase {
         int256 potDsrApr = IRateSource(rateSource).getAPR();
 
         uint256 expectedDaiBaseVariableBorrowRate = uint256(potDsrApr + DAI_IRM_SPREAD);
-        assertEq(expectedDaiBaseVariableBorrowRate, 0.064850972386296435444576000e27);  // Add an actual NEW expected value here
+        assertEq(expectedDaiBaseVariableBorrowRate, 0.148420005467532821842464000e27);
 
         _validateInterestRateStrategy(
             daiConfigAfter.interestRateStrategy,
