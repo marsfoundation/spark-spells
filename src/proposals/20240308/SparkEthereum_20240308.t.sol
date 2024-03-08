@@ -32,7 +32,7 @@ contract SparkEthereum_20240308Test is SparkEthereumTestBase {
     function testSpellSpecifics() public {
         ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', pool);
 
-        ReserveConfig memory daiConfigBefore    = _findReserveConfigBySymbol(allConfigsBefore, 'DAI');
+        ReserveConfig memory daiConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'DAI');
 
         assertEq(daiConfigBefore.interestRateStrategy, OLD_DAI_INTEREST_RATE_STRATEGY);
 
