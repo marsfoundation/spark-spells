@@ -12,8 +12,8 @@ interface IRateSource {
 }
 
 interface PotLike {
-    function file(bytes32 what, uint256 data) external;
     function drip() external;
+    function file(bytes32 what, uint256 data) external;
 }
 
 contract SparkEthereum_20240308Test is SparkEthereumTestBase {
