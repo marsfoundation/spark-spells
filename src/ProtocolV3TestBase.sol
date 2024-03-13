@@ -21,6 +21,7 @@ import { IVariableDebtToken }   from 'aave-v3-core/contracts/interfaces/IVariabl
 import { IERC20 }    from './interfaces/IERC20.sol';
 import { SafeERC20 } from './libraries/SafeERC20.sol';
 
+import { ICapAutomator }  from './interfaces/ICapAutomator.sol';
 import { ProxyHelpers }   from './libraries/ProxyHelpers.sol';
 import { CommonTestBase } from './CommonTestBase.sol';
 
@@ -126,14 +127,16 @@ contract ProtocolV3TestBase is CommonTestBase {
    */
   function createConfigurationSnapshot(
     string memory reportName,
-    IPool pool
+    IPool pool,
+    ICapAutomator capAutomator
   ) public returns (ReserveConfig[] memory) {
-    return createConfigurationSnapshot(reportName, pool, true, true, true, true);
+    return createConfigurationSnapshot(reportName, pool, capAutomator, true, true, true, true);
   }
 
   function createConfigurationSnapshot(
     string memory reportName,
     IPool pool,
+    ICapAutomator capAutomator,
     bool reserveConfigs,
     bool strategyConfigs,
     bool eModeConigs,
@@ -147,7 +150,7 @@ contract ProtocolV3TestBase is CommonTestBase {
     );
     vm.serializeUint('root', 'chainId', block.chainid);
     ReserveConfig[] memory configs = _getReservesConfigs(pool);
-    if (reserveConfigs) _writeReserveConfigs(path, configs, pool);
+    if (reserveConfigs) _writeReserveConfigs(path, configs, pool, capAutomator);
     if (strategyConfigs) _writeStrategyConfigs(path, configs);
     if (eModeConigs) _writeEModeConfigs(path, configs, pool);
     if (poolConfigs) _writePoolConfiguration(path, pool);
@@ -909,7 +912,8 @@ contract ProtocolV3TestBase is CommonTestBase {
   function _writeReserveConfigs(
     string memory path,
     ReserveConfig[] memory configs,
-    IPool pool
+    IPool pool,
+    ICapAutomator capAutomator
   ) internal {
     // keys for json stringification
     string memory reservesKey = 'reserves';
@@ -986,6 +990,17 @@ contract ProtocolV3TestBase is CommonTestBase {
         'variableDebtTokenName',
         IERC20Detailed(config.variableDebtToken).name()
       );
+      if (address(capAutomator) != address(0)) {
+        (uint48 maxBorrowCap, uint48 borrowCapGap, uint48 borrowCapIncreaseCooldown,, ) = capAutomator.borrowCapConfigs(config.underlying);
+        vm.serializeUint(key, 'maxBorrowCap', maxBorrowCap);
+        vm.serializeUint(key, 'borrowCapGap', borrowCapGap);
+        vm.serializeUint(key, 'borrowCapIncreaseCooldown', borrowCapIncreaseCooldown);
+
+        (uint48 maxSupplyCap, uint48 supplyCapGap, uint48 supplyCapIncreaseCooldown,, ) = capAutomator.supplyCapConfigs(config.underlying);
+        vm.serializeUint(key, 'maxSupplyCap', maxSupplyCap);
+        vm.serializeUint(key, 'supplyCapGap', supplyCapGap);
+        vm.serializeUint(key, 'supplyCapIncreaseCooldown', supplyCapIncreaseCooldown);
+      }
       vm.serializeAddress(key, 'oracle', address(assetOracle));
       if (address(assetOracle) != address(0)) {
         try assetOracle.description() returns (string memory name) {
