@@ -371,6 +371,8 @@ contract ProtocolV3TestBase is CommonTestBase {
     vm.startPrank(borrower);
     pool.borrow(config.underlying, maxBorrowAmount, 2, 0, borrower);
 
+    vm.warp(block.timestamp + 1 hours);
+
     // Since Chainlink precision is 8 decimals, the additional borrow needs to be at least 1e8
     // precision to trigger the LTV failure condition.
     uint256 minThresholdAmount = 10 ** config.decimals > 1e8 ? 10 ** config.decimals - 1e8 : 1;
@@ -507,6 +509,8 @@ contract ProtocolV3TestBase is CommonTestBase {
     vm.expectRevert(bytes("31")); // STABLE_BORROWING_NOT_ENABLED
     this._borrow(borrowConfig, pool, borrower, amount, true);
 
+    vm.warp(block.timestamp + 1 hours);
+
     this._borrow(borrowConfig, pool, borrower, amount, false);
 
     vm.warp(block.timestamp + 1 hours);
@@ -516,6 +520,8 @@ contract ProtocolV3TestBase is CommonTestBase {
 
     vm.expectRevert(bytes("39")); // NO_DEBT_OF_SELECTED_TYPE
     pool.repay(borrowConfig.underlying, amount, 1, borrower);
+
+    vm.warp(block.timestamp + 1 hours);
 
     pool.repay(borrowConfig.underlying, amount, 2, borrower);
 
