@@ -123,6 +123,7 @@ contract ProtocolV3TestBase is CommonTestBase {
    * @dev Generates a markdown compatible snapshot of the whole pool configuration into `/reports`.
    * @param reportName filename suffix for the generated reports.
    * @param pool the pool to be snapshotted
+   * @param capAutomator the cap automator to be snapshotted
    * @return ReserveConfig[] list of configs
    */
   function createConfigurationSnapshot(
@@ -131,6 +132,19 @@ contract ProtocolV3TestBase is CommonTestBase {
     ICapAutomator capAutomator
   ) public returns (ReserveConfig[] memory) {
     return createConfigurationSnapshot(reportName, pool, capAutomator, true, true, true, true);
+  }
+
+  /**
+   * @dev Generates a markdown compatible snapshot of the whole pool configuration into `/reports`.
+   * @param reportName filename suffix for the generated reports.
+   * @param pool the pool to be snapshotted
+   * @return ReserveConfig[] list of configs
+   */
+  function createConfigurationSnapshot(
+    string memory reportName,
+    IPool pool
+  ) public returns (ReserveConfig[] memory) {
+    return createConfigurationSnapshot(reportName, pool, ICapAutomator(address(0)), true, true, true, true);
   }
 
   function createConfigurationSnapshot(
