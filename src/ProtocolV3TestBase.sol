@@ -391,6 +391,8 @@ contract ProtocolV3TestBase is CommonTestBase {
 
     _assertReserveChange(beforeReserve, afterReserve, int256(amount), 1 hours);
 
+    vm.warp(block.timestamp + 1 hours);
+
     // Step 4: Try to withdraw all collateral, demonstrate it's not possible without paying back
     //         accrued debt
 
@@ -419,7 +421,7 @@ contract ProtocolV3TestBase is CommonTestBase {
     afterReserve = pool.getReserveData(collateralConfig.underlying);
 
     // If collateral == borrow asset, reserve was updated during repay step
-    uint256 timePassed = collateralConfig.underlying == borrowConfig.underlying ? 1 hours : 2 hours;
+    uint256 timePassed = collateralConfig.underlying == borrowConfig.underlying ? 1 hours : 3 hours;
 
     _assertReserveChange(beforeReserve, afterReserve, -int256(amount), timePassed);
   }
