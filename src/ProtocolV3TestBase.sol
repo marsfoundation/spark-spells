@@ -533,7 +533,9 @@ contract ProtocolV3TestBase is CommonTestBase {
       collateralConfig.liquidationBonus
     );
 
-    _liquidateAndReceiveCollateral(collateralConfig, borrowConfig, pool, liquidator, borrower, amount);
+    vm.warp(block.timestamp + 1 hours);
+
+    _liquidateAndReceiveCollateral(collateralConfig, borrowConfig, pool, liquidator, borrower);
   }
 
   function _e2eTestFlashLoan(
@@ -701,14 +703,15 @@ contract ProtocolV3TestBase is CommonTestBase {
     ReserveConfig memory borrow,
     IPool pool,
     address liquidator,
-    address user,
-    uint256 amount
+    address user
   ) internal {
-    deal2(borrow.underlying, liquidator, amount);
-
     address debtToken = borrow.variableDebtToken;
 
     LiquidationBalanceAssertions memory balances;
+
+    balances.debtBefore = IERC20(debtToken).balanceOf(user);
+
+    deal2(borrow.underlying, liquidator, balances.debtBefore);
 
     balances.aTokenBorrowerBefore = IERC20(collateral.aToken).balanceOf(user);
     balances.aTokenTreasuryBefore = IERC20(collateral.aToken).balanceOf(IAToken(collateral.aToken).RESERVE_TREASURY_ADDRESS());
@@ -716,7 +719,6 @@ contract ProtocolV3TestBase is CommonTestBase {
     balances.collateralATokenBefore     = IERC20(collateral.underlying).balanceOf(collateral.aToken);
     balances.collateralLiquidatorBefore = IERC20(collateral.underlying).balanceOf(liquidator);
 
-    balances.debtBefore = IERC20(debtToken).balanceOf(user);
 
     balances.borrowATokenBefore     = IERC20(borrow.underlying).balanceOf(borrow.aToken);
     balances.borrowLiquidatorBefore = IERC20(borrow.underlying).balanceOf(liquidator);
@@ -724,10 +726,10 @@ contract ProtocolV3TestBase is CommonTestBase {
     // TODO: Add totalSupply assertions
 
     vm.startPrank(liquidator);
-    SafeERC20.safeApprove(IERC20(borrow.underlying), address(pool), amount);
+    SafeERC20.safeApprove(IERC20(borrow.underlying), address(pool), balances.debtBefore);
 
-    console.log('LIQUIDATE: Collateral: %s, Debt: %s, Debt Amount: %s', collateral.symbol, borrow.symbol, _formattedAmount(amount, borrow.decimals));
-    pool.liquidationCall(collateral.underlying, borrow.underlying, user, amount, false);
+    console.log('LIQUIDATE: Collateral: %s, Debt: %s, Debt Amount: %s', collateral.symbol, borrow.symbol, _formattedAmount(balances.debtBefore, borrow.decimals));
+    pool.liquidationCall(collateral.underlying, borrow.underlying, user, balances.debtBefore, false);
     vm.stopPrank();
 
     balances.aTokenBorrowerAfter = IERC20(collateral.aToken).balanceOf(user);
