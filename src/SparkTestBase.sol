@@ -55,7 +55,6 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
     IPoolAddressesProviderRegistry internal poolAddressesProviderRegistry;
     IPoolConfigurator              internal poolConfigurator;
     IAaveOracle                    internal priceOracle;
-    ICapAutomator                  internal capAutomator;
 
     function loadPoolContext(address poolProvider) internal {
         poolAddressesProvider = IPoolAddressesProvider(poolProvider);
@@ -63,9 +62,6 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
         poolConfigurator      = IPoolConfigurator(poolAddressesProvider.getPoolConfigurator());
         aclManager            = IACLManager(poolAddressesProvider.getACLManager());
         priceOracle           = IAaveOracle(poolAddressesProvider.getPriceOracle());
-        capAutomator          = block.chainid == 1
-            ? ICapAutomator(0x2276f52afba7Cf2525fd0a050DF464AC8532d0ef)
-            : ICapAutomator(address(0));
     }
 
     function deployPayload() internal returns (address) {
@@ -81,8 +77,7 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
 
             createConfigurationSnapshot(
                 string(abi.encodePacked(prefix, '-', vm.toString(address(pool)), '-pre')),
-                pool,
-                capAutomator
+                pool
             );
         }
 
@@ -93,8 +88,7 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
 
             createConfigurationSnapshot(
                 string(abi.encodePacked(prefix, '-', vm.toString(address(pool)), '-post')),
-                pool,
-                capAutomator
+                pool
             );
 
             if (!disableExportDiff) {
@@ -227,6 +221,7 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
 
     IAuthority           internal authority;
     ISparkLendFreezerMom internal freezerMom;
+    ICapAutomator        internal capAutomator;
 
     address INCENTIVES_CONTROLLER = 0x4370D3b6C9588E02ce9D22e684387859c7Ff5b34;
 
@@ -252,6 +247,7 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
         poolAddressesProviderRegistry = IPoolAddressesProviderRegistry(0x03cFa0C4622FF84E50E75062683F44c9587e6Cc1);
         authority                     = IAuthority(0x0a3f6849f78076aefaDf113F5BED87720274dDC0);
         freezerMom                    = ISparkLendFreezerMom(0xFA36c12Bc307b40c701D65d8FE8F88cCEdE2277a);
+        capAutomator                  = ICapAutomator(0x2276f52afba7Cf2525fd0a050DF464AC8532d0ef);
     }
 
     function testFreezerMom() public {

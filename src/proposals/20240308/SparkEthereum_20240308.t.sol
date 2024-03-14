@@ -42,7 +42,7 @@ contract SparkEthereum_20240308Test is SparkEthereumTestBase {
     }
 
     function testSpellSpecifics() public {
-        ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', pool, capAutomator);
+        ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', pool);
 
         ReserveConfig memory daiConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'DAI');
 
@@ -50,7 +50,7 @@ contract SparkEthereum_20240308Test is SparkEthereumTestBase {
 
         GovHelpers.executePayload(vm, payload, executor);
 
-        ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool, capAutomator);
+        ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
 
         ReserveConfig memory daiConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'DAI');
 

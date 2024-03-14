@@ -123,34 +123,18 @@ contract ProtocolV3TestBase is CommonTestBase {
    * @dev Generates a markdown compatible snapshot of the whole pool configuration into `/reports`.
    * @param reportName filename suffix for the generated reports.
    * @param pool the pool to be snapshotted
-   * @param capAutomator the cap automator to be snapshotted
-   * @return ReserveConfig[] list of configs
-   */
-  function createConfigurationSnapshot(
-    string memory reportName,
-    IPool pool,
-    ICapAutomator capAutomator
-  ) public returns (ReserveConfig[] memory) {
-    return createConfigurationSnapshot(reportName, pool, capAutomator, true, true, true, true);
-  }
-
-  /**
-   * @dev Generates a markdown compatible snapshot of the whole pool configuration into `/reports`.
-   * @param reportName filename suffix for the generated reports.
-   * @param pool the pool to be snapshotted
    * @return ReserveConfig[] list of configs
    */
   function createConfigurationSnapshot(
     string memory reportName,
     IPool pool
   ) public returns (ReserveConfig[] memory) {
-    return createConfigurationSnapshot(reportName, pool, ICapAutomator(address(0)), true, true, true, true);
+    return createConfigurationSnapshot(reportName, pool, true, true, true, true);
   }
 
   function createConfigurationSnapshot(
     string memory reportName,
     IPool pool,
-    ICapAutomator capAutomator,
     bool reserveConfigs,
     bool strategyConfigs,
     bool eModeConigs,
@@ -164,7 +148,7 @@ contract ProtocolV3TestBase is CommonTestBase {
     );
     vm.serializeUint('root', 'chainId', block.chainid);
     ReserveConfig[] memory configs = _getReservesConfigs(pool);
-    if (reserveConfigs) _writeReserveConfigs(path, configs, pool, capAutomator);
+    if (reserveConfigs) _writeReserveConfigs(path, configs, pool);
     if (strategyConfigs) _writeStrategyConfigs(path, configs);
     if (eModeConigs) _writeEModeConfigs(path, configs, pool);
     if (poolConfigs) _writePoolConfiguration(path, pool);
@@ -932,8 +916,7 @@ contract ProtocolV3TestBase is CommonTestBase {
   function _writeReserveConfigs(
     string memory path,
     ReserveConfig[] memory configs,
-    IPool pool,
-    ICapAutomator capAutomator
+    IPool pool
   ) internal {
     // keys for json stringification
     string memory reservesKey = 'reserves';
@@ -1010,7 +993,8 @@ contract ProtocolV3TestBase is CommonTestBase {
         'variableDebtTokenName',
         IERC20Detailed(config.variableDebtToken).name()
       );
-      if (address(capAutomator) != address(0)) {
+      if (block.chainid == 1) {
+        ICapAutomator capAutomator = ICapAutomator(0x2276f52afba7Cf2525fd0a050DF464AC8532d0ef);
         (uint48 maxBorrowCap, uint48 borrowCapGap, uint48 borrowCapIncreaseCooldown,, ) = capAutomator.borrowCapConfigs(config.underlying);
         vm.serializeUint(key, 'maxBorrowCap', maxBorrowCap);
         vm.serializeUint(key, 'borrowCapGap', borrowCapGap);
