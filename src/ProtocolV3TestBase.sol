@@ -21,6 +21,7 @@ import { IVariableDebtToken }   from 'aave-v3-core/contracts/interfaces/IVariabl
 import { IERC20 }    from './interfaces/IERC20.sol';
 import { SafeERC20 } from './libraries/SafeERC20.sol';
 
+import { ICapAutomator }  from './interfaces/ICapAutomator.sol';
 import { ProxyHelpers }   from './libraries/ProxyHelpers.sol';
 import { CommonTestBase } from './CommonTestBase.sol';
 
@@ -354,6 +355,8 @@ contract ProtocolV3TestBase is CommonTestBase {
     vm.startPrank(borrower);
     pool.borrow(config.underlying, maxBorrowAmount, 2, 0, borrower);
 
+    vm.warp(block.timestamp + 1 hours);
+
     // Since Chainlink precision is 8 decimals, the additional borrow needs to be at least 1e8
     // precision to trigger the LTV failure condition.
     uint256 minThresholdAmount = 10 ** config.decimals > 1e8 ? 10 ** config.decimals - 1e8 : 1;
@@ -388,6 +391,8 @@ contract ProtocolV3TestBase is CommonTestBase {
 
     _assertReserveChange(beforeReserve, afterReserve, int256(amount), 1 hours);
 
+    vm.warp(block.timestamp + 1 hours);
+
     // Step 4: Try to withdraw all collateral, demonstrate it's not possible without paying back
     //         accrued debt
 
@@ -416,7 +421,7 @@ contract ProtocolV3TestBase is CommonTestBase {
     afterReserve = pool.getReserveData(collateralConfig.underlying);
 
     // If collateral == borrow asset, reserve was updated during repay step
-    uint256 timePassed = collateralConfig.underlying == borrowConfig.underlying ? 1 hours : 2 hours;
+    uint256 timePassed = collateralConfig.underlying == borrowConfig.underlying ? 1 hours : 3 hours;
 
     _assertReserveChange(beforeReserve, afterReserve, -int256(amount), timePassed);
   }
@@ -490,6 +495,8 @@ contract ProtocolV3TestBase is CommonTestBase {
     vm.expectRevert(bytes("31")); // STABLE_BORROWING_NOT_ENABLED
     this._borrow(borrowConfig, pool, borrower, amount, true);
 
+    vm.warp(block.timestamp + 1 hours);
+
     this._borrow(borrowConfig, pool, borrower, amount, false);
 
     vm.warp(block.timestamp + 1 hours);
@@ -499,6 +506,8 @@ contract ProtocolV3TestBase is CommonTestBase {
 
     vm.expectRevert(bytes("39")); // NO_DEBT_OF_SELECTED_TYPE
     pool.repay(borrowConfig.underlying, amount, 1, borrower);
+
+    vm.warp(block.timestamp + 1 hours);
 
     pool.repay(borrowConfig.underlying, amount, 2, borrower);
 
@@ -526,7 +535,9 @@ contract ProtocolV3TestBase is CommonTestBase {
       collateralConfig.liquidationBonus
     );
 
-    _liquidateAndReceiveCollateral(collateralConfig, borrowConfig, pool, liquidator, borrower, amount);
+    vm.warp(block.timestamp + 1 hours);
+
+    _liquidateAndReceiveCollateral(collateralConfig, borrowConfig, pool, liquidator, borrower);
   }
 
   function _e2eTestFlashLoan(
@@ -694,14 +705,15 @@ contract ProtocolV3TestBase is CommonTestBase {
     ReserveConfig memory borrow,
     IPool pool,
     address liquidator,
-    address user,
-    uint256 amount
+    address user
   ) internal {
-    deal2(borrow.underlying, liquidator, amount);
-
     address debtToken = borrow.variableDebtToken;
 
     LiquidationBalanceAssertions memory balances;
+
+    balances.debtBefore = IERC20(debtToken).balanceOf(user);
+
+    deal2(borrow.underlying, liquidator, balances.debtBefore);
 
     balances.aTokenBorrowerBefore = IERC20(collateral.aToken).balanceOf(user);
     balances.aTokenTreasuryBefore = IERC20(collateral.aToken).balanceOf(IAToken(collateral.aToken).RESERVE_TREASURY_ADDRESS());
@@ -709,7 +721,6 @@ contract ProtocolV3TestBase is CommonTestBase {
     balances.collateralATokenBefore     = IERC20(collateral.underlying).balanceOf(collateral.aToken);
     balances.collateralLiquidatorBefore = IERC20(collateral.underlying).balanceOf(liquidator);
 
-    balances.debtBefore = IERC20(debtToken).balanceOf(user);
 
     balances.borrowATokenBefore     = IERC20(borrow.underlying).balanceOf(borrow.aToken);
     balances.borrowLiquidatorBefore = IERC20(borrow.underlying).balanceOf(liquidator);
@@ -717,10 +728,10 @@ contract ProtocolV3TestBase is CommonTestBase {
     // TODO: Add totalSupply assertions
 
     vm.startPrank(liquidator);
-    SafeERC20.safeApprove(IERC20(borrow.underlying), address(pool), amount);
+    SafeERC20.safeApprove(IERC20(borrow.underlying), address(pool), balances.debtBefore);
 
-    console.log('LIQUIDATE: Collateral: %s, Debt: %s, Debt Amount: %s', collateral.symbol, borrow.symbol, _formattedAmount(amount, borrow.decimals));
-    pool.liquidationCall(collateral.underlying, borrow.underlying, user, amount, false);
+    console.log('LIQUIDATE: Collateral: %s, Debt: %s, Debt Amount: %s', collateral.symbol, borrow.symbol, _formattedAmount(balances.debtBefore, borrow.decimals));
+    pool.liquidationCall(collateral.underlying, borrow.underlying, user, balances.debtBefore, false);
     vm.stopPrank();
 
     balances.aTokenBorrowerAfter = IERC20(collateral.aToken).balanceOf(user);
@@ -986,6 +997,18 @@ contract ProtocolV3TestBase is CommonTestBase {
         'variableDebtTokenName',
         IERC20Detailed(config.variableDebtToken).name()
       );
+      if (block.chainid == 1) {
+        ICapAutomator capAutomator = ICapAutomator(0x2276f52afba7Cf2525fd0a050DF464AC8532d0ef);
+        (uint48 maxBorrowCap, uint48 borrowCapGap, uint48 borrowCapIncreaseCooldown,, ) = capAutomator.borrowCapConfigs(config.underlying);
+        vm.serializeUint(key, 'maxBorrowCap', maxBorrowCap);
+        vm.serializeUint(key, 'borrowCapGap', borrowCapGap);
+        vm.serializeUint(key, 'borrowCapIncreaseCooldown', borrowCapIncreaseCooldown);
+
+        (uint48 maxSupplyCap, uint48 supplyCapGap, uint48 supplyCapIncreaseCooldown,, ) = capAutomator.supplyCapConfigs(config.underlying);
+        vm.serializeUint(key, 'maxSupplyCap', maxSupplyCap);
+        vm.serializeUint(key, 'supplyCapGap', supplyCapGap);
+        vm.serializeUint(key, 'supplyCapIncreaseCooldown', supplyCapIncreaseCooldown);
+      }
       vm.serializeAddress(key, 'oracle', address(assetOracle));
       if (address(assetOracle) != address(0)) {
         try assetOracle.description() returns (string memory name) {

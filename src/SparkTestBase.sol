@@ -11,9 +11,11 @@ import { IPool }                                 from 'aave-v3-core/contracts/in
 import { IPoolAddressesProvider }                from 'aave-v3-core/contracts/interfaces/IPoolAddressesProvider.sol';
 import { IPoolAddressesProviderRegistry }        from 'aave-v3-core/contracts/interfaces/IPoolAddressesProviderRegistry.sol';
 import { IPoolConfigurator }                     from 'aave-v3-core/contracts/interfaces/IPoolConfigurator.sol';
+import { IScaledBalanceToken }                   from "aave-v3-core/contracts/interfaces/IScaledBalanceToken.sol";
 import { IncentivizedERC20 }                     from 'aave-v3-core/contracts/protocol/tokenization/base/IncentivizedERC20.sol';
 import { DataTypes }                             from 'aave-v3-core/contracts/protocol/libraries/types/DataTypes.sol';
 import { ReserveConfiguration }                  from 'aave-v3-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
+import { WadRayMath }                            from "aave-v3-core/contracts/protocol/libraries/math/WadRayMath.sol";
 
 import { ISparkLendFreezerMom } from './interfaces/ISparkLendFreezerMom.sol';
 import { ICapAutomator }        from './interfaces/ICapAutomator.sol';
@@ -215,6 +217,7 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
 abstract contract SparkEthereumTestBase is SparkTestBase {
 
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
+    using WadRayMath for uint256;
 
     IAuthority           internal authority;
     ISparkLendFreezerMom internal freezerMom;
@@ -264,6 +267,17 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
         GovHelpers.executePayload(vm, payload, executor);
 
         _runRewardsConfigurationTests();
+    }
+
+    function testCapAutomator() public {
+        uint256 snapshot = vm.snapshot();
+
+        _runCapAutomatorTests();
+
+        vm.revertTo(snapshot);
+        GovHelpers.executePayload(vm, payload, executor);
+
+        _runCapAutomatorTests();
     }
 
     function _runRewardsConfigurationTests() internal {
@@ -341,6 +355,61 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
         _voteAndCast(SPELL_PAUSE_ALL);
         _assertPaused(DAI,  true);
         _assertPaused(WETH, true);
+    }
+
+    function _runCapAutomatorTests() internal {
+        address[] memory reserves = pool.getReservesList();
+
+        for (uint256 i = 0; i < reserves.length; i++) {
+            _assertAutomatedCapsUpdate(reserves[i]);
+        }
+    }
+
+    function _assertAutomatedCapsUpdate(address asset) internal {
+        DataTypes.ReserveData memory reserveDataBefore = pool.getReserveData(asset);
+
+        uint256 supplyCapBefore = reserveDataBefore.configuration.getSupplyCap();
+        uint256 borrowCapBefore = reserveDataBefore.configuration.getBorrowCap();
+
+        capAutomator.exec(asset);
+
+        DataTypes.ReserveData memory reserveDataAfter = pool.getReserveData(asset);
+
+        uint256 supplyCapAfter = reserveDataAfter.configuration.getSupplyCap();
+        uint256 borrowCapAfter = reserveDataAfter.configuration.getBorrowCap();
+
+        uint48 max;
+        uint48 gap;
+
+        (max, gap,,,) = capAutomator.supplyCapConfigs(asset);
+
+        if (max > 0) {
+            uint256 currentSupply = (IScaledBalanceToken(reserveDataAfter.aTokenAddress).scaledTotalSupply() + uint256(reserveDataAfter.accruedToTreasury))
+                .rayMul(reserveDataAfter.liquidityIndex)
+                / 10 ** IERC20Detailed(reserveDataAfter.aTokenAddress).decimals();
+
+            uint256 expectedSupplyCap = uint256(max) < currentSupply + uint256(gap)
+                ? uint256(max)
+                : currentSupply + uint256(gap);
+
+            assertEq(supplyCapAfter, expectedSupplyCap);
+        } else {
+            assertEq(supplyCapAfter, supplyCapBefore);
+        }
+
+        (max, gap,,,) = capAutomator.borrowCapConfigs(asset);
+
+        if (max > 0) {
+            uint256 currentBorrows = IERC20(reserveDataAfter.variableDebtTokenAddress).totalSupply() / 10 ** IERC20Detailed(reserveDataAfter.variableDebtTokenAddress).decimals();
+
+            uint256 expectedBorrowCap = uint256(max) < currentBorrows + uint256(gap)
+                ? uint256(max)
+                : currentBorrows + uint256(gap);
+
+            assertEq(borrowCapAfter, expectedBorrowCap);
+        } else {
+            assertEq(borrowCapAfter, borrowCapBefore);
+        }
     }
 
     function _assertBorrowCapConfig(address asset, uint48 max, uint48 gap, uint48 increaseCooldown) internal {
