@@ -6,10 +6,10 @@ import { ICapAutomator } from '../../interfaces/ICapAutomator.sol';
 import { SparkPayloadEthereum } from '../../SparkPayloadEthereum.sol';
 
 /**
- * @title  March 20, 2024 Spark Ethereum Proposal - TODO
+ * @title  March 20, 2024 Spark Ethereum Proposal - Raise maximum supply cap in Cao Automator to 6,000 for WBTC
  * @author Phoenix Labs
- * @dev    TODO
- * Forum:  TODO
+ * @dev    This proposal changes the max parameter in supplyCapConfig in CapAutomator for WBTC market
+ * Forum:  https://forum.makerdao.com/t/mar-6-2024-proposed-changes-to-sparklend-for-upcoming-spell/23791
  * Votes:  TODO
  */
 contract SparkEthereum_20240320 is SparkPayloadEthereum {
