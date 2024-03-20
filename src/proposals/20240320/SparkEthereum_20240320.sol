@@ -11,6 +11,7 @@ import { SparkPayloadEthereum } from '../../SparkPayloadEthereum.sol';
  * @author Phoenix Labs
  * @dev    This proposal changes the max parameter in supplyCapConfig in CapAutomator for WBTC market
  * Forum:  https://forum.makerdao.com/t/mar-6-2024-proposed-changes-to-sparklend-for-upcoming-spell/23791
+ *         https://forum.makerdao.com/t/stability-scope-parameter-changes-11-under-sta-article-3-3/23910
  * Votes:  TODO
  */
 contract SparkEthereum_20240320 is SparkPayloadEthereum {

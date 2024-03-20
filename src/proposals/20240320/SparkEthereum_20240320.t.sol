@@ -86,8 +86,14 @@ contract SparkEthereum_20240320Test is SparkEthereumTestBase {
 
         int256 potDsrApr = IRateSource(rateSource).getAPR();
 
+        // Approx 13% APY
+        assertEq(_getAPY(uint256(potDsrApr)), 0.129999999999999999958580159e27);
+
         uint256 expectedDaiBaseVariableBorrowRate = uint256(potDsrApr + DAI_IRM_SPREAD);
         assertEq(expectedDaiBaseVariableBorrowRate, 0.131028262678607377469040000e27);
+
+        // Approx 14% APY
+        assertEq(_getAPY(expectedDaiBaseVariableBorrowRate), 0.139999999999999999983521905e27);
 
         _validateInterestRateStrategy(
             daiConfigAfter.interestRateStrategy,
