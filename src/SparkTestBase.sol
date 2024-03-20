@@ -371,6 +371,9 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
         uint256 supplyCapBefore = reserveDataBefore.configuration.getSupplyCap();
         uint256 borrowCapBefore = reserveDataBefore.configuration.getBorrowCap();
 
+        (,,,,uint48 supplyCapLastIncreaseTime) = capAutomator.supplyCapConfigs(asset);
+        (,,,,uint48 borrowCapLastIncreaseTime) = capAutomator.borrowCapConfigs(asset);
+
         capAutomator.exec(asset);
 
         DataTypes.ReserveData memory reserveDataAfter = pool.getReserveData(asset);
@@ -380,8 +383,9 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
 
         uint48 max;
         uint48 gap;
+        uint48 cooldown;
 
-        (max, gap,,,) = capAutomator.supplyCapConfigs(asset);
+        (max, gap, cooldown,,) = capAutomator.supplyCapConfigs(asset);
 
         if (max > 0) {
             uint256 currentSupply = (IScaledBalanceToken(reserveDataAfter.aTokenAddress).scaledTotalSupply() + uint256(reserveDataAfter.accruedToTreasury))
@@ -392,12 +396,16 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
                 ? uint256(max)
                 : currentSupply + uint256(gap);
 
-            assertEq(supplyCapAfter, expectedSupplyCap);
+            if (supplyCapLastIncreaseTime + cooldown > block.timestamp && supplyCapBefore < expectedSupplyCap) {
+                assertEq(supplyCapAfter, supplyCapBefore);
+            } else {
+                assertEq(supplyCapAfter, expectedSupplyCap);
+            }
         } else {
             assertEq(supplyCapAfter, supplyCapBefore);
         }
 
-        (max, gap,,,) = capAutomator.borrowCapConfigs(asset);
+        (max, gap, cooldown,,) = capAutomator.borrowCapConfigs(asset);
 
         if (max > 0) {
             uint256 currentBorrows = IERC20(reserveDataAfter.variableDebtTokenAddress).totalSupply() / 10 ** IERC20Detailed(reserveDataAfter.variableDebtTokenAddress).decimals();
@@ -406,7 +414,11 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
                 ? uint256(max)
                 : currentBorrows + uint256(gap);
 
-            assertEq(borrowCapAfter, expectedBorrowCap);
+            if (borrowCapLastIncreaseTime + cooldown > block.timestamp && borrowCapBefore < expectedBorrowCap) {
+                assertEq(borrowCapAfter, borrowCapBefore);
+            } else {
+                assertEq(borrowCapAfter, expectedBorrowCap);
+            }
         } else {
             assertEq(borrowCapAfter, borrowCapBefore);
         }
