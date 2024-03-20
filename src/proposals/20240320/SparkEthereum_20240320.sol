@@ -2,6 +2,7 @@
 pragma solidity ^0.8.10;
 
 import { ICapAutomator } from '../../interfaces/ICapAutomator.sol';
+import { IOwnable }      from '../../interfaces/IOwnable.sol';
 
 import { SparkPayloadEthereum } from '../../SparkPayloadEthereum.sol';
 
@@ -19,6 +20,8 @@ contract SparkEthereum_20240320 is SparkPayloadEthereum {
 
     address internal constant CAP_AUTOMATOR = 0x2276f52afba7Cf2525fd0a050DF464AC8532d0ef;
 
+    address internal constant META_MORPHO_VAULT = 0x73e65DBD630f90604062f6E02fAb9138e713edD9;
+
     // Formula for 13% target DSR APY (0.122217632961076156494096000)
     // bc -l <<< 'scale=27; (1.000000003875495717943815211 - 1) * 60 * 60 * 24 * 365'
     // Formula for 14% target APY (0.008810629717531220974944000 spread at current DSR):
@@ -34,6 +37,8 @@ contract SparkEthereum_20240320 is SparkPayloadEthereum {
             DAI,
             DAI_IRM
         );
+
+        IOwnable(META_MORPHO_VAULT).acceptOwnership();
     }
 
 }

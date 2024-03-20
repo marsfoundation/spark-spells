@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.10;
 
+import { IOwnable } from "src/interfaces/IOwnable.sol";
+
 import '../../SparkTestBase.sol';
 
 interface IIRM {
@@ -18,10 +20,13 @@ interface PotLike {
 
 contract SparkEthereum_20240320Test is SparkEthereumTestBase {
 
+    address public constant META_MORPHO_VAULT              = 0x73e65DBD630f90604062f6E02fAb9138e713edD9;
+    address public constant META_MORPHO_VAULT_OWNER        = 0xd1236a6A111879d9862f8374BA15344b6B233Fbd;  // TODO: Change to multisig
     address public constant OLD_DAI_INTEREST_RATE_STRATEGY = 0x7949a8Ef09c49506cCB1cB983317272dcf4170Dd;
     address public constant NEW_DAI_INTEREST_RATE_STRATEGY = 0x883b03288D1827066C57E5db96661aB994Ef3800;
     address public constant POT                            = 0x197E90f9FAD81970bA7976f33CbD77088E5D7cf7;
     address public constant PAUSE_PROXY                    = 0xBE8E3e3618f7474F8cB1d074A26afFef007E98FB;
+    address public constant SPARK_PROXY                    = 0x3300f198988e4C9C63F75dF86De36421f06af8c4;
 
     int256 public constant DAI_IRM_SPREAD = 0.008810629717531220974944000e27;
 
@@ -30,7 +35,7 @@ contract SparkEthereum_20240320Test is SparkEthereumTestBase {
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('mainnet').rpcUrl);
+        vm.createSelectFork(getChain('mainnet').rpcUrl, 19476609);  // March 20, 2024
         payload = deployPayload();
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
@@ -39,6 +44,10 @@ contract SparkEthereum_20240320Test is SparkEthereumTestBase {
         PotLike(POT).drip();
         PotLike(POT).file('dsr', 1000000003875495717943815211);
         vm.stopPrank();
+
+        // TODO: Remove once the multisig is setup
+        vm.prank(META_MORPHO_VAULT_OWNER);
+        IOwnable(META_MORPHO_VAULT).transferOwnership(SPARK_PROXY);
     }
 
     function testCapAutomatorConfiguration() public {
@@ -95,6 +104,18 @@ contract SparkEthereum_20240320Test is SparkEthereumTestBase {
                 variableRateSlope2:            0
             })
         );
+    }
+
+    function testVaultOwnership() public {
+        IOwnable vault = IOwnable(META_MORPHO_VAULT);
+
+        assertEq(vault.owner(),        META_MORPHO_VAULT_OWNER);
+        assertEq(vault.pendingOwner(), SPARK_PROXY);
+
+        GovHelpers.executePayload(vm, payload, executor);
+
+        assertEq(vault.owner(),        SPARK_PROXY);
+        assertEq(vault.pendingOwner(), address(0));
     }
 
 }
