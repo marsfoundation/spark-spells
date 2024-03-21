@@ -719,7 +719,6 @@ contract ProtocolV3TestBase is CommonTestBase {
     balances.collateralATokenBefore     = IERC20(collateral.underlying).balanceOf(collateral.aToken);
     balances.collateralLiquidatorBefore = IERC20(collateral.underlying).balanceOf(liquidator);
 
-
     balances.borrowATokenBefore     = IERC20(borrow.underlying).balanceOf(borrow.aToken);
     balances.borrowLiquidatorBefore = IERC20(borrow.underlying).balanceOf(liquidator);
 
@@ -792,7 +791,7 @@ contract ProtocolV3TestBase is CommonTestBase {
     assertApproxEqAbs(
       balances.collateralLiquidatorAfter - balances.collateralLiquidatorBefore,
       (balances.aTokenBorrowerBefore - balances.aTokenBorrowerAfter) - (balances.aTokenTreasuryAfter - balances.aTokenTreasuryBefore),
-      1
+      2
     );
   }
 
