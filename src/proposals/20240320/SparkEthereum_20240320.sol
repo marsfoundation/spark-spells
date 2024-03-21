@@ -2,9 +2,12 @@
 pragma solidity ^0.8.10;
 
 import { ICapAutomator } from '../../interfaces/ICapAutomator.sol';
-import { IOwnable }      from '../../interfaces/IOwnable.sol';
 
 import { SparkPayloadEthereum } from '../../SparkPayloadEthereum.sol';
+
+interface IOwnable {
+    function acceptOwnership() external;
+}
 
 /**
  * @title  March 20, 2024 Spark Ethereum Proposal - Raise maximum supply cap in Cap Automator to 6,000 for WBTC and adjust DAI spread to 14% target APY
@@ -12,7 +15,9 @@ import { SparkPayloadEthereum } from '../../SparkPayloadEthereum.sol';
  * @dev    This proposal changes the max parameter in supplyCapConfig in CapAutomator for WBTC market
  * Forum:  https://forum.makerdao.com/t/mar-6-2024-proposed-changes-to-sparklend-for-upcoming-spell/23791
  *         https://forum.makerdao.com/t/stability-scope-parameter-changes-11-under-sta-article-3-3/23910
- * Votes:  TODO
+ *         https://forum.makerdao.com/t/introduction-and-initial-parameters-for-ddm-overcollateralized-spark-metamorpho-ethena-vault/23925
+ * Votes:  https://vote.makerdao.com/polling/QmVGDsvm
+           https://vote.makerdao.com/polling/QmYYoAMe
  */
 contract SparkEthereum_20240320 is SparkPayloadEthereum {
 

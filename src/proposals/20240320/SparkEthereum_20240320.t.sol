@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.10;
 
-import { IOwnable } from "src/interfaces/IOwnable.sol";
-
 import '../../SparkTestBase.sol';
 
 interface IIRM {
@@ -16,6 +14,12 @@ interface IRateSource {
 interface PotLike {
     function drip() external;
     function file(bytes32 what, uint256 data) external;
+}
+
+interface IOwnable {
+    function owner() external view returns (address);
+    function pendingOwner() external view returns (address);
+    function transferOwnership(address newOwner) external;
 }
 
 contract SparkEthereum_20240320Test is SparkEthereumTestBase {
