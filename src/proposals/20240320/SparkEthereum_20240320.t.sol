@@ -21,7 +21,7 @@ interface PotLike {
 contract SparkEthereum_20240320Test is SparkEthereumTestBase {
 
     address public constant META_MORPHO_VAULT              = 0x73e65DBD630f90604062f6E02fAb9138e713edD9;
-    address public constant META_MORPHO_VAULT_OWNER        = 0xd1236a6A111879d9862f8374BA15344b6B233Fbd;  // TODO: Change to multisig
+    address public constant META_MORPHO_VAULT_OWNER        = 0xf1DB0D7f6aEc96d096f1b42d6B14440ca3d1c78b;
     address public constant OLD_DAI_INTEREST_RATE_STRATEGY = 0x7949a8Ef09c49506cCB1cB983317272dcf4170Dd;
     address public constant NEW_DAI_INTEREST_RATE_STRATEGY = 0x883b03288D1827066C57E5db96661aB994Ef3800;
     address public constant POT                            = 0x197E90f9FAD81970bA7976f33CbD77088E5D7cf7;
@@ -35,7 +35,7 @@ contract SparkEthereum_20240320Test is SparkEthereumTestBase {
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('mainnet').rpcUrl, 19476609);  // March 20, 2024
+        vm.createSelectFork(getChain('mainnet').rpcUrl, 19483181);  // March 21, 2024
         payload = deployPayload();
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
@@ -44,10 +44,6 @@ contract SparkEthereum_20240320Test is SparkEthereumTestBase {
         PotLike(POT).drip();
         PotLike(POT).file('dsr', 1000000003875495717943815211);
         vm.stopPrank();
-
-        // TODO: Remove once the multisig is setup
-        vm.prank(META_MORPHO_VAULT_OWNER);
-        IOwnable(META_MORPHO_VAULT).transferOwnership(SPARK_PROXY);
     }
 
     function testCapAutomatorConfiguration() public {
