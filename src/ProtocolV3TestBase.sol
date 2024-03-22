@@ -357,7 +357,7 @@ contract ProtocolV3TestBase is CommonTestBase {
 
     // Since Chainlink precision is 8 decimals, the additional borrow needs to be at least 1e8
     // precision to trigger the LTV failure condition.
-    uint256 minThresholdAmount = 10 ** config.decimals > 1e8 ? 10 ** config.decimals - 1e8 : 1;
+    uint256 minThresholdAmount = 10 ** config.decimals > 1e8 ? 10 ** config.decimals - 1e8 : 2;
 
     vm.expectRevert(bytes("36")); // COLLATERAL_CANNOT_COVER_NEW_BORROW
     pool.borrow(config.underlying, minThresholdAmount, 2, 0, borrower);
