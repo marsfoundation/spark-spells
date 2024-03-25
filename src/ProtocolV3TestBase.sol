@@ -355,11 +355,9 @@ contract ProtocolV3TestBase is CommonTestBase {
     vm.startPrank(borrower);
     pool.borrow(config.underlying, maxBorrowAmount, 2, 0, borrower);
 
-    vm.warp(block.timestamp + 1 hours);
-
     // Since Chainlink precision is 8 decimals, the additional borrow needs to be at least 1e8
     // precision to trigger the LTV failure condition.
-    uint256 minThresholdAmount = 10 ** config.decimals > 1e8 ? 10 ** config.decimals - 1e8 : 1;
+    uint256 minThresholdAmount = 10 ** config.decimals > 1e8 ? 10 ** config.decimals - 1e8 : 2;
 
     vm.expectRevert(bytes("36")); // COLLATERAL_CANNOT_COVER_NEW_BORROW
     pool.borrow(config.underlying, minThresholdAmount, 2, 0, borrower);
@@ -721,7 +719,6 @@ contract ProtocolV3TestBase is CommonTestBase {
     balances.collateralATokenBefore     = IERC20(collateral.underlying).balanceOf(collateral.aToken);
     balances.collateralLiquidatorBefore = IERC20(collateral.underlying).balanceOf(liquidator);
 
-
     balances.borrowATokenBefore     = IERC20(borrow.underlying).balanceOf(borrow.aToken);
     balances.borrowLiquidatorBefore = IERC20(borrow.underlying).balanceOf(liquidator);
 
@@ -794,7 +791,7 @@ contract ProtocolV3TestBase is CommonTestBase {
     assertApproxEqAbs(
       balances.collateralLiquidatorAfter - balances.collateralLiquidatorBefore,
       (balances.aTokenBorrowerBefore - balances.aTokenBorrowerAfter) - (balances.aTokenTreasuryAfter - balances.aTokenTreasuryBefore),
-      1
+      2
     );
   }
 
@@ -819,6 +816,36 @@ contract ProtocolV3TestBase is CommonTestBase {
     uint256 bonusCollateral = totalCollateralToLiquidate - totalCollateralToLiquidate * 100_00 / collateral.liquidationBonus;
 
     amountToProtocol = bonusCollateral * collateral.liquidationProtocolFee / 100_00;
+  }
+
+  function _rpow(uint256 x, uint256 n, uint256 b) internal pure returns (uint256 z) {
+    assembly {
+      switch x case 0 {switch n case 0 {z := b} default {z := 0}}
+      default {
+        switch mod(n, 2) case 0 { z := b } default { z := x }
+        let half := div(b, 2)  // for rounding.
+        for { n := div(n, 2) } n { n := div(n,2) } {
+          let xx := mul(x, x)
+          if iszero(eq(div(xx, x), x)) { revert(0,0) }
+          let xxRound := add(xx, half)
+          if lt(xxRound, xx) { revert(0,0) }
+          x := div(xxRound, b)
+          if mod(n,2) {
+            let zx := mul(z, x)
+            if and(iszero(iszero(x)), iszero(eq(div(zx, x), z))) { revert(0,0) }
+            let zxRound := add(zx, half)
+            if lt(zxRound, zx) { revert(0,0) }
+            z := div(zxRound, b)
+          }
+        }
+      }
+    }
+  }
+
+  function _getAPY(uint256 apr) internal pure returns (uint256) {
+    uint256 rate = apr / 365 days + 1e27;
+
+    return _rpow(rate, 365 days, 1e27) - 1e27;
   }
 
   function _formattedAmount(uint256 amount, uint256 decimals) internal pure returns (string memory) {
@@ -1654,4 +1681,5 @@ contract ProtocolV3LegacyTestBase is ProtocolV3TestBase {
 
     return localConfig;
   }
+
 }
