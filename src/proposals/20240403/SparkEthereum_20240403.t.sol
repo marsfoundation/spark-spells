@@ -3,13 +3,27 @@ pragma solidity ^0.8.10;
 
 import '../../SparkTestBase.sol';
 
-import { IKillSwitchOracle } from '../../interfaces/IKillSwitchOracle.sol';
+import { ReserveConfiguration } from "lib/aave-v3-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol";
+
+import { IKillSwitchOracle } from 'src/interfaces/IKillSwitchOracle.sol';
 
 interface IChainlinkAggregator {
     function latestAnswer() external view returns (int256);
 }
 
+contract MockAggregator {
+
+    int256 public latestAnswer;
+
+    constructor(int256 _latestAnswer) {
+        latestAnswer = _latestAnswer;
+    }
+    
+}
+
 contract SparkEthereum_20240403Test is SparkEthereumTestBase {
+
+    using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
     address internal constant KILL_SWITCH_ORACLE = 0x909A86f78e1cdEd68F9c2Fe2c9CD922c401abe82;
 
@@ -30,12 +44,14 @@ contract SparkEthereum_20240403Test is SparkEthereumTestBase {
     function testKillSwitchActivation() public {
         IKillSwitchOracle kso = IKillSwitchOracle(KILL_SWITCH_ORACLE);
 
+        assertEq(aclManager.isRiskAdmin(KILL_SWITCH_ORACLE), false);
         assertEq(kso.numOracles(), 0);
         assertEq(kso.oracleThresholds(WBTC_BTC_ORACLE),  0);
         assertEq(kso.oracleThresholds(STETH_ETH_ORACLE), 0);
 
         GovHelpers.executePayload(vm, payload, executor);
 
+        assertEq(aclManager.isRiskAdmin(KILL_SWITCH_ORACLE), true);
         assertEq(kso.numOracles(), 2);
         assertEq(kso.oracleThresholds(WBTC_BTC_ORACLE),  0.95e8);
         assertEq(kso.oracleThresholds(STETH_ETH_ORACLE), 0.95e18);
@@ -53,7 +69,43 @@ contract SparkEthereum_20240403Test is SparkEthereumTestBase {
         vm.expectRevert("KillSwitchOracle/price-above-threshold");
         kso.trigger(STETH_ETH_ORACLE);
 
-        // TODO force update the oracles to a low value to test triggering
+        // Replace the aggregator with a mock
+        MockAggregator wbtcAggregator = new MockAggregator(0.95e8);
+        vm.store(
+            WBTC_BTC_ORACLE,
+            bytes32(uint256(2)),
+            bytes32((uint256(uint160(address(wbtcAggregator))) << 16) | 1)
+        );
+
+        assertEq(IChainlinkAggregator(WBTC_BTC_ORACLE).latestAnswer(),  0.95e8);
+
+        assertEq(_getBorrowEnabled(DAI),    true);
+        assertEq(_getBorrowEnabled(SDAI),   false);
+        assertEq(_getBorrowEnabled(USDC),   true);
+        assertEq(_getBorrowEnabled(WETH),   true);
+        assertEq(_getBorrowEnabled(WSTETH), true);
+        assertEq(_getBorrowEnabled(WBTC),   true);
+        assertEq(_getBorrowEnabled(GNO),    false);
+        assertEq(_getBorrowEnabled(RETH),   true);
+        assertEq(_getBorrowEnabled(USDT),   true);
+
+        kso.trigger(WBTC_BTC_ORACLE);
+
+        assertEq(kso.triggered(), true);
+
+        assertEq(_getBorrowEnabled(DAI),    false);
+        assertEq(_getBorrowEnabled(SDAI),   false);
+        assertEq(_getBorrowEnabled(USDC),   false);
+        assertEq(_getBorrowEnabled(WETH),   false);
+        assertEq(_getBorrowEnabled(WSTETH), false);
+        assertEq(_getBorrowEnabled(WBTC),   false);
+        assertEq(_getBorrowEnabled(GNO),    false);
+        assertEq(_getBorrowEnabled(RETH),   false);
+        assertEq(_getBorrowEnabled(USDT),   false);
+    }
+
+    function _getBorrowEnabled(address asset) internal view returns (bool) {
+        return pool.getConfiguration(asset).getBorrowingEnabled();
     }
 
     function testCapAutomatorConfiguration() public {
