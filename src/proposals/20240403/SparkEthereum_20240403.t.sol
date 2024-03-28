@@ -45,40 +45,44 @@ contract SparkEthereum_20240403Test is SparkEthereumTestBase {
         IKillSwitchOracle kso = IKillSwitchOracle(KILL_SWITCH_ORACLE);
 
         assertEq(aclManager.isRiskAdmin(KILL_SWITCH_ORACLE), false);
-        assertEq(kso.numOracles(), 0);
-        assertEq(kso.oracleThresholds(WBTC_BTC_ORACLE),  0);
-        assertEq(kso.oracleThresholds(STETH_ETH_ORACLE), 0);
+        assertEq(kso.numOracles(),                           0);
+        assertEq(kso.oracleThresholds(WBTC_BTC_ORACLE),      0);
+        assertEq(kso.oracleThresholds(STETH_ETH_ORACLE),     0);
 
         GovHelpers.executePayload(vm, payload, executor);
 
         assertEq(aclManager.isRiskAdmin(KILL_SWITCH_ORACLE), true);
-        assertEq(kso.numOracles(), 2);
-        assertEq(kso.oracleThresholds(WBTC_BTC_ORACLE),  0.95e8);
-        assertEq(kso.oracleThresholds(STETH_ETH_ORACLE), 0.95e18);
+        assertEq(kso.numOracles(),                           2);
+        assertEq(kso.oracleThresholds(WBTC_BTC_ORACLE),      0.95e8);
+        assertEq(kso.oracleThresholds(STETH_ETH_ORACLE),     0.95e18);
         
         // Sanity check the latest answers
         assertEq(IChainlinkAggregator(WBTC_BTC_ORACLE).latestAnswer(),  0.99897716e8);
         assertEq(IChainlinkAggregator(STETH_ETH_ORACLE).latestAnswer(), 0.999478607275791200e18);
 
         // Should not be able to trigger either
-        assertEq(kso.triggered(), false);
-
         vm.expectRevert("KillSwitchOracle/price-above-threshold");
         kso.trigger(WBTC_BTC_ORACLE);
-
         vm.expectRevert("KillSwitchOracle/price-above-threshold");
         kso.trigger(STETH_ETH_ORACLE);
 
-        // Replace the aggregator with a mock
-        MockAggregator wbtcAggregator = new MockAggregator(0.95e8);
+        // Replace both Chainlink aggregators with MockAggregators reporting below
+        // threshold prices
         vm.store(
             WBTC_BTC_ORACLE,
             bytes32(uint256(2)),
-            bytes32((uint256(uint160(address(wbtcAggregator))) << 16) | 1)
+            bytes32((uint256(uint160(address(new MockAggregator(0.95e8)))) << 16) | 1)
+        );
+        vm.store(
+            STETH_ETH_ORACLE,
+            bytes32(uint256(2)),
+            bytes32((uint256(uint160(address(new MockAggregator(0.95e18)))) << 16) | 1)
         );
 
         assertEq(IChainlinkAggregator(WBTC_BTC_ORACLE).latestAnswer(),  0.95e8);
+        assertEq(IChainlinkAggregator(STETH_ETH_ORACLE).latestAnswer(), 0.95e18);
 
+        assertEq(kso.triggered(),           false);
         assertEq(_getBorrowEnabled(DAI),    true);
         assertEq(_getBorrowEnabled(SDAI),   false);
         assertEq(_getBorrowEnabled(USDC),   true);
@@ -89,10 +93,36 @@ contract SparkEthereum_20240403Test is SparkEthereumTestBase {
         assertEq(_getBorrowEnabled(RETH),   true);
         assertEq(_getBorrowEnabled(USDT),   true);
 
+        uint256 snapshotId = vm.snapshot();
         kso.trigger(WBTC_BTC_ORACLE);
 
-        assertEq(kso.triggered(), true);
+        assertEq(kso.triggered(),           true);
+        assertEq(_getBorrowEnabled(DAI),    false);
+        assertEq(_getBorrowEnabled(SDAI),   false);
+        assertEq(_getBorrowEnabled(USDC),   false);
+        assertEq(_getBorrowEnabled(WETH),   false);
+        assertEq(_getBorrowEnabled(WSTETH), false);
+        assertEq(_getBorrowEnabled(WBTC),   false);
+        assertEq(_getBorrowEnabled(GNO),    false);
+        assertEq(_getBorrowEnabled(RETH),   false);
+        assertEq(_getBorrowEnabled(USDT),   false);
 
+        vm.revertTo(snapshotId);
+
+        assertEq(kso.triggered(),           false);
+        assertEq(_getBorrowEnabled(DAI),    true);
+        assertEq(_getBorrowEnabled(SDAI),   false);
+        assertEq(_getBorrowEnabled(USDC),   true);
+        assertEq(_getBorrowEnabled(WETH),   true);
+        assertEq(_getBorrowEnabled(WSTETH), true);
+        assertEq(_getBorrowEnabled(WBTC),   true);
+        assertEq(_getBorrowEnabled(GNO),    false);
+        assertEq(_getBorrowEnabled(RETH),   true);
+        assertEq(_getBorrowEnabled(USDT),   true);
+        
+        kso.trigger(STETH_ETH_ORACLE);
+
+        assertEq(kso.triggered(),           true);
         assertEq(_getBorrowEnabled(DAI),    false);
         assertEq(_getBorrowEnabled(SDAI),   false);
         assertEq(_getBorrowEnabled(USDC),   false);
