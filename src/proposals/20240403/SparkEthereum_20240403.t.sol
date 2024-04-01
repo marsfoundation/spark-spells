@@ -35,8 +35,8 @@ contract SparkEthereum_20240403Test is SparkEthereumTestBase {
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('mainnet').rpcUrl, 19544220);  // March 30, 2024
-        payload = deployPayload();
+        vm.createSelectFork(getChain('mainnet').rpcUrl, 19558521);  // April 1, 2024
+        payload = 0x4d91Ee41b18D8a8FdF2B49Bd5154339a38c7EE8f;
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
     }
@@ -57,8 +57,8 @@ contract SparkEthereum_20240403Test is SparkEthereumTestBase {
         assertEq(kso.oracleThresholds(STETH_ETH_ORACLE),     0.95e18);
         
         // Sanity check the latest answers
-        assertEq(IChainlinkAggregator(WBTC_BTC_ORACLE).latestAnswer(),  1.00090190e8);
-        assertEq(IChainlinkAggregator(STETH_ETH_ORACLE).latestAnswer(), 0.996649982728797300e18);
+        assertEq(IChainlinkAggregator(WBTC_BTC_ORACLE).latestAnswer(),  1.00080829e8);
+        assertEq(IChainlinkAggregator(STETH_ETH_ORACLE).latestAnswer(), 0.996115045492042900e18);
 
         // Should not be able to trigger either
         vm.expectRevert("KillSwitchOracle/price-above-threshold");
