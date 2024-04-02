@@ -287,10 +287,10 @@ contract SparkEthereum_20240403Test is SparkEthereumTestBase {
         assertEq(IMetaMorpho(MORPHO_VAULT).config(id).cap, _currentCap);
         PendingUint192 memory pendingCap = IMetaMorpho(MORPHO_VAULT).pendingCap(id);
         if (_hasPending) {
-            assertEq(pendingCap.value, _pendingCap);
+            assertEq(pendingCap.value,   _pendingCap);
             assertGt(pendingCap.validAt, 0);
         } else {
-            assertEq(pendingCap.value, 0);
+            assertEq(pendingCap.value,   0);
             assertEq(pendingCap.validAt, 0);
         }
     }
