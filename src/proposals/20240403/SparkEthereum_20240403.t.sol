@@ -5,6 +5,10 @@ import '../../SparkTestBase.sol';
 
 import { ReserveConfiguration } from "lib/aave-v3-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol";
 
+import { IMetaMorpho }                  from 'lib/metamorpho/src/interfaces/IMetaMorpho.sol';
+import { MarketConfig, PendingUint192 } from "lib/metamorpho/src/libraries/PendingLib.sol";
+import { MarketParamsLib }              from "lib/metamorpho/lib/morpho-blue/src/libraries/MarketParamsLib.sol";
+
 import { IKillSwitchOracle } from 'src/interfaces/IKillSwitchOracle.sol';
 
 interface IChainlinkAggregator {
@@ -30,13 +34,20 @@ contract SparkEthereum_20240403Test is SparkEthereumTestBase {
     address internal constant WBTC_BTC_ORACLE  = 0xfdFD9C85aD200c506Cf9e21F1FD8dd01932FBB23;
     address internal constant STETH_ETH_ORACLE = 0x86392dC19c0b719886221c78AB11eb8Cf5c52812;
 
+    address internal constant MORPHO_VAULT = 0x73e65DBD630f90604062f6E02fAb9138e713edD9;
+
+    address internal constant USDE  = 0x4c9EDD5852cd905f086C759E8383e09bff1E68B3;
+    address internal constant SUSDE = 0x9D39A5DE30e57443BfF2A8307A4256c8797A3497;
+
+    address internal constant MORPHO_DEFAULT_IRM = 0x870aC11D48B15DB9a138Cf899d20F13F79Ba00BC;
+
     constructor() {
         id = '20240403';
     }
 
     function setUp() public {
         vm.createSelectFork(getChain('mainnet').rpcUrl, 19558521);  // April 1, 2024
-        payload = 0x4d91Ee41b18D8a8FdF2B49Bd5154339a38c7EE8f;
+        payload = deployPayload();
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
     }
@@ -167,6 +178,63 @@ contract SparkEthereum_20240403Test is SparkEthereumTestBase {
             gap:              20_000,
             increaseCooldown: 12 hours
         });
+    }
+
+    function testMorphoSupplyCapUpdates() public {
+        bytes32 susde1 = MarketParamsLib.id(MarketParams({
+            loanToken:       DAI,
+            collateralToken: SUSDE,
+            oracle:          SUSDE_ORACLE,
+            irm:             MORPHO_DEFAULT_IRM,
+            lltv:            0.77e18
+        }));
+        bytes32 susde2 = MarketParamsLib.id(MarketParams({
+            loanToken:       DAI,
+            collateralToken: SUSDE,
+            oracle:          SUSDE_ORACLE,
+            irm:             MORPHO_DEFAULT_IRM,
+            lltv:            0.86e18
+        }));
+
+        assertEq(_getCap(susde1), 1_000_000_000 ether);
+        assertEq(_getCap(susde2), 100_000_000 ether);
+
+        GovHelpers.executePayload(vm, payload, executor);
+
+        assertEq(_getCap(susde1), 1_000_000_000 ether);
+        assertEq(_getCap(susde2), 100_000_000 ether, 200_000_000 ether);
+    }
+
+    function _assertCap(
+        bytes32 _id,
+        uint256 _currentCap,
+        bool    _hasPending,
+        uint256 _pendingCap
+    ) internal {
+        assertEq(IMetaMorpho(MORPHO_VAULT).config(_id), _currentCap);
+        PendingUint192 memory pendingCap = IMetaMorpho(MORPHO_VAULT).pendingCap(_id);
+        if (_hasPending) {
+            assertEq(pendingCap.value, _pendingCap);
+            assertGt(pendingCap.validAt, 0);
+        } else {
+            assertEq(pendingCap.value, 0);
+            assertEq(pendingCap.validAt, 0);
+        }
+    }
+
+    function _assertCap(
+        bytes32 _id,
+        uint256 _currentCap,
+        uint256 _pendingCap
+    ) internal {
+        _assertCap(_id, _currentCap, true, _pendingCap);
+    }
+
+    function _assertCap(
+        bytes32 _id,
+        uint256 _currentCap
+    ) internal {
+        _assertCap(_id, _currentCap, false, 0);
     }
 
 }
