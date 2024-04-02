@@ -16,3 +16,6 @@
 [submodule "lib/metamorpho"]
 	path = lib/metamorpho
 	url = https://github.com/morpho-org/metamorpho
+[submodule "lib/sparklend-v1-core"]
+	path = lib/sparklend-v1-core
+	url = https://github.com/marsfoundation/sparklend-v1-core
