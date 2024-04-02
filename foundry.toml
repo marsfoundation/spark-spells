@@ -6,7 +6,7 @@ fs_permissions = [
     { access = "read", path = "./out" },
     { access = "write", path = "./reports" }
 ]
-solc = "0.8.20"
+solc = "0.8.10"
 optimizer = true
 ffi = true
 

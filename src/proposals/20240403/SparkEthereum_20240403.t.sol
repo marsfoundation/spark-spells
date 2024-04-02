@@ -5,11 +5,8 @@ import '../../SparkTestBase.sol';
 
 import { ReserveConfiguration } from "lib/aave-v3-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol";
 
-import { IMetaMorpho }                  from 'lib/metamorpho/src/interfaces/IMetaMorpho.sol';
-import { MarketConfig, PendingUint192 } from "lib/metamorpho/src/libraries/PendingLib.sol";
-import { MarketParamsLib }              from "lib/metamorpho/lib/morpho-blue/src/libraries/MarketParamsLib.sol";
-
-import { IKillSwitchOracle } from 'src/interfaces/IKillSwitchOracle.sol';
+import { IKillSwitchOracle }                         from 'src/interfaces/IKillSwitchOracle.sol';
+import { IMetaMorpho, MarketParams, PendingUint192 } from 'src/interfaces/IMetaMorpho.sol';
 
 interface IChainlinkAggregator {
     function latestAnswer() external view returns (int256);
@@ -38,6 +35,9 @@ contract SparkEthereum_20240403Test is SparkEthereumTestBase {
 
     address internal constant USDE  = 0x4c9EDD5852cd905f086C759E8383e09bff1E68B3;
     address internal constant SUSDE = 0x9D39A5DE30e57443BfF2A8307A4256c8797A3497;
+
+    address internal constant SUSDE_ORACLE = 0x5D916980D5Ae1737a8330Bf24dF812b2911Aae25;
+    address internal constant USDE_ORACLE  = 0xaE4750d0813B5E37A51f7629beedd72AF1f9cA35;
 
     address internal constant MORPHO_DEFAULT_IRM = 0x870aC11D48B15DB9a138Cf899d20F13F79Ba00BC;
 
@@ -181,38 +181,111 @@ contract SparkEthereum_20240403Test is SparkEthereumTestBase {
     }
 
     function testMorphoSupplyCapUpdates() public {
-        bytes32 susde1 = MarketParamsLib.id(MarketParams({
+        MarketParams memory susde1 = MarketParams({
             loanToken:       DAI,
             collateralToken: SUSDE,
             oracle:          SUSDE_ORACLE,
             irm:             MORPHO_DEFAULT_IRM,
             lltv:            0.77e18
-        }));
-        bytes32 susde2 = MarketParamsLib.id(MarketParams({
+        });
+        MarketParams memory susde2 = MarketParams({
             loanToken:       DAI,
             collateralToken: SUSDE,
             oracle:          SUSDE_ORACLE,
             irm:             MORPHO_DEFAULT_IRM,
             lltv:            0.86e18
-        }));
+        });
+        MarketParams memory susde3 = MarketParams({
+            loanToken:       DAI,
+            collateralToken: SUSDE,
+            oracle:          SUSDE_ORACLE,
+            irm:             MORPHO_DEFAULT_IRM,
+            lltv:            0.915e18
+        });
+        MarketParams memory susde4 = MarketParams({
+            loanToken:       DAI,
+            collateralToken: SUSDE,
+            oracle:          SUSDE_ORACLE,
+            irm:             MORPHO_DEFAULT_IRM,
+            lltv:            0.945e18
+        });
+        MarketParams memory usde1 = MarketParams({
+            loanToken:       DAI,
+            collateralToken: USDE,
+            oracle:          USDE_ORACLE,
+            irm:             MORPHO_DEFAULT_IRM,
+            lltv:            0.77e18
+        });
+        MarketParams memory usde2 = MarketParams({
+            loanToken:       DAI,
+            collateralToken: USDE,
+            oracle:          USDE_ORACLE,
+            irm:             MORPHO_DEFAULT_IRM,
+            lltv:            0.86e18
+        });
+        MarketParams memory usde3 = MarketParams({
+            loanToken:       DAI,
+            collateralToken: USDE,
+            oracle:          USDE_ORACLE,
+            irm:             MORPHO_DEFAULT_IRM,
+            lltv:            0.915e18
+        });
+        MarketParams memory usde4 = MarketParams({
+            loanToken:       DAI,
+            collateralToken: USDE,
+            oracle:          USDE_ORACLE,
+            irm:             MORPHO_DEFAULT_IRM,
+            lltv:            0.945e18
+        });
 
-        assertEq(_getCap(susde1), 1_000_000_000 ether);
-        assertEq(_getCap(susde2), 100_000_000 ether);
+        _assertCap(susde1, 1_000_000_000 ether);
+        _assertCap(susde2, 100_000_000 ether);
+        _assertCap(susde3, 50_000_000 ether);
+        _assertCap(susde4, 10_000_000 ether);
+        _assertCap(usde1,  1_000_000_000 ether);
+        _assertCap(usde2,  100_000_000 ether);
+        _assertCap(usde3,  50_000_000 ether);
+        _assertCap(usde4,  10_000_000 ether);
 
         GovHelpers.executePayload(vm, payload, executor);
 
-        assertEq(_getCap(susde1), 1_000_000_000 ether);
-        assertEq(_getCap(susde2), 100_000_000 ether, 200_000_000 ether);
+        _assertCap(susde1, 1_000_000_000 ether);
+        _assertCap(susde2, 100_000_000 ether, 200_000_000 ether);
+        _assertCap(susde3, 50_000_000 ether);
+        _assertCap(susde4, 10_000_000 ether);
+        _assertCap(usde1,  1_000_000_000 ether);
+        _assertCap(usde2,  100_000_000 ether, 500_000_000 ether);
+        _assertCap(usde3,  50_000_000 ether,  200_000_000 ether);
+        _assertCap(usde4,  10_000_000 ether);
+
+        assertEq(IMetaMorpho(MORPHO_VAULT).timelock(), 1 days);
+
+        skip(1 days);
+
+        // These are permissionless (call coming from the test contract)
+        IMetaMorpho(MORPHO_VAULT).acceptCap(susde2);
+        IMetaMorpho(MORPHO_VAULT).acceptCap(usde2);
+        IMetaMorpho(MORPHO_VAULT).acceptCap(usde3);
+
+        _assertCap(susde1, 1_000_000_000 ether);
+        _assertCap(susde2, 200_000_000 ether);
+        _assertCap(susde3, 50_000_000 ether);
+        _assertCap(susde4, 10_000_000 ether);
+        _assertCap(usde1,  1_000_000_000 ether);
+        _assertCap(usde2,  500_000_000 ether);
+        _assertCap(usde3,  200_000_000 ether);
+        _assertCap(usde4,  10_000_000 ether);
     }
 
     function _assertCap(
-        bytes32 _id,
-        uint256 _currentCap,
-        bool    _hasPending,
-        uint256 _pendingCap
+        MarketParams memory _config,
+        uint256             _currentCap,
+        bool                _hasPending,
+        uint256             _pendingCap
     ) internal {
-        assertEq(IMetaMorpho(MORPHO_VAULT).config(_id), _currentCap);
-        PendingUint192 memory pendingCap = IMetaMorpho(MORPHO_VAULT).pendingCap(_id);
+        bytes32 id = _id(_config);
+        assertEq(IMetaMorpho(MORPHO_VAULT).config(id).cap, _currentCap);
+        PendingUint192 memory pendingCap = IMetaMorpho(MORPHO_VAULT).pendingCap(id);
         if (_hasPending) {
             assertEq(pendingCap.value, _pendingCap);
             assertGt(pendingCap.validAt, 0);
@@ -223,18 +296,22 @@ contract SparkEthereum_20240403Test is SparkEthereumTestBase {
     }
 
     function _assertCap(
-        bytes32 _id,
-        uint256 _currentCap,
-        uint256 _pendingCap
+        MarketParams memory _config,
+        uint256             _currentCap,
+        uint256             _pendingCap
     ) internal {
-        _assertCap(_id, _currentCap, true, _pendingCap);
+        _assertCap(_config, _currentCap, true, _pendingCap);
     }
 
     function _assertCap(
-        bytes32 _id,
-        uint256 _currentCap
+        MarketParams memory _config,
+        uint256             _currentCap
     ) internal {
-        _assertCap(_id, _currentCap, false, 0);
+        _assertCap(_config, _currentCap, false, 0);
+    }
+
+    function _id(MarketParams memory marketParams) internal pure returns (bytes32) {
+        return keccak256(abi.encode(marketParams));
     }
 
 }

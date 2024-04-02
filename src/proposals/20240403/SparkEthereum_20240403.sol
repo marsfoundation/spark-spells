@@ -3,10 +3,10 @@ pragma solidity ^0.8.10;
 
 import { IACLManager } from 'lib/aave-v3-core/contracts/interfaces/IACLManager.sol';
 
-import { IMetaMorpho } from 'lib/metamorpho/src/interfaces/IMetaMorpho.sol';
 
-import { ICapAutomator }     from 'src/interfaces/ICapAutomator.sol';
-import { IKillSwitchOracle } from 'src/interfaces/IKillSwitchOracle.sol';
+import { ICapAutomator }             from 'src/interfaces/ICapAutomator.sol';
+import { IKillSwitchOracle }         from 'src/interfaces/IKillSwitchOracle.sol';
+import { IMetaMorpho, MarketParams } from 'src/interfaces/IMetaMorpho.sol';
 
 import { SparkPayloadEthereum } from 'src/SparkPayloadEthereum.sol';
 
@@ -61,6 +61,20 @@ contract SparkEthereum_20240403 is SparkPayloadEthereum {
             oracle:          SUSDE_ORACLE,
             irm:             MORPHO_DEFAULT_IRM,
             lltv:            0.86e18
+        }), 200_000_000 ether);
+        IMetaMorpho(MORPHO_VAULT).submitCap(MarketParams({
+            loanToken:       DAI,
+            collateralToken: USDE,
+            oracle:          USDE_ORACLE,
+            irm:             MORPHO_DEFAULT_IRM,
+            lltv:            0.86e18
+        }), 500_000_000 ether);
+        IMetaMorpho(MORPHO_VAULT).submitCap(MarketParams({
+            loanToken:       DAI,
+            collateralToken: USDE,
+            oracle:          USDE_ORACLE,
+            irm:             MORPHO_DEFAULT_IRM,
+            lltv:            0.915e18
         }), 200_000_000 ether);
     }
 
