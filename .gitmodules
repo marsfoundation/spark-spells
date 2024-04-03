@@ -10,3 +10,6 @@
 [submodule "lib/sparklend-v1-core"]
 	path = lib/sparklend-v1-core
 	url = https://github.com/marsfoundation/sparklend-v1-core
+[submodule "lib/spark-address-registry"]
+	path = lib/spark-address-registry
+	url = https://github.com/marsfoundation/spark-address-registry
