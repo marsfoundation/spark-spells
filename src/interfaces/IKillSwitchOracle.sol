@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity >=0.8.0;
 
-import { IPool }             from "aave-v3-core/contracts/interfaces/IPool.sol";
-import { IPoolConfigurator } from "aave-v3-core/contracts/interfaces/IPoolConfigurator.sol";
+import { IPool }             from "sparklend-v1-core/contracts/interfaces/IPool.sol";
+import { IPoolConfigurator } from "sparklend-v1-core/contracts/interfaces/IPoolConfigurator.sol";
 
 interface IKillSwitchOracle {
 

@@ -4,7 +4,7 @@ pragma solidity ^0.8.10;
 import '../src/SparkTestBase.sol';
 
 // Remove abstract to activate
-abstract contract SparkEthereum_EmptyTest is SparkEthereumTestBase {
+contract SparkEthereum_EmptyTest is SparkEthereumTestBase {
 
     constructor() {
         id                = 'Empty';
@@ -12,7 +12,7 @@ abstract contract SparkEthereum_EmptyTest is SparkEthereumTestBase {
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('mainnet').rpcUrl, 18707048);
+        vm.createSelectFork(getChain('mainnet').rpcUrl, 19573528);  // April 3, 2024
         payload = deployPayload();
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);

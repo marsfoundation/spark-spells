@@ -2,21 +2,20 @@
 pragma solidity >=0.7.5 <0.9.0;
 
 import 'forge-std/Test.sol';
-import {
-  IAaveOracle,
-  IPool,
-  IPoolAddressesProvider,
-  IPoolDataProvider,
-  IDefaultInterestRateStrategy,
-  DataTypes,
-  IPoolConfigurator
-} from 'aave-address-book/AaveV3.sol';
 
-import { ReserveConfiguration } from 'aave-v3-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
-import { WadRayMath }           from 'aave-v3-core/contracts/protocol/libraries/math/WadRayMath.sol';
-import { IAToken }              from 'aave-v3-core/contracts/interfaces/IAToken.sol';
-import { IStableDebtToken }     from 'aave-v3-core/contracts/interfaces/IStableDebtToken.sol';
-import { IVariableDebtToken }   from 'aave-v3-core/contracts/interfaces/IVariableDebtToken.sol';
+
+import { ReserveConfiguration }         from 'sparklend-v1-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
+import { WadRayMath }                   from 'sparklend-v1-core/contracts/protocol/libraries/math/WadRayMath.sol';
+import { DataTypes }                    from 'sparklend-v1-core/contracts/protocol/libraries/types/DataTypes.sol';
+import { IAaveOracle }                  from 'sparklend-v1-core/contracts/interfaces/IAaveOracle.sol';
+import { IAToken }                      from 'sparklend-v1-core/contracts/interfaces/IAToken.sol';
+import { IDefaultInterestRateStrategy } from 'sparklend-v1-core/contracts/interfaces/IDefaultInterestRateStrategy.sol';
+import { IPool }                        from 'sparklend-v1-core/contracts/interfaces/IPool.sol';
+import { IPoolAddressesProvider }       from 'sparklend-v1-core/contracts/interfaces/IPoolAddressesProvider.sol';
+import { IPoolConfigurator }            from 'sparklend-v1-core/contracts/interfaces/IPoolConfigurator.sol';
+import { IPoolDataProvider }            from 'sparklend-v1-core/contracts/interfaces/IPoolDataProvider.sol';
+import { IStableDebtToken }             from 'sparklend-v1-core/contracts/interfaces/IStableDebtToken.sol';
+import { IVariableDebtToken }           from 'sparklend-v1-core/contracts/interfaces/IVariableDebtToken.sol';
 
 import { IERC20 }    from './interfaces/IERC20.sol';
 import { SafeERC20 } from './libraries/SafeERC20.sol';

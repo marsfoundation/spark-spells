@@ -5,17 +5,17 @@ import './ProtocolV3TestBase.sol';
 
 import { GovHelpers } from './libraries/GovHelpers.sol';
 
-import { InitializableAdminUpgradeabilityProxy } from "aave-v3-core/contracts/dependencies/openzeppelin/upgradeability/InitializableAdminUpgradeabilityProxy.sol";
-import { IACLManager }                           from 'aave-v3-core/contracts/interfaces/IACLManager.sol';
-import { IPool }                                 from 'aave-v3-core/contracts/interfaces/IPool.sol';
-import { IPoolAddressesProvider }                from 'aave-v3-core/contracts/interfaces/IPoolAddressesProvider.sol';
-import { IPoolAddressesProviderRegistry }        from 'aave-v3-core/contracts/interfaces/IPoolAddressesProviderRegistry.sol';
-import { IPoolConfigurator }                     from 'aave-v3-core/contracts/interfaces/IPoolConfigurator.sol';
-import { IScaledBalanceToken }                   from "aave-v3-core/contracts/interfaces/IScaledBalanceToken.sol";
-import { IncentivizedERC20 }                     from 'aave-v3-core/contracts/protocol/tokenization/base/IncentivizedERC20.sol';
-import { DataTypes }                             from 'aave-v3-core/contracts/protocol/libraries/types/DataTypes.sol';
-import { ReserveConfiguration }                  from 'aave-v3-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
-import { WadRayMath }                            from "aave-v3-core/contracts/protocol/libraries/math/WadRayMath.sol";
+import { InitializableAdminUpgradeabilityProxy } from "sparklend-v1-core/contracts/dependencies/openzeppelin/upgradeability/InitializableAdminUpgradeabilityProxy.sol";
+import { IACLManager }                           from 'sparklend-v1-core/contracts/interfaces/IACLManager.sol';
+import { IPool }                                 from 'sparklend-v1-core/contracts/interfaces/IPool.sol';
+import { IPoolAddressesProvider }                from 'sparklend-v1-core/contracts/interfaces/IPoolAddressesProvider.sol';
+import { IPoolAddressesProviderRegistry }        from 'sparklend-v1-core/contracts/interfaces/IPoolAddressesProviderRegistry.sol';
+import { IPoolConfigurator }                     from 'sparklend-v1-core/contracts/interfaces/IPoolConfigurator.sol';
+import { IScaledBalanceToken }                   from "sparklend-v1-core/contracts/interfaces/IScaledBalanceToken.sol";
+import { IncentivizedERC20 }                     from 'sparklend-v1-core/contracts/protocol/tokenization/base/IncentivizedERC20.sol';
+import { DataTypes }                             from 'sparklend-v1-core/contracts/protocol/libraries/types/DataTypes.sol';
+import { ReserveConfiguration }                  from 'sparklend-v1-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
+import { WadRayMath }                            from "sparklend-v1-core/contracts/protocol/libraries/math/WadRayMath.sol";
 
 import { ISparkLendFreezerMom } from './interfaces/ISparkLendFreezerMom.sol';
 import { ICapAutomator }        from './interfaces/ICapAutomator.sol';
