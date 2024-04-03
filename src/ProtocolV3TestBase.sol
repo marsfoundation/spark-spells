@@ -22,17 +22,10 @@ import { Gnosis }   from 'spark-address-registry/src/Gnosis.sol';
 import { IERC20 }    from 'erc20-helpers/interfaces/IERC20.sol';
 import { SafeERC20 } from 'erc20-helpers/SafeERC20.sol';
 
-import { ICapAutomator }  from './interfaces/ICapAutomator.sol';
+import { ICapAutomator }  from 'sparklend-cap-automator/interfaces/ICapAutomator.sol';
+
 import { ProxyHelpers }   from './libraries/ProxyHelpers.sol';
 import { CommonTestBase } from './CommonTestBase.sol';
-
-interface IERC20Detailed is IERC20 {
-  function name() external view returns (string memory);
-
-  function symbol() external view returns (string memory);
-
-  function decimals() external view returns (uint8);
-}
 
 interface IProxyLike {
   function implementation() external view returns (address);
@@ -991,8 +984,8 @@ contract ProtocolV3TestBase is CommonTestBase {
         'aTokenImpl',
         ProxyHelpers.getInitializableAdminUpgradeabilityProxyImplementation(vm, config.aToken)
       );
-      vm.serializeString(key, 'aTokenSymbol', IERC20Detailed(config.aToken).symbol());
-      vm.serializeString(key, 'aTokenName', IERC20Detailed(config.aToken).name());
+      vm.serializeString(key, 'aTokenSymbol', IERC20(config.aToken).symbol());
+      vm.serializeString(key, 'aTokenName', IERC20(config.aToken).name());
       vm.serializeAddress(
         key,
         'stableDebtTokenImpl',
@@ -1004,9 +997,9 @@ contract ProtocolV3TestBase is CommonTestBase {
       vm.serializeString(
         key,
         'stableDebtTokenSymbol',
-        IERC20Detailed(config.stableDebtToken).symbol()
+        IERC20(config.stableDebtToken).symbol()
       );
-      vm.serializeString(key, 'stableDebtTokenName', IERC20Detailed(config.stableDebtToken).name());
+      vm.serializeString(key, 'stableDebtTokenName', IERC20(config.stableDebtToken).name());
       vm.serializeAddress(
         key,
         'variableDebtTokenImpl',
@@ -1018,12 +1011,12 @@ contract ProtocolV3TestBase is CommonTestBase {
       vm.serializeString(
         key,
         'variableDebtTokenSymbol',
-        IERC20Detailed(config.variableDebtToken).symbol()
+        IERC20(config.variableDebtToken).symbol()
       );
       vm.serializeString(
         key,
         'variableDebtTokenName',
-        IERC20Detailed(config.variableDebtToken).name()
+        IERC20(config.variableDebtToken).name()
       );
       if (block.chainid == 1) {
         ICapAutomator capAutomator = ICapAutomator(Ethereum.CAP_AUTOMATOR);

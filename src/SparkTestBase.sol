@@ -14,8 +14,7 @@ import { IncentivizedERC20 }                     from 'sparklend-v1-core/contrac
 import { ReserveConfiguration }                  from 'sparklend-v1-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
 import { WadRayMath }                            from "sparklend-v1-core/contracts/protocol/libraries/math/WadRayMath.sol";
 
-import { ISparkLendFreezerMom } from './interfaces/ISparkLendFreezerMom.sol';
-import { ICapAutomator }        from './interfaces/ICapAutomator.sol';
+import { ISparkLendFreezerMom } from 'sparklend-freezer/interfaces/ISparkLendFreezerMom.sol';
 
 // REPO ARCHITECTURE TODOs
 // TODO: Refactor Mock logic for executor to be more realistic, consider fork + prank.
@@ -369,7 +368,7 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
         if (max > 0) {
             uint256 currentSupply = (IScaledBalanceToken(reserveDataAfter.aTokenAddress).scaledTotalSupply() + uint256(reserveDataAfter.accruedToTreasury))
                 .rayMul(reserveDataAfter.liquidityIndex)
-                / 10 ** IERC20Detailed(reserveDataAfter.aTokenAddress).decimals();
+                / 10 ** IERC20(reserveDataAfter.aTokenAddress).decimals();
 
             uint256 expectedSupplyCap = uint256(max) < currentSupply + uint256(gap)
                 ? uint256(max)
@@ -387,7 +386,7 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
         (max, gap, cooldown,,) = capAutomator.borrowCapConfigs(asset);
 
         if (max > 0) {
-            uint256 currentBorrows = IERC20(reserveDataAfter.variableDebtTokenAddress).totalSupply() / 10 ** IERC20Detailed(reserveDataAfter.variableDebtTokenAddress).decimals();
+            uint256 currentBorrows = IERC20(reserveDataAfter.variableDebtTokenAddress).totalSupply() / 10 ** IERC20(reserveDataAfter.variableDebtTokenAddress).decimals();
 
             uint256 expectedBorrowCap = uint256(max) < currentBorrows + uint256(gap)
                 ? uint256(max)
