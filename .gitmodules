@@ -16,3 +16,6 @@
 [submodule "lib/erc20-helpers"]
 	path = lib/erc20-helpers
 	url = https://github.com/marsfoundation/erc20-helpers
+[submodule "lib/sparklend-kill-switch"]
+	path = lib/sparklend-kill-switch
+	url = https://github.com/marsfoundation/sparklend-kill-switch
