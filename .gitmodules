@@ -19,3 +19,6 @@
 [submodule "lib/sparklend-kill-switch"]
 	path = lib/sparklend-kill-switch
 	url = https://github.com/marsfoundation/sparklend-kill-switch
+[submodule "lib/sparklend-freezer"]
+	path = lib/sparklend-freezer
+	url = https://github.com/marsfoundation/sparklend-freezer
