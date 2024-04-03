@@ -19,8 +19,8 @@ import { IVariableDebtToken }           from 'sparklend-v1-core/contracts/interf
 import { Ethereum } from 'spark-address-registry/src/Ethereum.sol';
 import { Gnosis }   from 'spark-address-registry/src/Gnosis.sol';
 
-import { IERC20 }    from './interfaces/IERC20.sol';
-import { SafeERC20 } from './libraries/SafeERC20.sol';
+import { IERC20 }    from 'erc20-helpers/interfaces/IERC20.sol';
+import { SafeERC20 } from 'erc20-helpers/SafeERC20.sol';
 
 import { ICapAutomator }  from './interfaces/ICapAutomator.sol';
 import { ProxyHelpers }   from './libraries/ProxyHelpers.sol';

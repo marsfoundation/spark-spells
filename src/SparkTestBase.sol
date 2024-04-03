@@ -219,32 +219,14 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
     ISparkLendFreezerMom internal freezerMom;
     ICapAutomator        internal capAutomator;
 
-    address INCENTIVES_CONTROLLER = 0x4370D3b6C9588E02ce9D22e684387859c7Ff5b34;
-
-    address DAI    = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
-    address GNO    = 0x6810e776880C02933D47DB1b9fc05908e5386b96;
-    address MKR    = 0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2;
-    address RETH   = 0xae78736Cd615f374D3085123A210448E74Fc6393;
-    address SDAI   = 0x83F20F44975D03b1b09e64809B757c47f942BEeA;
-    address USDC   = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
-    address USDT   = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
-    address WBTC   = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
-    address WETH   = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-    address WSTETH = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0;
-
-    address SPELL_FREEZE_ALL = 0xA67d62f75F8D11395eE120CA8390Ab3bF01f0b8A;
-    address SPELL_FREEZE_DAI = 0x0F9149c4d6018A5999AdA5b592E372845cfeC725;
-    address SPELL_PAUSE_ALL  = 0x216738c7B1E83cC1A1FFcD3433226B0a3B174484;
-    address SPELL_PAUSE_DAI  = 0x1B94E2F3818E1D657bE2A62D37560514b52DB17F;
-
     constructor() {
-        executor = 0x3300f198988e4C9C63F75dF86De36421f06af8c4;
+        executor = Ethereum.SPARK_PROXY;
         domain   = 'Ethereum';
 
-        poolAddressesProviderRegistry = IPoolAddressesProviderRegistry(0x03cFa0C4622FF84E50E75062683F44c9587e6Cc1);
-        authority                     = IAuthority(0x0a3f6849f78076aefaDf113F5BED87720274dDC0);
-        freezerMom                    = ISparkLendFreezerMom(0xFA36c12Bc307b40c701D65d8FE8F88cCEdE2277a);
-        capAutomator                  = ICapAutomator(0x2276f52afba7Cf2525fd0a050DF464AC8532d0ef);
+        poolAddressesProviderRegistry = IPoolAddressesProviderRegistry(Ethereum.POOL_ADDRESSES_PROVIDER_REGISTRY);
+        authority                     = IAuthority(Ethereum.CHIEF);
+        freezerMom                    = ISparkLendFreezerMom(Ethereum.FREEZER_MOM);
+        capAutomator                  = ICapAutomator(Ethereum.CAP_AUTOMATOR);
     }
 
     function testFreezerMom() public {
@@ -283,8 +265,8 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
         for (uint256 i = 0; i < reserves.length; i++) {
             DataTypes.ReserveData memory reserveData = pool.getReserveData(reserves[i]);
 
-            assertEq(address(IncentivizedERC20(reserveData.aTokenAddress).getIncentivesController()),            INCENTIVES_CONTROLLER);
-            assertEq(address(IncentivizedERC20(reserveData.variableDebtTokenAddress).getIncentivesController()), INCENTIVES_CONTROLLER);
+            assertEq(address(IncentivizedERC20(reserveData.aTokenAddress).getIncentivesController()),            Ethereum.INCENTIVES);
+            assertEq(address(IncentivizedERC20(reserveData.variableDebtTokenAddress).getIncentivesController()), Ethereum.INCENTIVES);
         }
     }
 
@@ -300,10 +282,10 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
         address mkrWhale = makeAddr("mkrWhale");
         uint256 amount = 1_000_000 ether;
 
-        deal(MKR, mkrWhale, amount);
+        deal(Ethereum.MKR, mkrWhale, amount);
 
         vm.startPrank(mkrWhale);
-        IERC20(MKR).approve(address(authority), amount);
+        IERC20(Ethereum.MKR).approve(address(authority), amount);
         authority.lock(amount);
 
         address[] memory slate = new address[](1);
@@ -325,33 +307,33 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
     function _runFreezerMomTests() internal {
         // Sanity checks - cannot call Freezer Mom unless you have the hat
         vm.expectRevert("SparkLendFreezerMom/not-authorized");
-        freezerMom.freezeMarket(DAI, true);
+        freezerMom.freezeMarket(Ethereum.DAI, true);
         vm.expectRevert("SparkLendFreezerMom/not-authorized");
         freezerMom.freezeAllMarkets(true);
         vm.expectRevert("SparkLendFreezerMom/not-authorized");
-        freezerMom.pauseMarket(DAI, true);
+        freezerMom.pauseMarket(Ethereum.DAI, true);
         vm.expectRevert("SparkLendFreezerMom/not-authorized");
         freezerMom.pauseAllMarkets(true);
 
-        _assertFrozen(DAI,  false);
-        _assertFrozen(WETH, false);
-        _voteAndCast(SPELL_FREEZE_DAI);
-        _assertFrozen(DAI,  true);
-        _assertFrozen(WETH, false);
+        _assertFrozen(Ethereum.DAI,  false);
+        _assertFrozen(Ethereum.WETH, false);
+        _voteAndCast(Ethereum.SPELL_FREEZE_DAI);
+        _assertFrozen(Ethereum.DAI,  true);
+        _assertFrozen(Ethereum.WETH, false);
 
-        _voteAndCast(SPELL_FREEZE_ALL);
-        _assertFrozen(DAI,  true);
-        _assertFrozen(WETH, true);
+        _voteAndCast(Ethereum.SPELL_FREEZE_ALL);
+        _assertFrozen(Ethereum.DAI,  true);
+        _assertFrozen(Ethereum.WETH, true);
 
-        _assertPaused(DAI,  false);
-        _assertPaused(WETH, false);
-        _voteAndCast(SPELL_PAUSE_DAI);
-        _assertPaused(DAI,  true);
-        _assertPaused(WETH, false);
+        _assertPaused(Ethereum.DAI,  false);
+        _assertPaused(Ethereum.WETH, false);
+        _voteAndCast(Ethereum.SPELL_PAUSE_DAI);
+        _assertPaused(Ethereum.DAI,  true);
+        _assertPaused(Ethereum.WETH, false);
 
-        _voteAndCast(SPELL_PAUSE_ALL);
-        _assertPaused(DAI,  true);
-        _assertPaused(WETH, true);
+        _voteAndCast(Ethereum.SPELL_PAUSE_ALL);
+        _assertPaused(Ethereum.DAI,  true);
+        _assertPaused(Ethereum.WETH, true);
     }
 
     function _runCapAutomatorTests() internal {
@@ -451,24 +433,13 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
 
 }
 
-abstract contract SparkGoerliTestBase is SparkTestBase {
-
-    constructor() {
-        executor = 0x4e847915D8a9f2Ab0cDf2FC2FD0A30428F25665d;
-        domain   = 'Goerli';
-
-        poolAddressesProviderRegistry = IPoolAddressesProviderRegistry(0x1ad570fDEA255a3c1d8Cf56ec76ebA2b7bFDFfea);
-    }
-
-}
-
 abstract contract SparkGnosisTestBase is SparkTestBase {
 
     constructor() {
-        executor = 0xc4218C1127cB24a0D6c1e7D25dc34e10f2625f5A;
+        executor = Gnosis.AMB_EXECUTOR;
         domain   = 'Gnosis';
 
-        poolAddressesProviderRegistry = IPoolAddressesProviderRegistry(0x49d24798d3b84965F0d1fc8684EF6565115e70c1);
+        poolAddressesProviderRegistry = IPoolAddressesProviderRegistry(Gnosis.POOL_ADDRESSES_PROVIDER_REGISTRY);
     }
 
 }
