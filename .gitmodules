@@ -22,3 +22,6 @@
 [submodule "lib/sparklend-freezer"]
 	path = lib/sparklend-freezer
 	url = https://github.com/marsfoundation/sparklend-freezer
+[submodule "lib/metamorpho"]
+	path = lib/metamorpho
+	url = https://github.com/morpho-labs/metamorpho
