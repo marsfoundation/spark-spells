@@ -23,7 +23,6 @@ contract CommonTestBase is Test {
 
   address public constant EOA = 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045;
 
-  address public constant LDO_MAINNET  = 0x5A98FcBEA516Cf06857215779Fd812CA3beF1B32;
   address public constant USDC_MAINNET = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
 
   /**
@@ -36,12 +35,6 @@ contract CommonTestBase is Test {
    */
   function _patchedDeal(address asset, address user, uint256 amount) internal returns (bool) {
     if (block.chainid == ChainIds.MAINNET) {
-      // LDO
-      if (asset == LDO_MAINNET) {
-        vm.prank(0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c);
-        IERC20(asset).transfer(user, amount);
-        return true;
-      }
       // USDC
       if (asset == USDC_MAINNET) {
         vm.prank(0x28C6c06298d514Db089934071355E5743bf21d60);
