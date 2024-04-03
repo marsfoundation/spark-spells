@@ -3,7 +3,6 @@ pragma solidity >=0.7.5 <0.9.0;
 
 import 'forge-std/Test.sol';
 
-
 import { ReserveConfiguration }         from 'sparklend-v1-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
 import { WadRayMath }                   from 'sparklend-v1-core/contracts/protocol/libraries/math/WadRayMath.sol';
 import { DataTypes }                    from 'sparklend-v1-core/contracts/protocol/libraries/types/DataTypes.sol';
@@ -16,6 +15,9 @@ import { IPoolConfigurator }            from 'sparklend-v1-core/contracts/interf
 import { IPoolDataProvider }            from 'sparklend-v1-core/contracts/interfaces/IPoolDataProvider.sol';
 import { IStableDebtToken }             from 'sparklend-v1-core/contracts/interfaces/IStableDebtToken.sol';
 import { IVariableDebtToken }           from 'sparklend-v1-core/contracts/interfaces/IVariableDebtToken.sol';
+
+import { Ethereum } from 'spark-address-registry/src/Ethereum.sol';
+import { Gnosis }   from 'spark-address-registry/src/Gnosis.sol';
 
 import { IERC20 }    from './interfaces/IERC20.sol';
 import { SafeERC20 } from './libraries/SafeERC20.sol';
@@ -565,7 +567,7 @@ contract ProtocolV3TestBase is CommonTestBase {
     assertEq(IERC20(asset).balanceOf(address(this)), amount, 'UNDERLYING_NOT_AMOUNT');
 
     // Temporary measure while USDC deal gets fixed, set the balance to amount + premium either way
-    uint256 dealAmount = asset == 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 ? premium : amount + premium;
+    uint256 dealAmount = asset == Ethereum.USDC ? premium : amount + premium;
     deal2(asset, address(this), dealAmount);
 
     vm.startPrank(address(this));
@@ -1024,7 +1026,7 @@ contract ProtocolV3TestBase is CommonTestBase {
         IERC20Detailed(config.variableDebtToken).name()
       );
       if (block.chainid == 1) {
-        ICapAutomator capAutomator = ICapAutomator(0x2276f52afba7Cf2525fd0a050DF464AC8532d0ef);
+        ICapAutomator capAutomator = ICapAutomator(Ethereum.CAP_AUTOMATOR);
         (uint48 maxBorrowCap, uint48 borrowCapGap, uint48 borrowCapIncreaseCooldown,, ) = capAutomator.borrowCapConfigs(config.underlying);
         vm.serializeUint(key, 'maxBorrowCap', maxBorrowCap);
         vm.serializeUint(key, 'borrowCapGap', borrowCapGap);

@@ -7,13 +7,10 @@ import { GovHelpers } from './libraries/GovHelpers.sol';
 
 import { InitializableAdminUpgradeabilityProxy } from "sparklend-v1-core/contracts/dependencies/openzeppelin/upgradeability/InitializableAdminUpgradeabilityProxy.sol";
 import { IACLManager }                           from 'sparklend-v1-core/contracts/interfaces/IACLManager.sol';
-import { IPool }                                 from 'sparklend-v1-core/contracts/interfaces/IPool.sol';
-import { IPoolAddressesProvider }                from 'sparklend-v1-core/contracts/interfaces/IPoolAddressesProvider.sol';
 import { IPoolAddressesProviderRegistry }        from 'sparklend-v1-core/contracts/interfaces/IPoolAddressesProviderRegistry.sol';
 import { IPoolConfigurator }                     from 'sparklend-v1-core/contracts/interfaces/IPoolConfigurator.sol';
 import { IScaledBalanceToken }                   from "sparklend-v1-core/contracts/interfaces/IScaledBalanceToken.sol";
 import { IncentivizedERC20 }                     from 'sparklend-v1-core/contracts/protocol/tokenization/base/IncentivizedERC20.sol';
-import { DataTypes }                             from 'sparklend-v1-core/contracts/protocol/libraries/types/DataTypes.sol';
 import { ReserveConfiguration }                  from 'sparklend-v1-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
 import { WadRayMath }                            from "sparklend-v1-core/contracts/protocol/libraries/math/WadRayMath.sol";
 
@@ -21,7 +18,6 @@ import { ISparkLendFreezerMom } from './interfaces/ISparkLendFreezerMom.sol';
 import { ICapAutomator }        from './interfaces/ICapAutomator.sol';
 
 // REPO ARCHITECTURE TODOs
-// TODO: Investigate if aave-address-book can be removed as dep
 // TODO: Refactor Mock logic for executor to be more realistic, consider fork + prank.
 
 interface IAuthority {
