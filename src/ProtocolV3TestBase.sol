@@ -2,36 +2,31 @@
 pragma solidity >=0.7.5 <0.9.0;
 
 import 'forge-std/Test.sol';
-import {
-  IAaveOracle,
-  IPool,
-  IPoolAddressesProvider,
-  IPoolDataProvider,
-  IDefaultInterestRateStrategy,
-  DataTypes,
-  IPoolConfigurator
-} from 'aave-address-book/AaveV3.sol';
 
-import { ReserveConfiguration } from 'aave-v3-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
-import { WadRayMath }           from 'aave-v3-core/contracts/protocol/libraries/math/WadRayMath.sol';
-import { IAToken }              from 'aave-v3-core/contracts/interfaces/IAToken.sol';
-import { IStableDebtToken }     from 'aave-v3-core/contracts/interfaces/IStableDebtToken.sol';
-import { IVariableDebtToken }   from 'aave-v3-core/contracts/interfaces/IVariableDebtToken.sol';
+import { IAaveOracle }                  from 'sparklend-v1-core/contracts/interfaces/IAaveOracle.sol';
+import { IAToken }                      from 'sparklend-v1-core/contracts/interfaces/IAToken.sol';
+import { IDefaultInterestRateStrategy } from 'sparklend-v1-core/contracts/interfaces/IDefaultInterestRateStrategy.sol';
+import { IPool }                        from 'sparklend-v1-core/contracts/interfaces/IPool.sol';
+import { IPoolAddressesProvider }       from 'sparklend-v1-core/contracts/interfaces/IPoolAddressesProvider.sol';
+import { IPoolConfigurator }            from 'sparklend-v1-core/contracts/interfaces/IPoolConfigurator.sol';
+import { IPoolDataProvider }            from 'sparklend-v1-core/contracts/interfaces/IPoolDataProvider.sol';
+import { IStableDebtToken }             from 'sparklend-v1-core/contracts/interfaces/IStableDebtToken.sol';
+import { IVariableDebtToken }           from 'sparklend-v1-core/contracts/interfaces/IVariableDebtToken.sol';
 
-import { IERC20 }    from './interfaces/IERC20.sol';
-import { SafeERC20 } from './libraries/SafeERC20.sol';
+import { ReserveConfiguration } from 'sparklend-v1-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
+import { WadRayMath }           from 'sparklend-v1-core/contracts/protocol/libraries/math/WadRayMath.sol';
+import { DataTypes }            from 'sparklend-v1-core/contracts/protocol/libraries/types/DataTypes.sol';
 
-import { ICapAutomator }  from './interfaces/ICapAutomator.sol';
+import { Ethereum } from 'spark-address-registry/src/Ethereum.sol';
+import { Gnosis }   from 'spark-address-registry/src/Gnosis.sol';
+
+import { IERC20 }    from 'erc20-helpers/interfaces/IERC20.sol';
+import { SafeERC20 } from 'erc20-helpers/SafeERC20.sol';
+
+import { ICapAutomator }  from 'sparklend-cap-automator/interfaces/ICapAutomator.sol';
+
 import { ProxyHelpers }   from './libraries/ProxyHelpers.sol';
 import { CommonTestBase } from './CommonTestBase.sol';
-
-interface IERC20Detailed is IERC20 {
-  function name() external view returns (string memory);
-
-  function symbol() external view returns (string memory);
-
-  function decimals() external view returns (uint8);
-}
 
 interface IProxyLike {
   function implementation() external view returns (address);
@@ -566,7 +561,7 @@ contract ProtocolV3TestBase is CommonTestBase {
     assertEq(IERC20(asset).balanceOf(address(this)), amount, 'UNDERLYING_NOT_AMOUNT');
 
     // Temporary measure while USDC deal gets fixed, set the balance to amount + premium either way
-    uint256 dealAmount = asset == 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 ? premium : amount + premium;
+    uint256 dealAmount = asset == Ethereum.USDC ? premium : amount + premium;
     deal2(asset, address(this), dealAmount);
 
     vm.startPrank(address(this));
@@ -990,8 +985,8 @@ contract ProtocolV3TestBase is CommonTestBase {
         'aTokenImpl',
         ProxyHelpers.getInitializableAdminUpgradeabilityProxyImplementation(vm, config.aToken)
       );
-      vm.serializeString(key, 'aTokenSymbol', IERC20Detailed(config.aToken).symbol());
-      vm.serializeString(key, 'aTokenName', IERC20Detailed(config.aToken).name());
+      vm.serializeString(key, 'aTokenSymbol', IERC20(config.aToken).symbol());
+      vm.serializeString(key, 'aTokenName', IERC20(config.aToken).name());
       vm.serializeAddress(
         key,
         'stableDebtTokenImpl',
@@ -1003,9 +998,9 @@ contract ProtocolV3TestBase is CommonTestBase {
       vm.serializeString(
         key,
         'stableDebtTokenSymbol',
-        IERC20Detailed(config.stableDebtToken).symbol()
+        IERC20(config.stableDebtToken).symbol()
       );
-      vm.serializeString(key, 'stableDebtTokenName', IERC20Detailed(config.stableDebtToken).name());
+      vm.serializeString(key, 'stableDebtTokenName', IERC20(config.stableDebtToken).name());
       vm.serializeAddress(
         key,
         'variableDebtTokenImpl',
@@ -1017,15 +1012,15 @@ contract ProtocolV3TestBase is CommonTestBase {
       vm.serializeString(
         key,
         'variableDebtTokenSymbol',
-        IERC20Detailed(config.variableDebtToken).symbol()
+        IERC20(config.variableDebtToken).symbol()
       );
       vm.serializeString(
         key,
         'variableDebtTokenName',
-        IERC20Detailed(config.variableDebtToken).name()
+        IERC20(config.variableDebtToken).name()
       );
       if (block.chainid == 1) {
-        ICapAutomator capAutomator = ICapAutomator(0x2276f52afba7Cf2525fd0a050DF464AC8532d0ef);
+        ICapAutomator capAutomator = ICapAutomator(Ethereum.CAP_AUTOMATOR);
         (uint48 maxBorrowCap, uint48 borrowCapGap, uint48 borrowCapIncreaseCooldown,, ) = capAutomator.borrowCapConfigs(config.underlying);
         vm.serializeUint(key, 'maxBorrowCap', maxBorrowCap);
         vm.serializeUint(key, 'borrowCapGap', borrowCapGap);

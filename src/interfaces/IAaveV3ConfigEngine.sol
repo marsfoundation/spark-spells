@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {IPool, IPoolConfigurator, IAaveOracle} from 'aave-address-book/AaveV3.sol';
+import {IPool} from 'sparklend-v1-core/contracts/interfaces/IPool.sol';
+import {IPoolConfigurator} from 'sparklend-v1-core/contracts/interfaces/IPoolConfigurator.sol';
+import {IAaveOracle} from 'sparklend-v1-core/contracts/interfaces/IAaveOracle.sol';
 import {IV3RateStrategyFactory} from './IV3RateStrategyFactory.sol';
 
 /// @dev Examples here assume the usage of the `AaveV3PayloadBase` base contracts

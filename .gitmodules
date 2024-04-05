@@ -1,15 +1,30 @@
 [submodule "lib/forge-std"]
 	path = lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
-[submodule "lib/aave-v3-core"]
-	path = lib/aave-v3-core
-	url = https://github.com/aave/aave-v3-core
-[submodule "lib/aave-address-book"]
-	path = lib/aave-address-book
-	url = https://github.com/bgd-labs/aave-address-book
 [submodule "lib/xchain-helpers"]
 	path = lib/xchain-helpers
 	url = https://github.com/marsfoundation/xchain-helpers
 [submodule "lib/aave-v3-periphery"]
 	path = lib/aave-v3-periphery
 	url = https://github.com/aave/aave-v3-periphery
+[submodule "lib/sparklend-v1-core"]
+	path = lib/sparklend-v1-core
+	url = https://github.com/marsfoundation/sparklend-v1-core
+[submodule "lib/spark-address-registry"]
+	path = lib/spark-address-registry
+	url = https://github.com/marsfoundation/spark-address-registry
+[submodule "lib/erc20-helpers"]
+	path = lib/erc20-helpers
+	url = https://github.com/marsfoundation/erc20-helpers
+[submodule "lib/sparklend-kill-switch"]
+	path = lib/sparklend-kill-switch
+	url = https://github.com/marsfoundation/sparklend-kill-switch
+[submodule "lib/sparklend-freezer"]
+	path = lib/sparklend-freezer
+	url = https://github.com/marsfoundation/sparklend-freezer
+[submodule "lib/metamorpho"]
+	path = lib/metamorpho
+	url = https://github.com/morpho-labs/metamorpho
+[submodule "lib/sparklend-cap-automator"]
+	path = lib/sparklend-cap-automator
+	url = https://github.com/marsfoundation/sparklend-cap-automator

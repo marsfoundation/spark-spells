@@ -3,9 +3,7 @@ pragma solidity >=0.7.5 <0.9.0;
 
 import 'forge-std/StdJson.sol';
 import 'forge-std/Test.sol';
-import {IERC20} from './interfaces/IERC20.sol';
-import {AaveV2EthereumAssets} from 'aave-address-book/AaveV2Ethereum.sol';
-import {AaveV3OptimismAssets} from 'aave-address-book/AaveV3Optimism.sol';
+import {IERC20} from 'erc20-helpers/interfaces/IERC20.sol';
 
 library ChainIds {
     uint256 internal constant MAINNET = 1;
@@ -25,7 +23,6 @@ contract CommonTestBase is Test {
 
   address public constant EOA = 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045;
 
-  address public constant LDO_MAINNET  = 0x5A98FcBEA516Cf06857215779Fd812CA3beF1B32;
   address public constant USDC_MAINNET = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
 
   /**
@@ -38,47 +35,9 @@ contract CommonTestBase is Test {
    */
   function _patchedDeal(address asset, address user, uint256 amount) internal returns (bool) {
     if (block.chainid == ChainIds.MAINNET) {
-      // GUSD
-      if (asset == AaveV2EthereumAssets.GUSD_UNDERLYING) {
-        vm.prank(0x22FFDA6813f4F34C520bf36E5Ea01167bC9DF159);
-        IERC20(asset).transfer(user, amount);
-        return true;
-      }
-      // LDO
-      if (asset == LDO_MAINNET) {
-        vm.prank(0x3e40D73EB977Dc6a537aF587D48316feE66E9C8c);
-        IERC20(asset).transfer(user, amount);
-        return true;
-      }
-      // SNX
-      if (asset == AaveV2EthereumAssets.SNX_UNDERLYING) {
-        vm.prank(0xAc86855865CbF31c8f9FBB68C749AD5Bd72802e3);
-        IERC20(asset).transfer(user, amount);
-        return true;
-      }
-      // sUSD
-      if (asset == AaveV2EthereumAssets.sUSD_UNDERLYING) {
-        vm.prank(0x99F4176EE457afedFfCB1839c7aB7A030a5e4A92);
-        IERC20(asset).transfer(user, amount);
-        return true;
-      }
-      // stETH
-      if (asset == AaveV2EthereumAssets.stETH_UNDERLYING) {
-        vm.prank(0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0);
-        IERC20(asset).transfer(user, amount);
-        return true;
-      }
       // USDC
       if (asset == USDC_MAINNET) {
         vm.prank(0x28C6c06298d514Db089934071355E5743bf21d60);
-        IERC20(asset).transfer(user, amount);
-        return true;
-      }
-    }
-    if (block.chainid == ChainIds.OPTIMISM) {
-      // sUSD
-      if (asset == AaveV3OptimismAssets.sUSD_UNDERLYING) {
-        vm.prank(AaveV3OptimismAssets.sUSD_A_TOKEN);
         IERC20(asset).transfer(user, amount);
         return true;
       }
