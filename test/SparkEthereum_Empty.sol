@@ -3,5 +3,6 @@ pragma solidity ^0.8.10;
 
 import { SparkPayloadEthereum } from '../src/SparkPayloadEthereum.sol';
 
-contract SparkEthereum_Empty is SparkPayloadEthereum {
+// Remove the abstract to activate testing
+abstract contract SparkEthereum_Empty is SparkPayloadEthereum {
 }
