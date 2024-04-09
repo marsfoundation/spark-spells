@@ -25,6 +25,13 @@ contract SparkGnosis_20240417 is SparkPayloadGnosis {
     address public constant EURE             = 0xcB444e90D8198415266c6a2724b7900fb12FC56E;
     address public constant EURE_PRICE_FEED  = 0xab70BCB260073d036d1660201e9d5405F5829b7a;
 
+    function _preExecute()
+        internal override
+    {
+        // Update Pool Implementation
+        IPoolAddressesProvider(Gnosis.POOL_ADDRESSES_PROVIDER).setPoolImpl(POOL_IMPLEMENTATION_NEW);
+    }
+
     function newListings() public pure override returns (IEngine.Listing[] memory) {
         IEngine.Listing[] memory listings = new IEngine.Listing[](4);
 
@@ -88,7 +95,7 @@ contract SparkGnosis_20240417 is SparkPayloadGnosis {
             supplyCap:             10_000_000,
             borrowCap:             8_000_000,
             debtCeiling:           0,
-            liqProtocolFee:        10_00,
+            liqProtocolFee:        0,
             eModeCategory:         0
         });
 
@@ -120,7 +127,7 @@ contract SparkGnosis_20240417 is SparkPayloadGnosis {
             supplyCap:             10_000_000,
             borrowCap:             8_000_000,
             debtCeiling:           0,
-            liqProtocolFee:        10_00,
+            liqProtocolFee:        0,
             eModeCategory:         0
         });
 
@@ -152,18 +159,11 @@ contract SparkGnosis_20240417 is SparkPayloadGnosis {
             supplyCap:             5_000_000,
             borrowCap:             4_000_000,
             debtCeiling:           0,
-            liqProtocolFee:        10_00,
+            liqProtocolFee:        0,
             eModeCategory:         0
         });
 
         return listings;
-    }
-
-    function _postExecute()
-        internal override
-    {
-        // Update Pool Implementation
-        IPoolAddressesProvider(Gnosis.POOL_ADDRESSES_PROVIDER).setPoolImpl(POOL_IMPLEMENTATION_NEW);
     }
 
 }
