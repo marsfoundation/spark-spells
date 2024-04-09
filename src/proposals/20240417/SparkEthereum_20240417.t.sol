@@ -3,6 +3,10 @@ pragma solidity ^0.8.10;
 
 import '../../SparkTestBase.sol';
 
+import { IL2BridgeExecutor } from 'spark-gov-relay/interfaces/IL2BridgeExecutor.sol';
+
+import { Domain, GnosisDomain } from 'xchain-helpers/testing/GnosisDomain.sol';
+
 contract SparkEthereum_20240417Test is SparkEthereumTestBase {
 
     address public constant POOL_IMPLEMENTATION_OLD = Ethereum.POOL_IMPL;
@@ -17,12 +21,22 @@ contract SparkEthereum_20240417Test is SparkEthereumTestBase {
     address public constant SPELL_PAUSE_DAI       = 0xCacB88e39112B56278db25b423441248cfF94241;
     address public constant SPELL_REMOVE_MULTISIG = 0xE47AB4919F6F5459Dcbbfbe4264BD4630c0169A9;
 
+    address public constant GNOSIS_PAYLOAD = address(0);  // TODO
+
+    Domain       mainnet;
+    GnosisDomain gnosis;
+
     constructor() {
         id = '20240417';
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('mainnet').rpcUrl, 19616714);  // April 9, 2024
+        mainnet = new Domain(getChain('mainnet'));
+        gnosis  = new GnosisDomain(getChain('gnosis_chain'), mainnet);
+
+        mainnet.rollFork(19616714);  // April 9, 2024
+        gnosis.rollFork(33350835);   // April 9, 2024
+
         payload = deployPayload();
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
@@ -145,6 +159,25 @@ contract SparkEthereum_20240417Test is SparkEthereumTestBase {
         assertEq(freezerMom.wards(FREEZER_MULTISIG), 1);
         _voteAndCast(SPELL_REMOVE_MULTISIG);
         assertEq(freezerMom.wards(FREEZER_MULTISIG), 0);
+    }
+
+    function testGnosisSpellExecution() public {
+        GovHelpers.executePayload(vm, payload, executor);
+
+        gnosis.selectFork();
+
+        assertEq(IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).getActionsSetCount(), 3);
+
+        gnosis.relayFromHost(true);
+        skip(2 days);
+
+        assertEq(IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).getActionsSetCount(), 4);
+
+        vm.expectCall(
+            GNOSIS_PAYLOAD,
+            abi.encodeWithSignature('execute()')
+        );
+        IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).execute(3);
     }
 
 }
