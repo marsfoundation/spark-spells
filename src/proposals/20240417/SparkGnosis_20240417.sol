@@ -25,7 +25,7 @@ contract SparkGnosis_20240417 is SparkPayloadGnosis {
     address public constant EURE             = 0xcB444e90D8198415266c6a2724b7900fb12FC56E;
     address public constant EURE_PRICE_FEED  = 0xab70BCB260073d036d1660201e9d5405F5829b7a;
 
-    address public constant DAI_PRICE_FEED  = 0x6FC2871B6d9A94866B7260896257Fd5b50c09900;
+    address public constant XDAI_PRICE_FEED = 0x6FC2871B6d9A94866B7260896257Fd5b50c09900;
 
     function _preExecute()
         internal override
@@ -173,7 +173,7 @@ contract SparkGnosis_20240417 is SparkPayloadGnosis {
 
         updates[0] = IEngine.PriceFeedUpdate({
             asset:     Gnosis.WXDAI,
-            priceFeed: DAI_PRICE_FEED
+            priceFeed: XDAI_PRICE_FEED
         });
 
         return updates;

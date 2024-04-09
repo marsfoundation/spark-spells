@@ -17,6 +17,9 @@ contract SparkGnosis_20240417Test is SparkGnosisTestBase {
     address public constant EURE             = 0xcB444e90D8198415266c6a2724b7900fb12FC56E;
     address public constant EURE_PRICE_FEED  = 0xab70BCB260073d036d1660201e9d5405F5829b7a;
 
+    address public constant XDAI_PRICE_FEED_OLD = 0x678df3415fc31947dA4324eC63212874be5a82f8;
+    address public constant XDAI_PRICE_FEED_NEW = 0x6FC2871B6d9A94866B7260896257Fd5b50c09900;
+
     constructor() {
         id = '20240417';
     }
@@ -265,6 +268,7 @@ contract SparkGnosis_20240417Test is SparkGnosisTestBase {
                 variableRateSlope2:            oldInterestRateStrategy.getVariableRateSlope2()
             })
         );
+        _validateAssetSourceOnOracle(poolAddressesProvider, daiConfigBefore.underlying, XDAI_PRICE_FEED_OLD);
 
         assertEq(gnoConfigBefore.supplyCap, 200_000);
 
@@ -296,6 +300,7 @@ contract SparkGnosis_20240417Test is SparkGnosisTestBase {
                 variableRateSlope2:            oldInterestRateStrategy.getVariableRateSlope2()
             })
         );
+        _validateAssetSourceOnOracle(poolAddressesProvider, daiConfigBefore.underlying, XDAI_PRICE_FEED_NEW);
 
         gnoConfigBefore.supplyCap = 100_000;
         _validateReserveConfig(gnoConfigBefore, allConfigsAfter);
