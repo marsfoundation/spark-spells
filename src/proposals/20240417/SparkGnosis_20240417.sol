@@ -25,6 +25,8 @@ contract SparkGnosis_20240417 is SparkPayloadGnosis {
     address public constant EURE             = 0xcB444e90D8198415266c6a2724b7900fb12FC56E;
     address public constant EURE_PRICE_FEED  = 0xab70BCB260073d036d1660201e9d5405F5829b7a;
 
+    address public constant DAI_PRICE_FEED  = 0x6FC2871B6d9A94866B7260896257Fd5b50c09900;
+
     function _preExecute()
         internal override
     {
@@ -164,6 +166,94 @@ contract SparkGnosis_20240417 is SparkPayloadGnosis {
         });
 
         return listings;
+    }
+
+    function priceFeedsUpdates() public pure override returns (IEngine.PriceFeedUpdate[] memory) {
+        IEngine.PriceFeedUpdate[] memory updates = new IEngine.PriceFeedUpdate[](1);
+
+        updates[0] = IEngine.PriceFeedUpdate({
+            asset:     Gnosis.WXDAI,
+            priceFeed: DAI_PRICE_FEED
+        });
+
+        return updates;
+    }
+
+    function collateralsUpdates() public pure override returns (IEngine.CollateralUpdate[] memory) {
+        IEngine.CollateralUpdate[] memory updates = new IEngine.CollateralUpdate[](1);
+
+        updates[0] = IEngine.CollateralUpdate({
+            asset:          Gnosis.WXDAI,
+            ltv:            0,
+            liqThreshold:   EngineFlags.KEEP_CURRENT,
+            liqBonus:       EngineFlags.KEEP_CURRENT,
+            debtCeiling:    EngineFlags.KEEP_CURRENT,
+            liqProtocolFee: EngineFlags.KEEP_CURRENT,
+            eModeCategory:  EngineFlags.KEEP_CURRENT
+        });
+
+        return updates;
+    }
+
+    function borrowsUpdates() public pure override returns (IEngine.BorrowUpdate[] memory) {
+        IEngine.BorrowUpdate[] memory updates = new IEngine.BorrowUpdate[](1);
+
+        updates[0] = IEngine.BorrowUpdate({
+            asset:                 Gnosis.WXDAI,
+            enabledToBorrow:       EngineFlags.KEEP_CURRENT,
+            flashloanable:         EngineFlags.KEEP_CURRENT,
+            stableRateModeEnabled: EngineFlags.KEEP_CURRENT,
+            borrowableInIsolation: EngineFlags.KEEP_CURRENT,
+            withSiloedBorrowing:   EngineFlags.KEEP_CURRENT,
+            reserveFactor:         5_00
+        });
+
+        return updates;
+    }
+
+    function rateStrategiesUpdates()
+        public view override returns (IEngine.RateStrategyUpdate[] memory)
+    {
+        IEngine.RateStrategyUpdate[] memory ratesUpdate = new IEngine.RateStrategyUpdate[](1);
+
+        Rates.RateStrategyParams memory dai = Rates.RateStrategyParams({
+            optimalUsageRatio:             _bpsToRay(90_00),
+            baseVariableBorrowRate:        0,
+            variableRateSlope1:            _bpsToRay(12_00),
+            variableRateSlope2:            _bpsToRay(50_00),
+            stableRateSlope1:              0,
+            stableRateSlope2:              0,
+            baseStableRateOffset:          0,
+            stableRateExcessOffset:        0,
+            optimalStableToTotalDebtRatio: 0
+        });
+        ratesUpdate[0] = IEngine.RateStrategyUpdate({ asset: Gnosis.WXDAI, params: dai });
+
+        return ratesUpdate;
+    }
+
+    function capsUpdates()
+        public pure override returns (IEngine.CapsUpdate[] memory)
+    {
+        IEngine.CapsUpdate[] memory capsUpdate = new IEngine.CapsUpdate[](3);
+
+        capsUpdate[0] = IEngine.CapsUpdate({
+            asset:     Gnosis.WXDAI,
+            supplyCap: 20_000_000,
+            borrowCap: 16_000_000
+        });
+        capsUpdate[1] = IEngine.CapsUpdate({
+            asset:     Gnosis.GNO,
+            supplyCap: 100_000,
+            borrowCap: EngineFlags.KEEP_CURRENT
+        });
+        capsUpdate[2] = IEngine.CapsUpdate({
+            asset:     Gnosis.WSTETH,
+            supplyCap: 15_000,
+            borrowCap: EngineFlags.KEEP_CURRENT
+        });
+
+        return capsUpdate;
     }
 
 }

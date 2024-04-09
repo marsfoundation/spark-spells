@@ -236,4 +236,72 @@ contract SparkGnosis_20240417Test is SparkGnosisTestBase {
         _validateAssetSourceOnOracle(poolAddressesProvider, EURE, EURE_PRICE_FEED);
     }
 
+    function test_reserveChanges() public {
+        ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', pool);
+        
+        ReserveConfig memory daiConfigBefore    = _findReserveConfigBySymbol(allConfigsBefore, 'WXDAI');
+        ReserveConfig memory gnoConfigBefore    = _findReserveConfigBySymbol(allConfigsBefore, 'GNO');
+        ReserveConfig memory wstethConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'wstETH');
+        
+        IDefaultInterestRateStrategy oldInterestRateStrategy = IDefaultInterestRateStrategy(
+            daiConfigBefore.interestRateStrategy
+        );
+        assertEq(daiConfigBefore.ltv,           70_00);
+        assertEq(daiConfigBefore.supplyCap,     10_000_000);
+        assertEq(daiConfigBefore.borrowCap,     8_000_000);
+        assertEq(daiConfigBefore.reserveFactor, 0);
+        _validateInterestRateStrategy(
+            address(oldInterestRateStrategy),
+            address(oldInterestRateStrategy),
+            InterestStrategyValues({
+                addressesProvider:             address(poolAddressesProvider),
+                optimalUsageRatio:             oldInterestRateStrategy.OPTIMAL_USAGE_RATIO(),
+                optimalStableToTotalDebtRatio: oldInterestRateStrategy.OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO(),
+                baseStableBorrowRate:          0,
+                stableRateSlope1:              oldInterestRateStrategy.getStableRateSlope1(),
+                stableRateSlope2:              oldInterestRateStrategy.getStableRateSlope2(),
+                baseVariableBorrowRate:        0.048790164207174267760128000e27,
+                variableRateSlope1:            0,
+                variableRateSlope2:            oldInterestRateStrategy.getVariableRateSlope2()
+            })
+        );
+
+        assertEq(gnoConfigBefore.supplyCap, 200_000);
+
+        assertEq(wstethConfigBefore.supplyCap, 10_000);
+
+        GovHelpers.executePayload(vm, payload, executor);
+
+        ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
+
+        ReserveConfig memory daiConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'WXDAI');
+        daiConfigBefore.ltv           = 0;
+        daiConfigBefore.supplyCap     = 20_000_000;
+        daiConfigBefore.borrowCap     = 16_000_000;
+        daiConfigBefore.reserveFactor = 5_00;
+        daiConfigBefore.interestRateStrategy = daiConfigAfter.interestRateStrategy;
+        _validateReserveConfig(daiConfigBefore, allConfigsAfter);
+        _validateInterestRateStrategy(
+            daiConfigAfter.interestRateStrategy,
+            daiConfigAfter.interestRateStrategy,
+            InterestStrategyValues({
+                addressesProvider:             address(poolAddressesProvider),
+                optimalUsageRatio:             oldInterestRateStrategy.OPTIMAL_USAGE_RATIO(),
+                optimalStableToTotalDebtRatio: oldInterestRateStrategy.OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO(),
+                baseStableBorrowRate:          0.12e27,
+                stableRateSlope1:              oldInterestRateStrategy.getStableRateSlope1(),
+                stableRateSlope2:              oldInterestRateStrategy.getStableRateSlope2(),
+                baseVariableBorrowRate:        0,
+                variableRateSlope1:            0.12e27,
+                variableRateSlope2:            oldInterestRateStrategy.getVariableRateSlope2()
+            })
+        );
+
+        gnoConfigBefore.supplyCap = 100_000;
+        _validateReserveConfig(gnoConfigBefore, allConfigsAfter);
+
+        wstethConfigBefore.supplyCap = 15_000;
+        _validateReserveConfig(wstethConfigBefore, allConfigsAfter);
+    }
+
 }

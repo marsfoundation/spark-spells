@@ -287,7 +287,7 @@ contract ProtocolV3TestBase is CommonTestBase {
   }
 
   function _includeCollateralAssetInE2e(ReserveConfig memory config) internal pure returns (bool) {
-    return !config.isFrozen && config.isActive && !config.isPaused && config.usageAsCollateralEnabled;
+    return !config.isFrozen && config.isActive && !config.isPaused && config.usageAsCollateralEnabled && config.ltv > 0;
   }
 
   function _getTokenPrice(IPool pool, ReserveConfig memory config) internal view returns (uint256) {
