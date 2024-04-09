@@ -3,10 +3,14 @@ pragma solidity ^0.8.10;
 
 import { SparkPayloadEthereum, Ethereum } from 'src/SparkPayloadEthereum.sol';
 
+import { Gnosis } from 'spark-address-registry/src/Gnosis.sol';
+
 import { IACLManager }            from 'sparklend-v1-core/contracts/interfaces/IACLManager.sol';
 import { IPoolAddressesProvider } from 'sparklend-v1-core/contracts/interfaces/IPoolAddressesProvider.sol';
 
-import { ISparkLendFreezerMom } from 'sparklend-freezer/src/interfaces/ISparkLendFreezerMom.sol';
+import { ISparkLendFreezerMom } from 'sparklend-freezer/interfaces/ISparkLendFreezerMom.sol';
+
+import { XChainForwarders } from 'xchain-helpers/XChainForwarders.sol';
 
 /**
  * @title  April 17, 2024 Spark Ethereum Proposal
@@ -20,7 +24,8 @@ contract SparkEthereum_20240417 is SparkPayloadEthereum {
 
     address public constant POOL_IMPLEMENTATION_NEW = 0x5aE329203E00f76891094DcfedD5Aca082a50e1b;
     address public constant FREEZER_MOM_NEW         = 0x237e3985dD7E373F2ec878EC1Ac48A228Cf2e7a3;
-    address public constant FREEZER_MULTISIG        = 0x0;  // TODO
+    address public constant FREEZER_MULTISIG        = 0x44efFc473e81632B12486866AA1678edbb7BEeC3;
+    address public constant GNOSIS_PAYLOAD          = address(0);  // TODO
 
     function _postExecute()
         internal override
@@ -29,16 +34,21 @@ contract SparkEthereum_20240417 is SparkPayloadEthereum {
         IPoolAddressesProvider(Ethereum.POOL_ADDRESSES_PROVIDER).setPoolImpl(POOL_IMPLEMENTATION_NEW);
 
         // De-auth the old Freezer Mom
-        IACLManager(ACL_MANAGER).removeEmergencyAdmin(Ethereum.FREEZER_MOM);
-        IACLManager(ACL_MANAGER).removeRiskAdmin(Ethereum.FREEZER_MOM);
+        IACLManager(Ethereum.ACL_MANAGER).removeEmergencyAdmin(Ethereum.FREEZER_MOM);
+        IACLManager(Ethereum.ACL_MANAGER).removeRiskAdmin(Ethereum.FREEZER_MOM);
 
         // Activate the Freezer Mom
-        ISparkLendFreezerMom(FREEZER_MOM).setAuthority(Ethereum.CHIEF);
-        ISparkLendFreezerMom(FREEZER_MOM).rely(FREEZER_MULTISIG);
-        IACLManager(ACL_MANAGER).addEmergencyAdmin(FREEZER_MOM_NEW);
-        IACLManager(ACL_MANAGER).addRiskAdmin(FREEZER_MOM_NEW);
+        ISparkLendFreezerMom(FREEZER_MOM_NEW).setAuthority(Ethereum.CHIEF);
+        ISparkLendFreezerMom(FREEZER_MOM_NEW).rely(FREEZER_MULTISIG);
+        IACLManager(Ethereum.ACL_MANAGER).addEmergencyAdmin(FREEZER_MOM_NEW);
+        IACLManager(Ethereum.ACL_MANAGER).addRiskAdmin(FREEZER_MOM_NEW);
 
         // Trigger Gnosis Payload
+        XChainForwarders.sendMessageGnosis(
+            Gnosis.AMB_EXECUTOR,
+            encodePayloadQueue(GNOSIS_PAYLOAD),
+            4_000_000
+        );
     }
 
 }

@@ -9,14 +9,20 @@ contract SparkEthereum_20240417Test is SparkEthereumTestBase {
     address public constant POOL_IMPLEMENTATION_NEW = 0x5aE329203E00f76891094DcfedD5Aca082a50e1b;
     address public constant FREEZER_MOM_OLD         = Ethereum.FREEZER_MOM;
     address public constant FREEZER_MOM_NEW         = 0x237e3985dD7E373F2ec878EC1Ac48A228Cf2e7a3;
-    address public constant FREEZER_MULTISIG        = 0x0;  // TODO
+    address public constant FREEZER_MULTISIG        = 0x44efFc473e81632B12486866AA1678edbb7BEeC3;
+
+    address public constant SPELL_FREEZE_ALL      = 0x9e2890BF7f8D5568Cc9e5092E67Ba00C8dA3E97f;
+    address public constant SPELL_FREEZE_DAI      = 0xa2039bef2c5803d66E4e68F9E23a942E350b938c;
+    address public constant SPELL_PAUSE_ALL       = 0x425b0de240b4c2DC45979DB782A355D090Dc4d37;
+    address public constant SPELL_PAUSE_DAI       = 0xCacB88e39112B56278db25b423441248cfF94241;
+    address public constant SPELL_REMOVE_MULTISIG = 0xE47AB4919F6F5459Dcbbfbe4264BD4630c0169A9;
 
     constructor() {
         id = '20240417';
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('mainnet').rpcUrl, 19609702);  // April 8, 2024
+        vm.createSelectFork(getChain('mainnet').rpcUrl, 19616714);  // April 9, 2024
         payload = deployPayload();
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
@@ -35,7 +41,7 @@ contract SparkEthereum_20240417Test is SparkEthereumTestBase {
     }
 
     function test_freezerMomDeployAndConfiguration() public {
-        IFreezerMom freezerMom = IFreezerMom(FREEZER_MOM_NEW);
+        ISparkLendFreezerMom freezerMom = ISparkLendFreezerMom(FREEZER_MOM_NEW);
         
         assertEq(freezerMom.poolConfigurator(),      address(poolConfigurator));
         assertEq(freezerMom.pool(),                  address(pool));
@@ -64,6 +70,81 @@ contract SparkEthereum_20240417Test is SparkEthereumTestBase {
         assertEq(aclManager.isRiskAdmin(FREEZER_MOM_OLD), false);
         assertEq(aclManager.isEmergencyAdmin(FREEZER_MOM_NEW), true);
         assertEq(aclManager.isRiskAdmin(FREEZER_MOM_NEW), true);
+    }
+
+    function testFreezerMom_REMEMBER_TO_REENABLE_AFTER_THIS_SPELL() public {
+        uint256 snapshot = vm.snapshot();
+
+        // These will run as normal
+        _runFreezerMomTests();
+
+        vm.revertTo(snapshot);
+        GovHelpers.executePayload(vm, payload, executor);
+
+        // There are new spells
+        freezerMom = ISparkLendFreezerMom(FREEZER_MOM_NEW);
+
+        // Sanity checks - cannot call Freezer Mom unless you have the hat
+        vm.expectRevert("SparkLendFreezerMom/not-authorized");
+        freezerMom.freezeMarket(Ethereum.DAI, true);
+        vm.expectRevert("SparkLendFreezerMom/not-authorized");
+        freezerMom.freezeAllMarkets(true);
+        vm.expectRevert("SparkLendFreezerMom/not-authorized");
+        freezerMom.pauseMarket(Ethereum.DAI, true);
+        vm.expectRevert("SparkLendFreezerMom/not-authorized");
+        freezerMom.pauseAllMarkets(true);
+
+        snapshot = vm.snapshot();
+
+        _assertFrozen(Ethereum.DAI,  false);
+        _assertFrozen(Ethereum.WETH, false);
+        _voteAndCast(SPELL_FREEZE_DAI);
+        _assertFrozen(Ethereum.DAI,  true);
+        _assertFrozen(Ethereum.WETH, false);
+
+        _voteAndCast(SPELL_FREEZE_ALL);
+        _assertFrozen(Ethereum.DAI,  true);
+        _assertFrozen(Ethereum.WETH, true);
+
+        _assertPaused(Ethereum.DAI,  false);
+        _assertPaused(Ethereum.WETH, false);
+        _voteAndCast(SPELL_PAUSE_DAI);
+        _assertPaused(Ethereum.DAI,  true);
+        _assertPaused(Ethereum.WETH, false);
+
+        _voteAndCast(SPELL_PAUSE_ALL);
+        _assertPaused(Ethereum.DAI,  true);
+        _assertPaused(Ethereum.WETH, true);
+
+        vm.revertTo(snapshot);
+
+        _assertFrozen(Ethereum.DAI,  false);
+        _assertFrozen(Ethereum.WETH, false);
+        vm.prank(FREEZER_MULTISIG);
+        freezerMom.freezeMarket(Ethereum.DAI, true);
+        _assertFrozen(Ethereum.DAI,  true);
+        _assertFrozen(Ethereum.WETH, false);
+
+        vm.prank(FREEZER_MULTISIG);
+        freezerMom.freezeAllMarkets(true);
+        _assertFrozen(Ethereum.DAI,  true);
+        _assertFrozen(Ethereum.WETH, true);
+
+        _assertPaused(Ethereum.DAI,  false);
+        _assertPaused(Ethereum.WETH, false);
+        vm.prank(FREEZER_MULTISIG);
+        freezerMom.pauseMarket(Ethereum.DAI, true);
+        _assertPaused(Ethereum.DAI,  true);
+        _assertPaused(Ethereum.WETH, false);
+
+        vm.prank(FREEZER_MULTISIG);
+        freezerMom.pauseAllMarkets(true);
+        _assertPaused(Ethereum.DAI,  true);
+        _assertPaused(Ethereum.WETH, true);
+
+        assertEq(freezerMom.wards(FREEZER_MULTISIG), 1);
+        _voteAndCast(SPELL_REMOVE_MULTISIG);
+        assertEq(freezerMom.wards(FREEZER_MULTISIG), 0);
     }
 
 }

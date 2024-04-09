@@ -5,14 +5,36 @@ import './AaveV3PayloadBase.sol';
 
 import { Ethereum } from 'spark-address-registry/src/Ethereum.sol';
 
+import { IL2BridgeExecutor } from 'spark-gov-relay/interfaces/IL2BridgeExecutor.sol';
+
 /**
- * @dev Base smart contract for a Aave v3.0.1 (compatible with 3.0.0) listing on Ethereum.
+ * @dev Base smart contract for Ethereum.
  * @author Phoenix Labs
  */
 abstract contract SparkPayloadEthereum is
-  AaveV3PayloadBase(IEngine(Ethereum.CONFIG_ENGINE))
+    AaveV3PayloadBase(IEngine(Ethereum.CONFIG_ENGINE))
 {
-  function getPoolContext() public pure override returns (IEngine.PoolContext memory) {
-    return IEngine.PoolContext({networkName: 'Ethereum', networkAbbreviation: 'Eth'});
-  }
+    function getPoolContext() public pure override returns (IEngine.PoolContext memory) {
+        return IEngine.PoolContext({networkName: 'Ethereum', networkAbbreviation: 'Eth'});
+    }
+    function encodePayloadQueue(address _payload) internal view returns (bytes memory) {
+        address[] memory targets = new address[](1);
+        targets[0] = _payload;
+        uint256[] memory values = new uint256[](1);
+        values[0] = 0;
+        string[] memory signatures = new string[](1);
+        signatures[0] = 'execute()';
+        bytes[] memory calldatas = new bytes[](1);
+        calldatas[0] = '';
+        bool[] memory withDelegatecalls = new bool[](1);
+        withDelegatecalls[0] = true;
+
+        return abi.encodeCall(IL2BridgeExecutor.queue, (
+            targets,
+            values,
+            signatures,
+            calldatas,
+            withDelegatecalls
+        ));
+    }
 }
