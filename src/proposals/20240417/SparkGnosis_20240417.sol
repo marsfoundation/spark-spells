@@ -10,7 +10,12 @@ import { IPoolAddressesProvider } from 'sparklend-v1-core/contracts/interfaces/I
  * @notice Upgrade Pool Implementation to SparkLend V1.0.0, onboard sxDAI/EURe/USDC/USDT, parameter refresh.
  * @author Phoenix Labs
  * Forum:  https://forum.makerdao.com/t/apr-4-2024-proposed-changes-to-sparklend-for-upcoming-spell/24033
- * Votes:  TODO
+ * Votes:  https://vote.makerdao.com/polling/QmZND8WW#poll-detail
+ *         https://vote.makerdao.com/polling/QmUhT32b#poll-detail
+ *         https://vote.makerdao.com/polling/QmSh8gyC#poll-detail
+ *         https://vote.makerdao.com/polling/QmcRdMyA#poll-detail
+ *         https://vote.makerdao.com/polling/QmSYZSCQ#poll-detail
+ *         https://vote.makerdao.com/polling/QmfGV2vt#poll-detail
  */
 contract SparkGnosis_20240417 is SparkPayloadGnosis {
 
