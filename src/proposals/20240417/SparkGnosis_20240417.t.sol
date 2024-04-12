@@ -253,20 +253,21 @@ contract SparkGnosis_20240417Test is SparkGnosisTestBase {
         assertEq(daiConfigBefore.supplyCap,     10_000_000);
         assertEq(daiConfigBefore.borrowCap,     8_000_000);
         assertEq(daiConfigBefore.reserveFactor, 0);
+        InterestStrategyValues memory interestStrategyValuesBefore = InterestStrategyValues({
+            addressesProvider:             address(poolAddressesProvider),
+            optimalUsageRatio:             oldInterestRateStrategy.OPTIMAL_USAGE_RATIO(),
+            optimalStableToTotalDebtRatio: oldInterestRateStrategy.OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO(),
+            baseStableBorrowRate:          0,
+            stableRateSlope1:              oldInterestRateStrategy.getStableRateSlope1(),
+            stableRateSlope2:              oldInterestRateStrategy.getStableRateSlope2(),
+            baseVariableBorrowRate:        0.048790164207174267760128000e27,
+            variableRateSlope1:            0,
+            variableRateSlope2:            oldInterestRateStrategy.getVariableRateSlope2()
+        });
         _validateInterestRateStrategy(
             address(oldInterestRateStrategy),
             address(oldInterestRateStrategy),
-            InterestStrategyValues({
-                addressesProvider:             address(poolAddressesProvider),
-                optimalUsageRatio:             oldInterestRateStrategy.OPTIMAL_USAGE_RATIO(),
-                optimalStableToTotalDebtRatio: oldInterestRateStrategy.OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO(),
-                baseStableBorrowRate:          0,
-                stableRateSlope1:              oldInterestRateStrategy.getStableRateSlope1(),
-                stableRateSlope2:              oldInterestRateStrategy.getStableRateSlope2(),
-                baseVariableBorrowRate:        0.048790164207174267760128000e27,
-                variableRateSlope1:            0,
-                variableRateSlope2:            oldInterestRateStrategy.getVariableRateSlope2()
-            })
+            interestStrategyValuesBefore
         );
         _validateAssetSourceOnOracle(poolAddressesProvider, daiConfigBefore.underlying, XDAI_PRICE_FEED_OLD);
 
@@ -285,20 +286,13 @@ contract SparkGnosis_20240417Test is SparkGnosisTestBase {
         daiConfigBefore.reserveFactor = 5_00;
         daiConfigBefore.interestRateStrategy = daiConfigAfter.interestRateStrategy;
         _validateReserveConfig(daiConfigBefore, allConfigsAfter);
+        interestStrategyValuesBefore.baseStableBorrowRate   = 0.12e27;
+        interestStrategyValuesBefore.baseVariableBorrowRate = 0;
+        interestStrategyValuesBefore.variableRateSlope1     = 0.12e27;
         _validateInterestRateStrategy(
             daiConfigAfter.interestRateStrategy,
             daiConfigAfter.interestRateStrategy,
-            InterestStrategyValues({
-                addressesProvider:             address(poolAddressesProvider),
-                optimalUsageRatio:             oldInterestRateStrategy.OPTIMAL_USAGE_RATIO(),
-                optimalStableToTotalDebtRatio: oldInterestRateStrategy.OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO(),
-                baseStableBorrowRate:          0.12e27,
-                stableRateSlope1:              oldInterestRateStrategy.getStableRateSlope1(),
-                stableRateSlope2:              oldInterestRateStrategy.getStableRateSlope2(),
-                baseVariableBorrowRate:        0,
-                variableRateSlope1:            0.12e27,
-                variableRateSlope2:            oldInterestRateStrategy.getVariableRateSlope2()
-            })
+            interestStrategyValuesBefore
         );
         _validateAssetSourceOnOracle(poolAddressesProvider, daiConfigBefore.underlying, XDAI_PRICE_FEED_NEW);
 
