@@ -560,7 +560,7 @@ contract ProtocolV3TestBase is CommonTestBase {
     address pool = abi.decode(params, (address));
     assertEq(IERC20(asset).balanceOf(address(this)), amount, 'UNDERLYING_NOT_AMOUNT');
 
-    // Temporary measure while USDC deal gets fixed, set the balance to amount + premium either way
+    // Temporary measure while USDC/EURe deal gets fixed, set the balance to amount + premium either way
     uint256 dealAmount = asset == USDC_MAINNET || asset == EURE_GNOSIS ? premium : amount + premium;
     deal2(asset, address(this), dealAmount);
 

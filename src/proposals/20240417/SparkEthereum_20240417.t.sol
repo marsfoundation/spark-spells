@@ -74,16 +74,16 @@ contract SparkEthereum_20240417Test is SparkEthereumTestBase {
 
     function test_aclChanges() public {
         assertEq(aclManager.isEmergencyAdmin(FREEZER_MOM_OLD), true);
-        assertEq(aclManager.isRiskAdmin(FREEZER_MOM_OLD), true);
+        assertEq(aclManager.isRiskAdmin(FREEZER_MOM_OLD),      true);
         assertEq(aclManager.isEmergencyAdmin(FREEZER_MOM_NEW), false);
-        assertEq(aclManager.isRiskAdmin(FREEZER_MOM_NEW), false);
+        assertEq(aclManager.isRiskAdmin(FREEZER_MOM_NEW),      false);
 
         GovHelpers.executePayload(vm, payload, executor);
 
         assertEq(aclManager.isEmergencyAdmin(FREEZER_MOM_OLD), false);
-        assertEq(aclManager.isRiskAdmin(FREEZER_MOM_OLD), false);
+        assertEq(aclManager.isRiskAdmin(FREEZER_MOM_OLD),      false);
         assertEq(aclManager.isEmergencyAdmin(FREEZER_MOM_NEW), true);
-        assertEq(aclManager.isRiskAdmin(FREEZER_MOM_NEW), true);
+        assertEq(aclManager.isRiskAdmin(FREEZER_MOM_NEW),      true);
     }
 
     function testFreezerMom_REMEMBER_TO_REENABLE_AFTER_THIS_SPELL() public {

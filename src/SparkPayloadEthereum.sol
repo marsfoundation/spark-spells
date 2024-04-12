@@ -18,15 +18,16 @@ abstract contract SparkPayloadEthereum is
         return IEngine.PoolContext({networkName: 'Ethereum', networkAbbreviation: 'Eth'});
     }
     function encodePayloadQueue(address _payload) internal view returns (bytes memory) {
-        address[] memory targets = new address[](1);
-        targets[0] = _payload;
-        uint256[] memory values = new uint256[](1);
-        values[0] = 0;
-        string[] memory signatures = new string[](1);
-        signatures[0] = 'execute()';
-        bytes[] memory calldatas = new bytes[](1);
-        calldatas[0] = '';
+        address[] memory targets        = new address[](1);
+        uint256[] memory values         = new uint256[](1);
+        string[] memory signatures      = new string[](1);
+        bytes[] memory calldatas        = new bytes[](1);
         bool[] memory withDelegatecalls = new bool[](1);
+
+        targets[0]           = _payload;
+        values[0]            = 0;
+        signatures[0]        = 'execute()';
+        calldatas[0]         = '';
         withDelegatecalls[0] = true;
 
         return abi.encodeCall(IL2BridgeExecutor.queue, (
