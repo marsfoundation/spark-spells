@@ -27,7 +27,7 @@ contract SparkEthereum_20240417 is SparkPayloadEthereum {
     address public constant FREEZER_MOM_NEW         = 0x237e3985dD7E373F2ec878EC1Ac48A228Cf2e7a3;
     address public constant FREEZER_MULTISIG        = 0x44efFc473e81632B12486866AA1678edbb7BEeC3;
     
-    address public constant GNOSIS_PAYLOAD = 0x3068FA0B6Fc6A5c998988a271501fF7A6892c6Ff;
+    address public constant GNOSIS_PAYLOAD = 0xa2915822472377C7EF913D5E4D149891FEe4999e;
 
     function _postExecute()
         internal override
