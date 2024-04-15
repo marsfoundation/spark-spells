@@ -17,7 +17,7 @@ abstract contract SparkPayloadEthereum is
     function getPoolContext() public pure override returns (IEngine.PoolContext memory) {
         return IEngine.PoolContext({networkName: 'Ethereum', networkAbbreviation: 'Eth'});
     }
-    function encodePayloadQueue(address _payload) internal view returns (bytes memory) {
+    function encodePayloadQueue(address _payload) internal pure returns (bytes memory) {
         address[] memory targets        = new address[](1);
         uint256[] memory values         = new uint256[](1);
         string[] memory signatures      = new string[](1);

@@ -172,7 +172,8 @@ contract SparkEthereum_20240417Test is SparkEthereumTestBase {
         skip(2 days);
 
         assertEq(IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).getActionsSetCount(), 4);
-
+        
+        assertTrue(GNOSIS_PAYLOAD != address(0));
         vm.expectCall(
             GNOSIS_PAYLOAD,
             abi.encodeWithSignature('execute()')

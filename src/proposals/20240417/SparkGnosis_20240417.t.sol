@@ -255,14 +255,14 @@ contract SparkGnosis_20240417Test is SparkGnosisTestBase {
         assertEq(daiConfigBefore.reserveFactor, 0);
         InterestStrategyValues memory interestStrategyValuesBefore = InterestStrategyValues({
             addressesProvider:             address(poolAddressesProvider),
-            optimalUsageRatio:             oldInterestRateStrategy.OPTIMAL_USAGE_RATIO(),
+            optimalUsageRatio:             0.9e27,
             optimalStableToTotalDebtRatio: oldInterestRateStrategy.OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO(),
             baseStableBorrowRate:          0,
             stableRateSlope1:              oldInterestRateStrategy.getStableRateSlope1(),
             stableRateSlope2:              oldInterestRateStrategy.getStableRateSlope2(),
             baseVariableBorrowRate:        0.048790164207174267760128000e27,
             variableRateSlope1:            0,
-            variableRateSlope2:            oldInterestRateStrategy.getVariableRateSlope2()
+            variableRateSlope2:            0.5e27
         });
         _validateInterestRateStrategy(
             address(oldInterestRateStrategy),
