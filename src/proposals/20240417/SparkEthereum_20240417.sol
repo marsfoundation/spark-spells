@@ -17,8 +17,9 @@ import { XChainForwarders } from 'xchain-helpers/XChainForwarders.sol';
  * @notice Upgrade Pool Implementation to SparkLend V1.0.0, activate Freezer Mom /w multi-sig, trigger Gnosis Payload.
  * @author Phoenix Labs
  * Forum:  https://forum.makerdao.com/t/apr-4-2024-proposed-changes-to-sparklend-for-upcoming-spell/24033
- *         TODO multisig link
+ *         https://forum.makerdao.com/t/sparklend-external-security-access-multisig-for-freezer-mom/24070
  * Votes:  https://vote.makerdao.com/polling/QmZND8WW#poll-detail
+ *         https://vote.makerdao.com/polling/QmVXriiT#poll-detail
  */
 contract SparkEthereum_20240417 is SparkPayloadEthereum {
 
@@ -26,7 +27,7 @@ contract SparkEthereum_20240417 is SparkPayloadEthereum {
     address public constant FREEZER_MOM_NEW         = 0x237e3985dD7E373F2ec878EC1Ac48A228Cf2e7a3;
     address public constant FREEZER_MULTISIG        = 0x44efFc473e81632B12486866AA1678edbb7BEeC3;
     
-    address public constant GNOSIS_PAYLOAD = address(0);  // TODO
+    address public constant GNOSIS_PAYLOAD = 0x3068FA0B6Fc6A5c998988a271501fF7A6892c6Ff;
 
     function _postExecute()
         internal override

@@ -17,6 +17,7 @@ import { IPoolAddressesProvider } from 'sparklend-v1-core/contracts/interfaces/I
  *         https://vote.makerdao.com/polling/QmcRdMyA#poll-detail
  *         https://vote.makerdao.com/polling/QmSYZSCQ#poll-detail
  *         https://vote.makerdao.com/polling/QmfGV2vt#poll-detail
+ *         https://vote.makerdao.com/polling/QmdJoSib#poll-detail
  */
 contract SparkGnosis_20240417 is SparkPayloadGnosis {
 
