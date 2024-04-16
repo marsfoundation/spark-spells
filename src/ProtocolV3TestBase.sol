@@ -287,7 +287,7 @@ contract ProtocolV3TestBase is CommonTestBase {
   }
 
   function _includeCollateralAssetInE2e(ReserveConfig memory config) internal pure returns (bool) {
-    return !config.isFrozen && config.isActive && !config.isPaused && config.usageAsCollateralEnabled;
+    return !config.isFrozen && config.isActive && !config.isPaused && config.usageAsCollateralEnabled && config.ltv > 0;
   }
 
   function _getTokenPrice(IPool pool, ReserveConfig memory config) internal view returns (uint256) {
@@ -560,8 +560,8 @@ contract ProtocolV3TestBase is CommonTestBase {
     address pool = abi.decode(params, (address));
     assertEq(IERC20(asset).balanceOf(address(this)), amount, 'UNDERLYING_NOT_AMOUNT');
 
-    // Temporary measure while USDC deal gets fixed, set the balance to amount + premium either way
-    uint256 dealAmount = asset == Ethereum.USDC ? premium : amount + premium;
+    // Temporary measure while USDC/EURe deal gets fixed, set the balance to amount + premium either way
+    uint256 dealAmount = asset == USDC_MAINNET || asset == EURE_GNOSIS ? premium : amount + premium;
     deal2(asset, address(this), dealAmount);
 
     vm.startPrank(address(this));

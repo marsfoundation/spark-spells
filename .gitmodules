@@ -28,3 +28,6 @@
 [submodule "lib/sparklend-cap-automator"]
 	path = lib/sparklend-cap-automator
 	url = https://github.com/marsfoundation/sparklend-cap-automator
+[submodule "lib/spark-gov-relay"]
+	path = lib/spark-gov-relay
+	url = https://github.com/marsfoundation/spark-gov-relay
