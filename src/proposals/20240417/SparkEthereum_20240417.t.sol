@@ -7,6 +7,19 @@ import { IL2BridgeExecutor } from 'spark-gov-relay/interfaces/IL2BridgeExecutor.
 
 import { Domain, GnosisDomain } from 'xchain-helpers/testing/GnosisDomain.sol';
 
+interface IIRM {
+    function RATE_SOURCE() external view returns (address);
+}
+
+interface IRateSource {
+    function getAPR() external view returns (int256);
+}
+
+interface PotLike {
+    function drip() external;
+    function file(bytes32 what, uint256 data) external;
+}
+
 contract SparkEthereum_20240417Test is SparkEthereumTestBase {
 
     address public constant POOL_IMPLEMENTATION_OLD = Ethereum.POOL_IMPL;
@@ -23,6 +36,11 @@ contract SparkEthereum_20240417Test is SparkEthereumTestBase {
 
     address public constant GNOSIS_PAYLOAD = 0xa2915822472377C7EF913D5E4D149891FEe4999e;
 
+    address public constant OLD_DAI_INTEREST_RATE_STRATEGY = 0x883b03288D1827066C57E5db96661aB994Ef3800;
+    address public constant NEW_DAI_INTEREST_RATE_STRATEGY = 0xE9905C2dCf64F3fBAeE50a81D1844339FC77e812;
+
+    int256 public constant DAI_IRM_SPREAD = 0.009049835548567426118688000e27;
+
     Domain       mainnet;
     GnosisDomain gnosis;
 
@@ -34,12 +52,19 @@ contract SparkEthereum_20240417Test is SparkEthereumTestBase {
         mainnet = new Domain(getChain('mainnet'));
         gnosis  = new GnosisDomain(getChain('gnosis_chain'), mainnet);
 
-        mainnet.rollFork(19662367);  // April 15, 2024
+        mainnet.rollFork(19695629);  // April 20, 2024
         gnosis.rollFork(33459207);   // April 15, 2024
 
-        payload = 0x3d1DD14Fa08163E7f64b0abf0F514f6276f50882;
+        mainnet.selectFork();
+
+        payload = 0x151D5fA7B3eD50098fFfDd61DB29cB928aE04C0e;
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
+
+        vm.startPrank(Ethereum.PAUSE_PROXY);
+        PotLike(Ethereum.POT).drip();
+        PotLike(Ethereum.POT).file('dsr', 1000000003022265980097387650);
+        vm.stopPrank();
     }
 
     function test_poolUpgrade() public {
@@ -176,6 +201,50 @@ contract SparkEthereum_20240417Test is SparkEthereumTestBase {
         assertEq(IPool(Gnosis.POOL).getReservesList().length, 4);
         IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).execute(3);
         assertEq(IPool(Gnosis.POOL).getReservesList().length, 8);
+    }
+
+    function testDaiInterestRateUpdate() public {
+        ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', pool);
+
+        ReserveConfig memory daiConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'DAI');
+
+        assertEq(daiConfigBefore.interestRateStrategy, OLD_DAI_INTEREST_RATE_STRATEGY);
+
+        GovHelpers.executePayload(vm, payload, executor);
+
+        ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
+
+        ReserveConfig memory daiConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'DAI');
+
+        address rateSource = IIRM(daiConfigAfter.interestRateStrategy).RATE_SOURCE();
+        assertEq(rateSource, IIRM(OLD_DAI_INTEREST_RATE_STRATEGY).RATE_SOURCE());  // Same rate source as before
+
+        int256 potDsrApr = IRateSource(rateSource).getAPR();
+
+        // Approx 10% APY
+        assertEq(_getAPY(uint256(potDsrApr)), 0.099999999999999999953897206e27);
+
+        uint256 expectedDaiBaseVariableBorrowRate = uint256(potDsrApr + DAI_IRM_SPREAD);
+        assertEq(expectedDaiBaseVariableBorrowRate, 0.104360015496918643049088000e27);
+
+        // Approx 11% APY
+        assertEq(_getAPY(expectedDaiBaseVariableBorrowRate), 0.109999999999999999970583056e27);
+
+        _validateInterestRateStrategy(
+            daiConfigAfter.interestRateStrategy,
+            NEW_DAI_INTEREST_RATE_STRATEGY,
+            InterestStrategyValues({
+                addressesProvider:             address(poolAddressesProvider),
+                optimalUsageRatio:             1e27,
+                optimalStableToTotalDebtRatio: 0,
+                baseStableBorrowRate:          0,
+                stableRateSlope1:              0,
+                stableRateSlope2:              0,
+                baseVariableBorrowRate:        expectedDaiBaseVariableBorrowRate,
+                variableRateSlope1:            0,
+                variableRateSlope2:            0
+            })
+        );
     }
 
 }
