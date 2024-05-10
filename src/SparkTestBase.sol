@@ -228,8 +228,7 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
         capAutomator                  = ICapAutomator(Ethereum.CAP_AUTOMATOR);
     }
 
-    // FIXME: This should be re-enabled in the next spell
-    function testFreezerMom() private {
+    function testFreezerMom() public {
         uint256 snapshot = vm.snapshot();
 
         _runFreezerMomTests();
