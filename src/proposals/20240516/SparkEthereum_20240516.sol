@@ -7,7 +7,7 @@ import { SparkPayloadEthereum, Ethereum } from 'src/SparkPayloadEthereum.sol';
  * @title  May 16, 2024 Spark Ethereum Proposal
  * @notice Update DAI IRM.
  * @author Phoenix Labs
- * Forum:  TODO
+ * Forum:  https://forum.makerdao.com/t/stability-scope-parameter-changes-13-under-sta-article-3-3/24250
  */
 contract SparkEthereum_20240516 is SparkPayloadEthereum {
 
