@@ -28,8 +28,8 @@ contract SparkEthereum_20240516Test is SparkEthereumTestBase {
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('mainnet').rpcUrl, 19837381);  // May 10, 2024
-        payload = deployPayload();
+        vm.createSelectFork(getChain('mainnet').rpcUrl, 19859567);  // May 13, 2024
+        payload = 0x901E4450f01ae1A2615E384b9104888Cb9Cb02FF;
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
 
