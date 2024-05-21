@@ -77,6 +77,8 @@ contract SparkEthereum_20240530 is SparkPayloadEthereum {
             STABLECOINS_IRM
         );
 
+        // Morpho Vault Supply Cap Changes
+
         // Trigger Gnosis Payload
         XChainForwarders.sendMessageGnosis(
             Gnosis.AMB_EXECUTOR,
