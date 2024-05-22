@@ -22,14 +22,50 @@ contract SparkEthereum_20240530Test is SparkEthereumTestBase {
         mainnet = new Domain(getChain('mainnet'));
         gnosis  = new GnosisDomain(getChain('gnosis_chain'), mainnet);
 
-        mainnet.rollFork(19918271);  // May 21, 2024
+        mainnet.rollFork(19918335);  // May 21, 2024
         gnosis.rollFork(34058083);   // May 21, 2024
 
-        //mainnet.selectFork();
+        mainnet.selectFork();
 
         payload = deployPayload();
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
+    }
+
+    function testMorphoSupplyCapUpdates() public {
+        MarketParams memory susde1 = MarketParams({
+            loanToken:       Ethereum.DAI,
+            collateralToken: Ethereum.SUSDE,
+            oracle:          Ethereum.MORPHO_SUSDE_ORACLE,
+            irm:             Ethereum.MORPHO_DEFAULT_IRM,
+            lltv:            0.86e18
+        });
+        MarketParams memory susde2 = MarketParams({
+            loanToken:       Ethereum.DAI,
+            collateralToken: Ethereum.SUSDE,
+            oracle:          Ethereum.MORPHO_SUSDE_ORACLE,
+            irm:             Ethereum.MORPHO_DEFAULT_IRM,
+            lltv:            0.915e18
+        });
+
+        _assertMorphoCap(susde1, 200_000_000e18);
+        _assertMorphoCap(susde2, 50_000_000e18);
+
+        GovHelpers.executePayload(vm, payload, executor);
+
+        _assertMorphoCap(susde1, 200_000_000e18, 400_000_000e18);
+        _assertMorphoCap(susde2, 50_000_000e18, 100_000_000e18);
+
+        assertEq(IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).timelock(), 1 days);
+
+        skip(1 days);
+
+        // These are permissionless (call coming from the test contract)
+        IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).acceptCap(susde1);
+        IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).acceptCap(susde2);
+
+        _assertMorphoCap(susde1, 400_000_000e18);
+        _assertMorphoCap(susde2, 100_000_000e18);
     }
 
 }

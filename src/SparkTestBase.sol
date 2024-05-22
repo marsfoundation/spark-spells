@@ -16,6 +16,9 @@ import { WadRayMath }                            from "sparklend-v1-core/contrac
 
 import { ISparkLendFreezerMom } from 'sparklend-freezer/interfaces/ISparkLendFreezerMom.sol';
 
+import { IMetaMorpho, MarketParams, PendingUint192, Id } from 'lib/metamorpho/src/interfaces/IMetaMorpho.sol';
+import { MarketParamsLib }                               from 'lib/metamorpho/lib/morpho-blue/src/libraries/MarketParamsLib.sol';
+
 // REPO ARCHITECTURE TODOs
 // TODO: Refactor Mock logic for executor to be more realistic, consider fork + prank.
 
@@ -428,6 +431,39 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
         assertEq(_max,              0);
         assertEq(_gap,              0);
         assertEq(_increaseCooldown, 0);
+    }
+
+    function _assertMorphoCap(
+        MarketParams memory _config,
+        uint256             _currentCap,
+        bool                _hasPending,
+        uint256             _pendingCap
+    ) internal {
+        Id id = MarketParamsLib.id(_config);
+        assertEq(IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).config(id).cap, _currentCap);
+        PendingUint192 memory pendingCap = IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).pendingCap(id);
+        if (_hasPending) {
+            assertEq(pendingCap.value,   _pendingCap);
+            assertGt(pendingCap.validAt, 0);
+        } else {
+            assertEq(pendingCap.value,   0);
+            assertEq(pendingCap.validAt, 0);
+        }
+    }
+
+    function _assertMorphoCap(
+        MarketParams memory _config,
+        uint256             _currentCap,
+        uint256             _pendingCap
+    ) internal {
+        _assertMorphoCap(_config, _currentCap, true, _pendingCap);
+    }
+
+    function _assertMorphoCap(
+        MarketParams memory _config,
+        uint256             _currentCap
+    ) internal {
+        _assertMorphoCap(_config, _currentCap, false, 0);
     }
 
 }

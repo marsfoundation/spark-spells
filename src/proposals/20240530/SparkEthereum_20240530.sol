@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.10;
 
+import { IMetaMorpho, MarketParams } from 'lib/metamorpho/src/interfaces/IMetaMorpho.sol';
+import { Gnosis }                    from 'lib/spark-address-registry/src/Gnosis.sol';
+import { XChainForwarders }          from 'lib/xchain-helpers/src/XChainForwarders.sol';
+
 import { SparkPayloadEthereum, Ethereum, IEngine, EngineFlags, Rates } from 'src/SparkPayloadEthereum.sol';
 
-import { Gnosis }   from 'spark-address-registry/src/Gnosis.sol';
-
-import { XChainForwarders } from 'xchain-helpers/XChainForwarders.sol';
 
 /**
  * @title  May 30, 2024 Spark Ethereum Proposal
@@ -78,6 +79,20 @@ contract SparkEthereum_20240530 is SparkPayloadEthereum {
         );
 
         // Morpho Vault Supply Cap Changes
+        IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).submitCap(MarketParams({
+            loanToken:       Ethereum.DAI,
+            collateralToken: Ethereum.SUSDE,
+            oracle:          Ethereum.MORPHO_SUSDE_ORACLE,
+            irm:             Ethereum.MORPHO_DEFAULT_IRM,
+            lltv:            0.86e18
+        }), 400_000_000e18);
+        IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).submitCap(MarketParams({
+            loanToken:       Ethereum.DAI,
+            collateralToken: Ethereum.SUSDE,
+            oracle:          Ethereum.MORPHO_SUSDE_ORACLE,
+            irm:             Ethereum.MORPHO_DEFAULT_IRM,
+            lltv:            0.915e18
+        }), 100_000_000e18);
 
         // Trigger Gnosis Payload
         XChainForwarders.sendMessageGnosis(
