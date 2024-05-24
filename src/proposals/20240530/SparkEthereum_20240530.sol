@@ -10,7 +10,7 @@ import { SparkPayloadEthereum, Ethereum, IEngine, EngineFlags, Rates } from 'src
 
 /**
  * @title  May 30, 2024 Spark Ethereum Proposal
- * @notice Turn off silo borrowing for USDC/USDC, update IRMs for USDC/USDT/ETH, trigger Gnosis Payload.
+ * @notice Turn off silo borrowing for USDC/USDC, update IRMs for USDC/USDT/ETH, update Morpho supply caps, trigger Gnosis Payload.
  * @author Phoenix Labs
  * Forum:  https://forum.makerdao.com/t/may-21-2024-proposed-changes-to-sparklend-for-upcoming-spell/24327
  * Votes:  TODO
@@ -79,20 +79,26 @@ contract SparkEthereum_20240530 is SparkPayloadEthereum {
         );
 
         // Morpho Vault Supply Cap Changes
-        IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).submitCap(MarketParams({
-            loanToken:       Ethereum.DAI,
-            collateralToken: Ethereum.SUSDE,
-            oracle:          Ethereum.MORPHO_SUSDE_ORACLE,
-            irm:             Ethereum.MORPHO_DEFAULT_IRM,
-            lltv:            0.86e18
-        }), 400_000_000e18);
-        IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).submitCap(MarketParams({
-            loanToken:       Ethereum.DAI,
-            collateralToken: Ethereum.SUSDE,
-            oracle:          Ethereum.MORPHO_SUSDE_ORACLE,
-            irm:             Ethereum.MORPHO_DEFAULT_IRM,
-            lltv:            0.915e18
-        }), 100_000_000e18);
+        IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).submitCap(
+            MarketParams({
+                loanToken:       Ethereum.DAI,
+                collateralToken: Ethereum.SUSDE,
+                oracle:          Ethereum.MORPHO_SUSDE_ORACLE,
+                irm:             Ethereum.MORPHO_DEFAULT_IRM,
+                lltv:            0.86e18
+            }),
+            400_000_000e18
+        );
+        IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).submitCap(
+            MarketParams({
+                loanToken:       Ethereum.DAI,
+                collateralToken: Ethereum.SUSDE,
+                oracle:          Ethereum.MORPHO_SUSDE_ORACLE,
+                irm:             Ethereum.MORPHO_DEFAULT_IRM,
+                lltv:            0.915e18
+            }),
+            100_000_000e18
+        );
 
         // Trigger Gnosis Payload
         XChainForwarders.sendMessageGnosis(

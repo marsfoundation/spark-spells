@@ -66,15 +66,15 @@ contract SparkGnosis_20240530 is SparkPayloadGnosis {
 
         // DAI/USDC/USDT
         Rates.RateStrategyParams memory usdStablecoinParams = Rates.RateStrategyParams({
-                optimalUsageRatio:             _bpsToRay(95_00),
-                baseVariableBorrowRate:        _bpsToRay(0),
-                variableRateSlope1:            _bpsToRay(9_00),
-                variableRateSlope2:            _bpsToRay(15_00),
-                stableRateSlope1:              0,
-                stableRateSlope2:              0,
-                baseStableRateOffset:          0,
-                stableRateExcessOffset:        0,
-                optimalStableToTotalDebtRatio: 0
+            optimalUsageRatio:             _bpsToRay(95_00),
+            baseVariableBorrowRate:        _bpsToRay(0),
+            variableRateSlope1:            _bpsToRay(9_00),
+            variableRateSlope2:            _bpsToRay(15_00),
+            stableRateSlope1:              0,
+            stableRateSlope2:              0,
+            baseStableRateOffset:          0,
+            stableRateExcessOffset:        0,
+            optimalStableToTotalDebtRatio: 0
         });
         ratesUpdate[1] = IEngine.RateStrategyUpdate({
             asset:  Gnosis.WXDAI,
@@ -91,15 +91,15 @@ contract SparkGnosis_20240530 is SparkPayloadGnosis {
 
         // EURe
         Rates.RateStrategyParams memory euroStablecoinParams = Rates.RateStrategyParams({
-                optimalUsageRatio:             _bpsToRay(95_00),
-                baseVariableBorrowRate:        _bpsToRay(0),
-                variableRateSlope1:            _bpsToRay(5_00),
-                variableRateSlope2:            _bpsToRay(15_00),
-                stableRateSlope1:              0,
-                stableRateSlope2:              0,
-                baseStableRateOffset:          0,
-                stableRateExcessOffset:        0,
-                optimalStableToTotalDebtRatio: 0
+            optimalUsageRatio:             _bpsToRay(95_00),
+            baseVariableBorrowRate:        _bpsToRay(0),
+            variableRateSlope1:            _bpsToRay(5_00),
+            variableRateSlope2:            _bpsToRay(15_00),
+            stableRateSlope1:              0,
+            stableRateSlope2:              0,
+            baseStableRateOffset:          0,
+            stableRateExcessOffset:        0,
+            optimalStableToTotalDebtRatio: 0
         });
         ratesUpdate[4] = IEngine.RateStrategyUpdate({
             asset:  Gnosis.EURE,

@@ -67,15 +67,17 @@ contract SparkEthereum_20240530Test is SparkEthereumTestBase {
 
         ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
 
+        uint256 dsrPlusOnePercent = 0.086961041230036903346080000e27;
+
         InterestStrategyValues memory usdIRMValues = InterestStrategyValues({
             addressesProvider:             address(poolAddressesProvider),
             optimalUsageRatio:             0.95e27,
             optimalStableToTotalDebtRatio: 0,
-            baseStableBorrowRate:          0.086961041230036903346080000e27,
+            baseStableBorrowRate:          dsrPlusOnePercent,
             stableRateSlope1:              0,
             stableRateSlope2:              0,
             baseVariableBorrowRate:        0,
-            variableRateSlope1:            0.086961041230036903346080000e27,  // DSR as APR + 1%
+            variableRateSlope1:            dsrPlusOnePercent,
             variableRateSlope2:            0.15e27
         });
 
@@ -160,7 +162,7 @@ contract SparkEthereum_20240530Test is SparkEthereumTestBase {
         executePayload(payload);
 
         _assertMorphoCap(susde1, 200_000_000e18, 400_000_000e18);
-        _assertMorphoCap(susde2, 50_000_000e18, 100_000_000e18);
+        _assertMorphoCap(susde2, 50_000_000e18,  100_000_000e18);
 
         assertEq(IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).timelock(), 1 days);
 

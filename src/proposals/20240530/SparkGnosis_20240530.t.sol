@@ -63,7 +63,7 @@ contract SparkGnosis_20240530Test is SparkGnosisTestBase {
         );
 
         ReserveConfig memory usdtConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'USDT');
-        assertEq(usdtConfigBefore.isSiloed, true);
+        assertEq(usdtConfigBefore.isSiloed,             true);
         assertEq(usdtConfigBefore.interestRateStrategy, usdcConfigBefore.interestRateStrategy);  // USDT and USDC have the same IRM params
 
         ReserveConfig memory eureConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'EURe');
