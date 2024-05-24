@@ -147,12 +147,34 @@ contract SparkGnosis_20240530Test is SparkGnosisTestBase {
         usdtConfigBefore.interestRateStrategy = usdtConfigAfter.interestRateStrategy;
         _validateReserveConfig(usdtConfigBefore, allConfigsAfter);
         _validateInterestRateStrategy(
-            usdcConfigAfter.interestRateStrategy,
-            usdcConfigAfter.interestRateStrategy,
+            usdtConfigAfter.interestRateStrategy,
+            usdtConfigAfter.interestRateStrategy,
             usdIRMValues
         );
 
+        ReserveConfig memory eureConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'EURe');
+        eureConfigBefore.isSiloed = false;
+        eureConfigBefore.interestRateStrategy = eureConfigAfter.interestRateStrategy;
+        _validateReserveConfig(eureConfigBefore, allConfigsAfter);
+        _validateInterestRateStrategy(
+            eureConfigAfter.interestRateStrategy,
+            eureConfigAfter.interestRateStrategy,
+            InterestStrategyValues({
+                addressesProvider:             address(poolAddressesProvider),
+                optimalUsageRatio:             0.95e27,
+                optimalStableToTotalDebtRatio: wethOldInterestRateStrategy.OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO(),
+                baseStableBorrowRate:          0.05e27,
+                stableRateSlope1:              wethOldInterestRateStrategy.getStableRateSlope1(),
+                stableRateSlope2:              wethOldInterestRateStrategy.getStableRateSlope2(),
+                baseVariableBorrowRate:        wethOldInterestRateStrategy.getBaseVariableBorrowRate(),
+                variableRateSlope1:            0.05e27,
+                variableRateSlope2:            0.15e27
+            })
+        );
+
         ReserveConfig memory wethConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'WETH');
+        wethConfigBefore.interestRateStrategy = wethConfigAfter.interestRateStrategy;
+        _validateReserveConfig(wethConfigBefore, allConfigsAfter);
         _validateInterestRateStrategy(
             wethConfigAfter.interestRateStrategy,
             wethConfigAfter.interestRateStrategy,
