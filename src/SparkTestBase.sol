@@ -3,8 +3,6 @@ pragma solidity ^0.8.0;
 
 import './ProtocolV3TestBase.sol';
 
-import { GovHelpers } from './libraries/GovHelpers.sol';
-
 import { InitializableAdminUpgradeabilityProxy } from "sparklend-v1-core/contracts/dependencies/openzeppelin/upgradeability/InitializableAdminUpgradeabilityProxy.sol";
 import { IACLManager }                           from 'sparklend-v1-core/contracts/interfaces/IACLManager.sol';
 import { IPoolAddressesProviderRegistry }        from 'sparklend-v1-core/contracts/interfaces/IPoolAddressesProviderRegistry.sol';
@@ -18,6 +16,8 @@ import { ISparkLendFreezerMom } from 'sparklend-freezer/interfaces/ISparkLendFre
 
 import { IMetaMorpho, MarketParams, PendingUint192, Id } from 'lib/metamorpho/src/interfaces/IMetaMorpho.sol';
 import { MarketParamsLib }                               from 'lib/metamorpho/lib/morpho-blue/src/libraries/MarketParamsLib.sol';
+
+import { IExecutorBase } from 'lib/spark-gov-relay/src/interfaces/IExecutorBase.sol';
 
 // REPO ARCHITECTURE TODOs
 // TODO: Refactor Mock logic for executor to be more realistic, consider fork + prank.
@@ -79,7 +79,7 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
             );
         }
 
-        GovHelpers.executePayload(vm, payload, executor);
+        executePayload(payload);
 
         for (uint256 i = 0; i < poolProviders.length; i++) {
             loadPoolContext(poolProviders[i]);
@@ -108,7 +108,7 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
             e2eTest(pool);
         }
 
-        GovHelpers.executePayload(vm, payload, executor);
+        executePayload(payload);
 
         for (uint256 i = 0; i < poolProviders.length; i++) {
             loadPoolContext(poolProviders[i]);
@@ -169,7 +169,7 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
         // This test is to avoid a footgun where the token implementations are upgraded (possibly in an emergency) and
         // the config engine is not redeployed to use the new implementation. As a general rule all reserves should
         // use the same implementation for AToken, StableDebtToken and VariableDebtToken.
-        GovHelpers.executePayload(vm, payload, executor);
+        executePayload(payload);
 
         address[] memory reserves = pool.getReservesList();
         assertGt(reserves.length, 0);
@@ -191,7 +191,7 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
     function testOracles() public {
         _validateOracles();
 
-        GovHelpers.executePayload(vm, payload, executor);
+        executePayload(payload);
 
         _validateOracles();
     }
@@ -209,6 +209,8 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
         vm.prank(admin);
         return InitializableAdminUpgradeabilityProxy(payable(proxy)).implementation();
     }
+
+    function executePayload(address payloadAddress) internal virtual;
 
 }
 
@@ -231,13 +233,23 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
         capAutomator                  = ICapAutomator(Ethereum.CAP_AUTOMATOR);
     }
 
+    function executePayload(address payloadAddress) internal override {
+        vm.prank(Ethereum.PAUSE_PROXY);
+        (bool success,) = executor.call(abi.encodeWithSignature(
+            'exec(address,bytes)', 
+            payloadAddress,
+            abi.encodeWithSignature('execute()')
+        ));
+        assertEq(success, true, "FAILED TO EXECUTE PAYLOAD");
+    }
+
     function testFreezerMom() public {
         uint256 snapshot = vm.snapshot();
 
         _runFreezerMomTests();
 
         vm.revertTo(snapshot);
-        GovHelpers.executePayload(vm, payload, executor);
+        executePayload(payload);
 
         _runFreezerMomTests();
     }
@@ -245,7 +257,7 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
     function testRewardsConfiguration() public {
         _runRewardsConfigurationTests();
 
-        GovHelpers.executePayload(vm, payload, executor);
+        executePayload(payload);
 
         _runRewardsConfigurationTests();
     }
@@ -256,7 +268,7 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
         _runCapAutomatorTests();
 
         vm.revertTo(snapshot);
-        GovHelpers.executePayload(vm, payload, executor);
+        executePayload(payload);
 
         _runCapAutomatorTests();
     }
@@ -475,6 +487,14 @@ abstract contract SparkGnosisTestBase is SparkTestBase {
         domain   = 'Gnosis';
 
         poolAddressesProviderRegistry = IPoolAddressesProviderRegistry(Gnosis.POOL_ADDRESSES_PROVIDER_REGISTRY);
+    }
+
+    function executePayload(address payloadAddress) internal override {
+        vm.prank(executor);
+        IExecutorBase(executor).executeDelegateCall(
+            payloadAddress,
+            abi.encodeWithSignature('execute()')
+        );
     }
 
 }

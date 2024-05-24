@@ -107,7 +107,7 @@ contract SparkGnosis_20240530Test is SparkGnosisTestBase {
             })
         );
 
-        GovHelpers.executePayload(vm, payload, executor);
+        executePayload(payload);
 
         ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
 
@@ -196,7 +196,7 @@ contract SparkGnosis_20240530Test is SparkGnosisTestBase {
         assertEq(IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).getMinimumDelay(), 8 hours);
         assertEq(IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).getDelay(),        2 days);
 
-        GovHelpers.executePayload(vm, payload, executor);
+        executePayload(payload);
 
         assertEq(IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).getMinimumDelay(), 0);
         assertEq(IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).getDelay(),        0);

@@ -63,7 +63,7 @@ contract SparkEthereum_20240530Test is SparkEthereumTestBase {
             })
         );
 
-        GovHelpers.executePayload(vm, payload, executor);
+        executePayload(payload);
 
         ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
 
@@ -120,7 +120,7 @@ contract SparkEthereum_20240530Test is SparkEthereumTestBase {
     }
 
     function testGnosisSpellExecution() public {
-        GovHelpers.executePayload(vm, payload, executor);
+        executePayload(payload);
 
         gnosis.selectFork();
 
@@ -157,7 +157,7 @@ contract SparkEthereum_20240530Test is SparkEthereumTestBase {
         _assertMorphoCap(susde1, 200_000_000e18);
         _assertMorphoCap(susde2, 50_000_000e18);
 
-        GovHelpers.executePayload(vm, payload, executor);
+        executePayload(payload);
 
         _assertMorphoCap(susde1, 200_000_000e18, 400_000_000e18);
         _assertMorphoCap(susde2, 50_000_000e18, 100_000_000e18);
