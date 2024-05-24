@@ -3,6 +3,8 @@ pragma solidity ^0.8.10;
 
 import '../../SparkTestBase.sol';
 
+import { IL2BridgeExecutor } from 'spark-gov-relay/interfaces/IL2BridgeExecutor.sol';
+
 contract SparkGnosis_20240530Test is SparkGnosisTestBase {
 
     constructor() {
@@ -188,6 +190,16 @@ contract SparkGnosis_20240530Test is SparkGnosisTestBase {
                 variableRateSlope2:            wethOldInterestRateStrategy.getVariableRateSlope2()
             })
         );
+    }
+
+    function testRemoveExecutorDelay() public {
+        assertEq(IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).getMinimumDelay(), 8 hours);
+        assertEq(IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).getDelay(), 2 days);
+
+        GovHelpers.executePayload(vm, payload, executor);
+
+        assertEq(IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).getMinimumDelay(), 0);
+        assertEq(IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).getDelay(), 0);
     }
 
 }

@@ -3,9 +3,11 @@ pragma solidity ^0.8.10;
 
 import { SparkPayloadGnosis, Gnosis, IEngine, Rates, EngineFlags } from 'src/SparkPayloadGnosis.sol';
 
+import { IL2BridgeExecutor } from 'spark-gov-relay/interfaces/IL2BridgeExecutor.sol';
+
 /**
  * @title  May 30, 2024 Spark Gnosis Proposal
- * @notice Turn off silo borrowing for USDC/USDC/EURe, update IRMs for XDAI/USDC/USDT/EURe/ETH.
+ * @notice Turn off silo borrowing for USDC/USDC/EURe, update IRMs for XDAI/USDC/USDT/EURe/ETH, disable executor delay and min delay.
  * @author Phoenix Labs
  * Forum:  https://forum.makerdao.com/t/may-21-2024-proposed-changes-to-sparklend-for-upcoming-spell/24327
  * Votes:  TODO
@@ -105,6 +107,13 @@ contract SparkGnosis_20240530 is SparkPayloadGnosis {
         });
 
         return ratesUpdate;
+    }
+
+    function _postExecute()
+        internal override
+    {
+        IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).updateMinimumDelay(0);
+        IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).updateDelay(0);
     }
 
 }

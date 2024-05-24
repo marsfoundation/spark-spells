@@ -119,6 +119,23 @@ contract SparkEthereum_20240530Test is SparkEthereumTestBase {
         );
     }
 
+    function testGnosisSpellExecution() public {
+        GovHelpers.executePayload(vm, payload, executor);
+
+        gnosis.selectFork();
+
+        assertEq(IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).getActionsSetCount(), 4);
+
+        gnosis.relayFromHost(true);
+        skip(2 days);
+
+        assertEq(IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).getActionsSetCount(), 5);
+        
+        assertEq(IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).getDelay(), 2 days);
+        IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).execute(4);
+        assertEq(IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).getDelay(), 0);
+    }
+
     function testMorphoSupplyCapUpdates() public {
         MarketParams memory susde1 = MarketParams({
             loanToken:       Ethereum.DAI,
