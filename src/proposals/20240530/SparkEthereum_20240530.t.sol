@@ -131,9 +131,11 @@ contract SparkEthereum_20240530Test is SparkEthereumTestBase {
 
         assertEq(IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).getActionsSetCount(), 5);
         
-        assertEq(IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).getDelay(), 2 days);
+        assertEq(IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).getMinimumDelay(), 8 hours);
+        assertEq(IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).getDelay(),        2 days);
         IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).execute(4);
-        assertEq(IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).getDelay(), 0);
+        assertEq(IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).getMinimumDelay(), 0);
+        assertEq(IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).getDelay(),        0);
     }
 
     function testMorphoSupplyCapUpdates() public {

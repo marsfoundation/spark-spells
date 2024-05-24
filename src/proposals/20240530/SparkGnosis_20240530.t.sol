@@ -194,12 +194,12 @@ contract SparkGnosis_20240530Test is SparkGnosisTestBase {
 
     function testRemoveExecutorDelay() public {
         assertEq(IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).getMinimumDelay(), 8 hours);
-        assertEq(IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).getDelay(), 2 days);
+        assertEq(IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).getDelay(),        2 days);
 
         GovHelpers.executePayload(vm, payload, executor);
 
         assertEq(IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).getMinimumDelay(), 0);
-        assertEq(IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).getDelay(), 0);
+        assertEq(IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).getDelay(),        0);
     }
 
 }

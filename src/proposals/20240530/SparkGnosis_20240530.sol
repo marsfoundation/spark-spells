@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.10;
 
-import { SparkPayloadGnosis, Gnosis, IEngine, Rates, EngineFlags } from 'src/SparkPayloadGnosis.sol';
+import { IExecutorBase } from 'lib/spark-gov-relay/src/interfaces/IExecutorBase.sol';
 
-import { IL2BridgeExecutor } from 'spark-gov-relay/interfaces/IL2BridgeExecutor.sol';
+import { SparkPayloadGnosis, Gnosis, IEngine, Rates, EngineFlags } from 'src/SparkPayloadGnosis.sol';
 
 /**
  * @title  May 30, 2024 Spark Gnosis Proposal
@@ -112,8 +112,8 @@ contract SparkGnosis_20240530 is SparkPayloadGnosis {
     function _postExecute()
         internal override
     {
-        IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).updateMinimumDelay(0);
-        IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).updateDelay(0);
+        IExecutorBase(address(this)).updateMinimumDelay(0);
+        IExecutorBase(address(this)).updateDelay(0);
     }
 
 }
