@@ -5,7 +5,7 @@ import { SparkPayloadGnosis, Gnosis, IEngine, Rates, EngineFlags } from 'src/Spa
 
 /**
  * @title  May 30, 2024 Spark Gnosis Proposal
- * @notice Turn off silo borrowing for USDC/USDC/EURe, update IRMs for USDC/USDT/EURe/ETH.
+ * @notice Turn off silo borrowing for USDC/USDC/EURe, update IRMs for XDAI/USDC/USDT/EURe/ETH.
  * @author Phoenix Labs
  * Forum:  https://forum.makerdao.com/t/may-21-2024-proposed-changes-to-sparklend-for-upcoming-spell/24327
  * Votes:  TODO
