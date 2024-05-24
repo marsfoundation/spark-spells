@@ -16,10 +16,8 @@ contract SparkGnosis_20240530Test is SparkGnosisTestBase {
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
     }
 
-    function testSpellSpecifics() public {
-
+    function testMarketConfigChanges() public {
         ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', pool);
-
 
         ReserveConfig memory daiConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'WXDAI');
         IDefaultInterestRateStrategy daiOldInterestRateStrategy = IDefaultInterestRateStrategy(

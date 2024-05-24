@@ -9,6 +9,8 @@ import { Domain, GnosisDomain } from 'xchain-helpers/testing/GnosisDomain.sol';
 
 contract SparkEthereum_20240530Test is SparkEthereumTestBase {
 
+    address public constant STABLECOINS_IRM = 0x4Da18457A76C355B74F9e4A944EcC882aAc64043;
+
     address public constant GNOSIS_PAYLOAD = address(0);  // TODO
 
     Domain       mainnet;
@@ -30,6 +32,91 @@ contract SparkEthereum_20240530Test is SparkEthereumTestBase {
         payload = deployPayload();
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
+    }
+
+    function testMarketConfigChanges() public {
+        ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', pool);
+
+        ReserveConfig memory usdcConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'USDC');
+        assertEq(usdcConfigBefore.isSiloed, true);
+
+        ReserveConfig memory usdtConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'USDT');
+        assertEq(usdtConfigBefore.isSiloed, true);
+
+        ReserveConfig memory wethConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'WETH');
+        IDefaultInterestRateStrategy wethOldInterestRateStrategy = IDefaultInterestRateStrategy(
+            wethConfigBefore.interestRateStrategy
+        );
+        _validateInterestRateStrategy(
+            address(wethOldInterestRateStrategy),
+            address(wethOldInterestRateStrategy),
+            InterestStrategyValues({
+                addressesProvider:             address(poolAddressesProvider),
+                optimalUsageRatio:             wethOldInterestRateStrategy.OPTIMAL_USAGE_RATIO(),
+                optimalStableToTotalDebtRatio: wethOldInterestRateStrategy.OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO(),
+                baseStableBorrowRate:          0.028e27,
+                stableRateSlope1:              wethOldInterestRateStrategy.getStableRateSlope1(),
+                stableRateSlope2:              wethOldInterestRateStrategy.getStableRateSlope2(),
+                baseVariableBorrowRate:        wethOldInterestRateStrategy.getBaseVariableBorrowRate(),
+                variableRateSlope1:            0.028e27,
+                variableRateSlope2:            wethOldInterestRateStrategy.getVariableRateSlope2()
+            })
+        );
+
+        GovHelpers.executePayload(vm, payload, executor);
+
+        ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
+
+        InterestStrategyValues memory usdIRMValues = InterestStrategyValues({
+            addressesProvider:             address(poolAddressesProvider),
+            optimalUsageRatio:             0.95e27,
+            optimalStableToTotalDebtRatio: 0,
+            baseStableBorrowRate:          0.086961041230036903346080000e27,
+            stableRateSlope1:              0,
+            stableRateSlope2:              0,
+            baseVariableBorrowRate:        0,
+            variableRateSlope1:            0.086961041230036903346080000e27,  // DSR as APR + 1%
+            variableRateSlope2:            0.15e27
+        });
+
+        ReserveConfig memory usdcConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'USDC');
+        usdcConfigBefore.isSiloed = false;
+        usdcConfigBefore.interestRateStrategy = STABLECOINS_IRM;
+        _validateReserveConfig(usdcConfigBefore, allConfigsAfter);
+        _validateInterestRateStrategy(
+            usdcConfigAfter.interestRateStrategy,
+            usdcConfigAfter.interestRateStrategy,
+            usdIRMValues
+        );
+
+        ReserveConfig memory usdtConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'USDT');
+        usdtConfigBefore.isSiloed = false;
+        usdtConfigBefore.interestRateStrategy = STABLECOINS_IRM;
+        _validateReserveConfig(usdtConfigBefore, allConfigsAfter);
+        _validateInterestRateStrategy(
+            usdtConfigAfter.interestRateStrategy,
+            usdtConfigAfter.interestRateStrategy,
+            usdIRMValues
+        );
+
+        ReserveConfig memory wethConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'WETH');
+        wethConfigBefore.interestRateStrategy = wethConfigAfter.interestRateStrategy;
+        _validateReserveConfig(wethConfigBefore, allConfigsAfter);
+        _validateInterestRateStrategy(
+            wethConfigAfter.interestRateStrategy,
+            wethConfigAfter.interestRateStrategy,
+            InterestStrategyValues({
+                addressesProvider:             address(poolAddressesProvider),
+                optimalUsageRatio:             wethOldInterestRateStrategy.OPTIMAL_USAGE_RATIO(),
+                optimalStableToTotalDebtRatio: wethOldInterestRateStrategy.OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO(),
+                baseStableBorrowRate:          0.025e27,
+                stableRateSlope1:              wethOldInterestRateStrategy.getStableRateSlope1(),
+                stableRateSlope2:              wethOldInterestRateStrategy.getStableRateSlope2(),
+                baseVariableBorrowRate:        wethOldInterestRateStrategy.getBaseVariableBorrowRate(),
+                variableRateSlope1:            0.025e27,
+                variableRateSlope2:            wethOldInterestRateStrategy.getVariableRateSlope2()
+            })
+        );
     }
 
     function testMorphoSupplyCapUpdates() public {
