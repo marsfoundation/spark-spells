@@ -10,7 +10,9 @@ import { SparkPayloadGnosis, Gnosis, IEngine, Rates, EngineFlags } from 'src/Spa
  * @notice Turn off silo borrowing for USDC/USDC/EURe, update IRMs for XDAI/USDC/USDT/EURe/ETH, disable executor delay and min delay.
  * @author Phoenix Labs
  * Forum:  https://forum.makerdao.com/t/may-21-2024-proposed-changes-to-sparklend-for-upcoming-spell/24327
- * Votes:  TODO
+ * Votes:  https://vote.makerdao.com/polling/QmZhjzUg#poll-detail
+ *         https://vote.makerdao.com/polling/QmT5e8NG#poll-detail
+ *         https://vote.makerdao.com/polling/QmQHu69a#poll-detail
  */
 contract SparkGnosis_20240530 is SparkPayloadGnosis {
 

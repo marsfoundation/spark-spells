@@ -13,7 +13,9 @@ import { SparkPayloadEthereum, Ethereum, IEngine, EngineFlags, Rates } from 'src
  * @notice Turn off silo borrowing for USDC/USDC, update IRMs for USDC/USDT/ETH, update Morpho supply caps, trigger Gnosis Payload.
  * @author Phoenix Labs
  * Forum:  https://forum.makerdao.com/t/may-21-2024-proposed-changes-to-sparklend-for-upcoming-spell/24327
- * Votes:  TODO
+ * Votes:  https://vote.makerdao.com/polling/QmZhjzUg#poll-detail
+ *         https://vote.makerdao.com/polling/QmWdmh1e#poll-detail
+ *         https://vote.makerdao.com/polling/QmQHu69a#poll-detail
  */
 contract SparkEthereum_20240530 is SparkPayloadEthereum {
 
