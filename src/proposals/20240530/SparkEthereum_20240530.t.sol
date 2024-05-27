@@ -11,7 +11,7 @@ contract SparkEthereum_20240530Test is SparkEthereumTestBase {
 
     address public constant STABLECOINS_IRM = 0x4Da18457A76C355B74F9e4A944EcC882aAc64043;
 
-    address public constant GNOSIS_PAYLOAD = address(0);  // TODO
+    address public constant GNOSIS_PAYLOAD = 0x4e77714b90b470Bef30613908FAd307Ca96A811a;
 
     Domain       mainnet;
     GnosisDomain gnosis;
@@ -24,12 +24,12 @@ contract SparkEthereum_20240530Test is SparkEthereumTestBase {
         mainnet = new Domain(getChain('mainnet'));
         gnosis  = new GnosisDomain(getChain('gnosis_chain'), mainnet);
 
-        mainnet.rollFork(19918335);  // May 21, 2024
-        gnosis.rollFork(34058083);   // May 21, 2024
+        mainnet.rollFork(19962401);  // May 27, 2024
+        gnosis.rollFork(34161350);   // May 27, 2024
 
         mainnet.selectFork();
 
-        payload = deployPayload();
+        payload = 0x7bcDd1c8641F8a0Ef98572427FDdD8c26D642256;
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
     }

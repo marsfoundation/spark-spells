@@ -21,7 +21,7 @@ contract SparkEthereum_20240530 is SparkPayloadEthereum {
 
     address public constant STABLECOINS_IRM = 0x4Da18457A76C355B74F9e4A944EcC882aAc64043;
     
-    address public constant GNOSIS_PAYLOAD = address(0);  // TODO
+    address public constant GNOSIS_PAYLOAD = 0x4e77714b90b470Bef30613908FAd307Ca96A811a;
 
     function borrowsUpdates() public view override returns (IEngine.BorrowUpdate[] memory) {
         IEngine.BorrowUpdate[] memory borrowUpdates = new IEngine.BorrowUpdate[](2);
