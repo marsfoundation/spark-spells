@@ -196,6 +196,17 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
         _validateOracles();
     }
 
+    function testAllReservesSeeded() public {
+        executePayload(payload);
+
+        address[] memory reserves = pool.getReservesList();
+
+        for (uint256 i = 0; i < reserves.length; i++) {
+            IERC20 aToken = IERC20(pool.getReserveData(reserves[i]).aTokenAddress);
+            require(aToken.totalSupply() >= 1e6, 'RESERVE_NOT_SEEDED');
+        }
+    }
+
     function _validateOracles() internal view {
         address[] memory reserves = pool.getReservesList();
 
@@ -236,7 +247,7 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
     function executePayload(address payloadAddress) internal override {
         vm.prank(Ethereum.PAUSE_PROXY);
         (bool success,) = executor.call(abi.encodeWithSignature(
-            'exec(address,bytes)', 
+            'exec(address,bytes)',
             payloadAddress,
             abi.encodeWithSignature('execute()')
         ));
