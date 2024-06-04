@@ -8,7 +8,7 @@ import { SparkPayloadEthereum, EngineFlags, IEngine, Rates } from 'src/SparkPayl
 
 /**
  * @title  Jun 13, 2024 Spark Ethereum Proposal
- * @notice Onboard weETH
+ * @notice Onboard weETH as collateral
  * @author Phoenix Labs
  * Forum:  https://forum.makerdao.com/t/may-31-2024-proposed-changes-to-sparklend-for-upcoming-spell/24413
  * Votes:  TODO
