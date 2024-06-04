@@ -11,7 +11,7 @@ import { SparkPayloadEthereum, EngineFlags, IEngine, Rates } from 'src/SparkPayl
  * @notice Onboard weETH as collateral
  * @author Phoenix Labs
  * Forum:  https://forum.makerdao.com/t/may-31-2024-proposed-changes-to-sparklend-for-upcoming-spell/24413
- * Votes:  TODO
+ * Vote:  TODO
  */
 contract SparkEthereum_20240613 is SparkPayloadEthereum {
 
