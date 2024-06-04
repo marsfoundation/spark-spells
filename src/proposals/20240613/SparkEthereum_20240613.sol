@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.10;
 
-import { SparkPayloadEthereum, EngineFlags, IEngine, Rates } from 'src/SparkPayloadEthereum.sol';
-
 import { ICapAutomator } from 'lib/sparklend-cap-automator/src/interfaces/ICapAutomator.sol';
 import { IERC20 }        from 'lib/erc20-helpers/src/interfaces/IERC20.sol';
+
+import { SparkPayloadEthereum, EngineFlags, IEngine, Rates } from 'src/SparkPayloadEthereum.sol';
 
 /**
  * @title  Jun 13, 2024 Spark Ethereum Proposal

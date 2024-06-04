@@ -19,7 +19,7 @@ contract SparkEthereum_20240613 is SparkEthereumTestBase {
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
     }
 
-    function test_collateralOnboarding() public {
+    function testCollateralOnboarding() public {
         ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', pool);
 
         assertEq(allConfigsBefore.length, 9);
