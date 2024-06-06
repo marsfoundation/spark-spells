@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.10;
 
-import { ICapAutomator } from 'lib/sparklend-cap-automator/src/interfaces/ICapAutomator.sol';
 import { IERC20 }        from 'lib/erc20-helpers/src/interfaces/IERC20.sol';
+import { ICapAutomator } from 'lib/sparklend-cap-automator/src/interfaces/ICapAutomator.sol';
+import { Ethereum }      from 'lib/spark-address-registry/src/Ethereum.sol';
 
 import { SparkPayloadEthereum, EngineFlags, IEngine, Rates } from 'src/SparkPayloadEthereum.sol';
 
@@ -17,7 +18,6 @@ contract SparkEthereum_20240613 is SparkPayloadEthereum {
 
     address internal constant WEETH            = 0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee;
     address internal constant WEETH_PRICE_FEED = 0x1A6BDB22b9d7a454D20EAf12DB55D6B5F058183D;
-    address internal constant CAP_AUTOMATOR    = 0x2276f52afba7Cf2525fd0a050DF464AC8532d0ef;
 
     function newListings()
         public pure override returns (IEngine.Listing[] memory)
@@ -61,7 +61,7 @@ contract SparkEthereum_20240613 is SparkPayloadEthereum {
     function _postExecute()
         internal override
     {
-        ICapAutomator(CAP_AUTOMATOR).setSupplyCapConfig({asset: WEETH, max: 50_000, gap: 5_000, increaseCooldown: 12 hours});
+        ICapAutomator(Ethereum.CAP_AUTOMATOR).setSupplyCapConfig({asset: WEETH, max: 50_000, gap: 5_000, increaseCooldown: 12 hours});
 
         IERC20(WEETH).approve(address(LISTING_ENGINE.POOL()), 1_000_000);
         LISTING_ENGINE.POOL().deposit(WEETH, 1_000_000, address(this), 0);
