@@ -12,7 +12,7 @@ import { SparkPayloadEthereum, EngineFlags, IEngine, Rates } from 'src/SparkPayl
  * @notice Onboard weETH as collateral
  * @author Phoenix Labs
  * Forum:  https://forum.makerdao.com/t/may-31-2024-proposed-changes-to-sparklend-for-upcoming-spell/24413
- * Vote:  TODO
+ * Vote:   https://vote.makerdao.com/polling/QmPmVeDx
  */
 contract SparkEthereum_20240613 is SparkPayloadEthereum {
 
@@ -63,8 +63,9 @@ contract SparkEthereum_20240613 is SparkPayloadEthereum {
     {
         ICapAutomator(Ethereum.CAP_AUTOMATOR).setSupplyCapConfig({asset: WEETH, max: 50_000, gap: 5_000, increaseCooldown: 12 hours});
 
-        IERC20(WEETH).approve(address(LISTING_ENGINE.POOL()), 1_000_000);
-        LISTING_ENGINE.POOL().deposit(WEETH, 1_000_000, address(this), 0);
+        // Making an initial deposit right after the listing to prevent spToken value manipulation
+        IERC20(WEETH).approve(address(LISTING_ENGINE.POOL()), 1e6);
+        LISTING_ENGINE.POOL().deposit(WEETH, 1e6, address(this), 0);
     }
 
 }
