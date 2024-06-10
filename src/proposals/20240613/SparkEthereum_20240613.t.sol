@@ -3,7 +3,7 @@ pragma solidity ^0.8.10;
 
 import 'src/SparkTestBase.sol';
 
-contract SparkEthereum_20240613 is SparkEthereumTestBase {
+contract SparkEthereum_20240613Test is SparkEthereumTestBase {
 
     address internal constant WEETH            = 0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee;
     address internal constant WEETH_PRICE_FEED = 0x1A6BDB22b9d7a454D20EAf12DB55D6B5F058183D;
@@ -13,8 +13,8 @@ contract SparkEthereum_20240613 is SparkEthereumTestBase {
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('mainnet').rpcUrl, 20039538);
-        payload = deployPayload();
+        vm.createSelectFork(getChain('mainnet').rpcUrl, 20061083);
+        payload = 0x258FD2E6b5C155aa5f3e84326A622288bd70f376;
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
     }
