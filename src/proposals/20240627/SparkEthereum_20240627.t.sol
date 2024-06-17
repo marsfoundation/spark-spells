@@ -11,7 +11,7 @@ import { SparkGnosis_20240627 } from './SparkGnosis_20240627.sol';
 
 contract SparkEthereum_20240627Test is SparkEthereumTestBase {
 
-    address public constant USDCE          = 0x2a22f9c3b484c3629090FeED35F17Ff8F88f76F0;
+    address public constant USDCE = 0x2a22f9c3b484c3629090FeED35F17Ff8F88f76F0;
 
     Domain       mainnet;
     GnosisDomain gnosis;
