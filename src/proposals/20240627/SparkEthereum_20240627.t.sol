@@ -11,7 +11,8 @@ import { SparkGnosis_20240627 } from './SparkGnosis_20240627.sol';
 
 contract SparkEthereum_20240627Test is SparkEthereumTestBase {
 
-    address public GNOSIS_PAYLOAD;
+    address public constant USDCe          = 0x2a22f9c3b484c3629090FeED35F17Ff8F88f76F0;
+    address public constant GNOSIS_PAYLOAD = 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a;
 
     Domain       mainnet;
     GnosisDomain gnosis;
@@ -28,7 +29,7 @@ contract SparkEthereum_20240627Test is SparkEthereumTestBase {
         gnosis.rollFork(34508250);   // June 17, 2024
 
         gnosis.selectFork();
-        GNOSIS_PAYLOAD = address(new SparkGnosis_20240627());
+        new SparkGnosis_20240627();
 
         mainnet.selectFork();
         payload = deployPayload();
@@ -50,6 +51,9 @@ contract SparkEthereum_20240627Test is SparkEthereumTestBase {
 
         assertEq(createConfigurationSnapshot('', IPool(Gnosis.POOL)).length, 8);
 
+        // TODO: Remove this after the executor receives 1e6 USDCe
+        vm.prank(0xBA12222222228d8Ba445958a75a0704d566BF2C8);
+        IERC20(USDCe).transfer(Gnosis.AMB_EXECUTOR, 1e6);
         IL2BridgeExecutor(Gnosis.AMB_EXECUTOR).execute(5);
 
         assertEq(createConfigurationSnapshot('', IPool(Gnosis.POOL)).length, 9);

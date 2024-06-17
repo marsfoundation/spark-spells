@@ -15,7 +15,7 @@ import { SparkPayloadEthereum, Ethereum, IEngine, EngineFlags, Rates } from 'src
  * Votes:  TODO
  */
 contract SparkEthereum_20240627 is SparkPayloadEthereum {
-    address public constant GNOSIS_PAYLOAD = 0x4e77714b90b470Bef30613908FAd307Ca96A811a;
+    address public constant GNOSIS_PAYLOAD = 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a; // TODO: Replace after deployment
 
     function _postExecute()
         internal override

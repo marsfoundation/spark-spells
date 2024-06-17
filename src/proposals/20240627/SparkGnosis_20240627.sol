@@ -24,7 +24,6 @@ contract SparkGnosis_20240627 is SparkPayloadGnosis {
         public view override returns (IEngine.Listing[] memory)
     {
         IEngine.Listing[] memory listings = new IEngine.Listing[](1);
-        console2.log('listings length: %d', listings.length);
 
         listings[0] = IEngine.Listing({
             asset:              USDCe,
@@ -56,8 +55,6 @@ contract SparkGnosis_20240627 is SparkPayloadGnosis {
             liqProtocolFee:        0,
             eModeCategory:         0
         });
-        console2.log('listings length: %d', listings.length);
-        console2.log('listing', listings[0].asset);
 
         return listings;
     }
@@ -66,7 +63,7 @@ contract SparkGnosis_20240627 is SparkPayloadGnosis {
         public view override returns (IEngine.RateStrategyUpdate[] memory)
     {
         IEngine.RateStrategyUpdate[] memory ratesUpdate = new IEngine.RateStrategyUpdate[](1);
-        console2.log('rateStrategiesUpdates rateStrategiesUpdates');
+
         Rates.RateStrategyParams memory usdcParams = LISTING_ENGINE
             .RATE_STRATEGIES_FACTORY()
             .getStrategyDataOfAsset(Gnosis.USDC);
