@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.10;
 
+import 'forge-std/console2.sol';
+
 import { IERC20 }        from 'lib/erc20-helpers/src/interfaces/IERC20.sol';
 import { IExecutorBase } from 'lib/spark-gov-relay/src/interfaces/IExecutorBase.sol';
 
@@ -19,9 +21,10 @@ contract SparkGnosis_20240627 is SparkPayloadGnosis {
     address public constant USDCe_PRICE_FEED = 0x6FC2871B6d9A94866B7260896257Fd5b50c09900;
 
     function newListings()
-        public pure override returns (IEngine.Listing[] memory)
+        public view override returns (IEngine.Listing[] memory)
     {
         IEngine.Listing[] memory listings = new IEngine.Listing[](1);
+        console2.log('listings length: %d', listings.length);
 
         listings[0] = IEngine.Listing({
             asset:              USDCe,
@@ -53,6 +56,8 @@ contract SparkGnosis_20240627 is SparkPayloadGnosis {
             liqProtocolFee:        0,
             eModeCategory:         0
         });
+        console2.log('listings length: %d', listings.length);
+        console2.log('listing', listings[0].asset);
 
         return listings;
     }
@@ -61,7 +66,7 @@ contract SparkGnosis_20240627 is SparkPayloadGnosis {
         public view override returns (IEngine.RateStrategyUpdate[] memory)
     {
         IEngine.RateStrategyUpdate[] memory ratesUpdate = new IEngine.RateStrategyUpdate[](1);
-
+        console2.log('rateStrategiesUpdates rateStrategiesUpdates');
         Rates.RateStrategyParams memory usdcParams = LISTING_ENGINE
             .RATE_STRATEGIES_FACTORY()
             .getStrategyDataOfAsset(Gnosis.USDC);

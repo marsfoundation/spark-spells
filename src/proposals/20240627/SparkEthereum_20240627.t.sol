@@ -11,7 +11,7 @@ import { SparkGnosis_20240627 } from './SparkGnosis_20240627.sol';
 
 contract SparkEthereum_20240627Test is SparkEthereumTestBase {
 
-    address public constant GNOSIS_PAYLOAD = 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a;
+    address public GNOSIS_PAYLOAD;
 
     Domain       mainnet;
     GnosisDomain gnosis;
@@ -28,7 +28,7 @@ contract SparkEthereum_20240627Test is SparkEthereumTestBase {
         gnosis.rollFork(34508250);   // June 17, 2024
 
         gnosis.selectFork();
-        new SparkGnosis_20240627();
+        GNOSIS_PAYLOAD = address(new SparkGnosis_20240627());
 
         mainnet.selectFork();
         payload = deployPayload();

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import 'forge-std/console2.sol';
+
 import {Address} from './libraries/Address.sol';
 import {IAaveV3ConfigEngine as IEngine} from './interfaces/IAaveV3ConfigEngine.sol';
 import {IV3RateStrategyFactory as Rates} from './interfaces/IV3RateStrategyFactory.sol';
@@ -69,10 +71,13 @@ abstract contract AaveV3PayloadBase {
     IEngine.PriceFeedUpdate[] memory priceFeeds = priceFeedsUpdates();
     IEngine.RateStrategyUpdate[] memory rates = rateStrategiesUpdates();
 
+      console2.log('Listings before the IF statement');
     if (listings.length != 0) {
+      console2.log('Listings before', listings[0].asset);
       address(LISTING_ENGINE).functionDelegateCall(
         abi.encodeWithSelector(LISTING_ENGINE.listAssets.selector, getPoolContext(), listings)
       );
+      console2.log('Listings after');
     }
 
     if (listingsCustom.length != 0) {

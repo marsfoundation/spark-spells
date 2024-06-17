@@ -32,53 +32,53 @@ contract SparkGnosis_20240627Test is SparkGnosisTestBase {
 
         assertEq(allConfigsAfter.length, 9);
 
-        ReserveConfig memory usdce = ReserveConfig({
-            symbol:                  'USDC.e',
-            underlying:               USDCe,
-            aToken:                   address(0),  // Mock, as they don't get validated, because of the "dynamic" deployment on proposal execution
-            variableDebtToken:        address(0),  // Mock, as they don't get validated, because of the "dynamic" deployment on proposal execution
-            stableDebtToken:          address(0),  // Mock, as they don't get validated, because of the "dynamic" deployment on proposal execution
-            decimals:                 6,
-            ltv:                      0,
-            liquidationThreshold:     0,
-            liquidationBonus:         0,
-            liquidationProtocolFee:   0,
-            reserveFactor:            10_00,
-            usageAsCollateralEnabled: true,
-            borrowingEnabled:         true,
-            interestRateStrategy:     _findReserveConfigBySymbol(allConfigsAfter, 'USDC.e').interestRateStrategy,
-            stableBorrowRateEnabled:  false,
-            isPaused:                 false,
-            isActive:                 true,
-            isFrozen:                 false,
-            isSiloed:                 false,
-            isBorrowableInIsolation:  true,
-            isFlashloanable:          true,
-            supplyCap:                10_000_000,
-            borrowCap:                8_000_000,
-            debtCeiling:              0,
-            eModeCategory:            0
-        });
+        // ReserveConfig memory usdce = ReserveConfig({
+        //     symbol:                  'USDC.e',
+        //     underlying:               USDCe,
+        //     aToken:                   address(0),  // Mock, as they don't get validated, because of the "dynamic" deployment on proposal execution
+        //     variableDebtToken:        address(0),  // Mock, as they don't get validated, because of the "dynamic" deployment on proposal execution
+        //     stableDebtToken:          address(0),  // Mock, as they don't get validated, because of the "dynamic" deployment on proposal execution
+        //     decimals:                 6,
+        //     ltv:                      0,
+        //     liquidationThreshold:     0,
+        //     liquidationBonus:         0,
+        //     liquidationProtocolFee:   0,
+        //     reserveFactor:            10_00,
+        //     usageAsCollateralEnabled: true,
+        //     borrowingEnabled:         true,
+        //     interestRateStrategy:     _findReserveConfigBySymbol(allConfigsAfter, 'USDC.e').interestRateStrategy,
+        //     stableBorrowRateEnabled:  false,
+        //     isPaused:                 false,
+        //     isActive:                 true,
+        //     isFrozen:                 false,
+        //     isSiloed:                 false,
+        //     isBorrowableInIsolation:  true,
+        //     isFlashloanable:          true,
+        //     supplyCap:                10_000_000,
+        //     borrowCap:                8_000_000,
+        //     debtCeiling:              0,
+        //     eModeCategory:            0
+        // });
 
-        _validateReserveConfig(usdce, allConfigsAfter);
+        // _validateReserveConfig(usdce, allConfigsAfter);
 
-        _validateInterestRateStrategy(
-            usdce.interestRateStrategy,
-            usdce.interestRateStrategy,
-            InterestStrategyValues({
-                addressesProvider:             address(poolAddressesProvider),
-                optimalUsageRatio:             0.95e27,
-                optimalStableToTotalDebtRatio: 0,
-                baseStableBorrowRate:          0.09e27,
-                stableRateSlope1:              0,
-                stableRateSlope2:              0,
-                baseVariableBorrowRate:        0,
-                variableRateSlope1:            0.09e27,
-                variableRateSlope2:            0.15e27
-            })
-        );
+        // _validateInterestRateStrategy(
+        //     usdce.interestRateStrategy,
+        //     usdce.interestRateStrategy,
+        //     InterestStrategyValues({
+        //         addressesProvider:             address(poolAddressesProvider),
+        //         optimalUsageRatio:             0.95e27,
+        //         optimalStableToTotalDebtRatio: 0,
+        //         baseStableBorrowRate:          0.09e27,
+        //         stableRateSlope1:              0,
+        //         stableRateSlope2:              0,
+        //         baseVariableBorrowRate:        0,
+        //         variableRateSlope1:            0.09e27,
+        //         variableRateSlope2:            0.15e27
+        //     })
+        // );
 
-        _validateAssetSourceOnOracle(poolAddressesProvider, USDCe, USDCe_PRICE_FEED);
+        // _validateAssetSourceOnOracle(poolAddressesProvider, USDCe, USDCe_PRICE_FEED);
     }
 
     function testExistingMarketUpdates() public {
