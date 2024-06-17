@@ -7,8 +7,8 @@ import { IL2BridgeExecutor } from 'spark-gov-relay/interfaces/IL2BridgeExecutor.
 
 contract SparkGnosis_20240627Test is SparkGnosisTestBase {
 
-    address public constant USDCe            = 0x2a22f9c3b484c3629090FeED35F17Ff8F88f76F0;
-    address public constant USDCe_PRICE_FEED = 0x6FC2871B6d9A94866B7260896257Fd5b50c09900;
+    address public constant USDCE            = 0x2a22f9c3b484c3629090FeED35F17Ff8F88f76F0;
+    address public constant USDCE_PRICE_FEED = 0x6FC2871B6d9A94866B7260896257Fd5b50c09900;
 
     constructor() {
         id = '20240627';
@@ -26,9 +26,9 @@ contract SparkGnosis_20240627Test is SparkGnosisTestBase {
 
         assertEq(allConfigsBefore.length, 8);
 
-        // TODO: Remove this after the executor receives 1e6 USDCe
+        // TODO: Remove this after the executor receives 1e6 USDCE
         vm.prank(0xBA12222222228d8Ba445958a75a0704d566BF2C8);
-        IERC20(USDCe).transfer(Gnosis.AMB_EXECUTOR, 1e6);
+        IERC20(USDCE).transfer(Gnosis.AMB_EXECUTOR, 1e6);
         executePayload(payload);
 
         ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
@@ -37,7 +37,7 @@ contract SparkGnosis_20240627Test is SparkGnosisTestBase {
 
         ReserveConfig memory usdce = ReserveConfig({
             symbol:                  'USDC.e',
-            underlying:               USDCe,
+            underlying:               USDCE,
             aToken:                   address(0),  // Mock, as they don't get validated, because of the "dynamic" deployment on proposal execution
             variableDebtToken:        address(0),  // Mock, as they don't get validated, because of the "dynamic" deployment on proposal execution
             stableDebtToken:          address(0),  // Mock, as they don't get validated, because of the "dynamic" deployment on proposal execution
@@ -81,7 +81,7 @@ contract SparkGnosis_20240627Test is SparkGnosisTestBase {
             })
         );
 
-        _validateAssetSourceOnOracle(poolAddressesProvider, USDCe, USDCe_PRICE_FEED);
+        _validateAssetSourceOnOracle(poolAddressesProvider, USDCE, USDCE_PRICE_FEED);
     }
 
     function testExistingMarketUpdates() public {
@@ -112,9 +112,9 @@ contract SparkGnosis_20240627Test is SparkGnosisTestBase {
             oldInterestStrategyValues
         );
 
-        // TODO: Remove this after the executor receives 1e6 USDCe
+        // TODO: Remove this after the executor receives 1e6 USDCE
         vm.prank(0xBA12222222228d8Ba445958a75a0704d566BF2C8);
-        IERC20(USDCe).transfer(Gnosis.AMB_EXECUTOR, 1e6);
+        IERC20(USDCE).transfer(Gnosis.AMB_EXECUTOR, 1e6);
         executePayload(payload);
 
         ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);

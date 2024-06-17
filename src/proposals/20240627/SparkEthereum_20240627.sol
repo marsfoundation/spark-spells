@@ -9,7 +9,7 @@ import { SparkPayloadEthereum, Ethereum, IEngine, EngineFlags, Rates } from 'src
 
 /**
  * @title  June 27, 2024 Spark Ethereum Proposal
- * @notice Update Morpho supply caps, trigger Gnosis Payload
+ * @notice Update Morpho supply caps, trigger Gnosis payload
  * @author Phoenix Labs
  * Forum:  https://forum.makerdao.com/t/jun-12-2024-proposed-changes-to-sparklend-for-upcoming-spell/24489
  * Votes:  TODO

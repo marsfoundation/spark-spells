@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import 'forge-std/console2.sol';
-
 import {Address} from './libraries/Address.sol';
 import {IAaveV3ConfigEngine as IEngine} from './interfaces/IAaveV3ConfigEngine.sol';
 import {IV3RateStrategyFactory as Rates} from './interfaces/IV3RateStrategyFactory.sol';

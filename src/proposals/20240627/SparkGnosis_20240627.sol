@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.10;
 
-import 'forge-std/console2.sol';
-
 import { IERC20 }        from 'lib/erc20-helpers/src/interfaces/IERC20.sol';
 import { IExecutorBase } from 'lib/spark-gov-relay/src/interfaces/IExecutorBase.sol';
 
@@ -17,8 +15,8 @@ import { SparkPayloadGnosis, Gnosis, IEngine, Rates, EngineFlags } from 'src/Spa
  */
 contract SparkGnosis_20240627 is SparkPayloadGnosis {
 
-    address public constant USDCe            = 0x2a22f9c3b484c3629090FeED35F17Ff8F88f76F0;
-    address public constant USDCe_PRICE_FEED = 0x6FC2871B6d9A94866B7260896257Fd5b50c09900;
+    address public constant USDCE            = 0x2a22f9c3b484c3629090FeED35F17Ff8F88f76F0;
+    address public constant USDCE_PRICE_FEED = 0x6FC2871B6d9A94866B7260896257Fd5b50c09900;
 
     function newListings()
         public view override returns (IEngine.Listing[] memory)
@@ -26,9 +24,9 @@ contract SparkGnosis_20240627 is SparkPayloadGnosis {
         IEngine.Listing[] memory listings = new IEngine.Listing[](1);
 
         listings[0] = IEngine.Listing({
-            asset:              USDCe,
+            asset:              USDCE,
             assetSymbol:        'USDC.e',
-            priceFeed:          USDCe_PRICE_FEED,
+            priceFeed:          USDCE_PRICE_FEED,
             rateStrategyParams: Rates.RateStrategyParams({
                 optimalUsageRatio:             _bpsToRay(95_00),
                 baseVariableBorrowRate:        _bpsToRay(0),
@@ -95,8 +93,8 @@ contract SparkGnosis_20240627 is SparkPayloadGnosis {
         internal override
     {
         // Making an initial deposit right after the listing to prevent spToken value manipulation
-        IERC20(USDCe).approve(address(LISTING_ENGINE.POOL()), 1e6);
-        LISTING_ENGINE.POOL().deposit(USDCe, 1e6, address(this), 0);
+        IERC20(USDCE).approve(address(LISTING_ENGINE.POOL()), 1e6);
+        LISTING_ENGINE.POOL().deposit(USDCE, 1e6, address(this), 0);
     }
 
 }
