@@ -11,7 +11,9 @@ import { SparkPayloadGnosis, Gnosis, IEngine, Rates, EngineFlags } from 'src/Spa
  * @notice Onboard USDC.e market and update USDC market parameters
  * @author Phoenix Labs
  * Forum:  https://forum.makerdao.com/t/jun-12-2024-proposed-changes-to-sparklend-for-upcoming-spell/24489
- * Votes:  TODO
+ * Votes:  https://vote.makerdao.com/polling/QmQv9zQR
+ *         https://vote.makerdao.com/polling/QmU6KSGc
+ *         https://vote.makerdao.com/polling/QmdQYTQe
  */
 contract SparkGnosis_20240627 is SparkPayloadGnosis {
 

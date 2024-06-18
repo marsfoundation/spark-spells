@@ -15,7 +15,7 @@ contract SparkGnosis_20240627Test is SparkGnosisTestBase {
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('gnosis_chain').rpcUrl, 34508250);  // June 17, 2024
+        vm.createSelectFork(getChain('gnosis_chain').rpcUrl, 34526700);  // June 18, 2024
         payload = deployPayload();
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
@@ -26,9 +26,6 @@ contract SparkGnosis_20240627Test is SparkGnosisTestBase {
 
         assertEq(allConfigsBefore.length, 8);
 
-        // TODO: Remove this after the executor receives 1e6 USDCE
-        vm.prank(0xBA12222222228d8Ba445958a75a0704d566BF2C8);
-        IERC20(USDCE).transfer(Gnosis.AMB_EXECUTOR, 1e6);
         executePayload(payload);
 
         ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
@@ -112,9 +109,6 @@ contract SparkGnosis_20240627Test is SparkGnosisTestBase {
             oldInterestStrategyValues
         );
 
-        // TODO: Remove this after the executor receives 1e6 USDCE
-        vm.prank(0xBA12222222228d8Ba445958a75a0704d566BF2C8);
-        IERC20(USDCE).transfer(Gnosis.AMB_EXECUTOR, 1e6);
         executePayload(payload);
 
         ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);

@@ -12,7 +12,9 @@ import { SparkPayloadEthereum, Ethereum, IEngine, EngineFlags, Rates } from 'src
  * @notice Update Morpho supply caps, trigger Gnosis payload
  * @author Phoenix Labs
  * Forum:  https://forum.makerdao.com/t/jun-12-2024-proposed-changes-to-sparklend-for-upcoming-spell/24489
- * Votes:  TODO
+ * Votes:  https://vote.makerdao.com/polling/QmQv9zQR
+ *         https://vote.makerdao.com/polling/QmU6KSGc
+ *         https://vote.makerdao.com/polling/QmdQYTQe
  */
 contract SparkEthereum_20240627 is SparkPayloadEthereum {
     address public constant GNOSIS_PAYLOAD = 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a; // TODO: Replace after deployment
