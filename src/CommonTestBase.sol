@@ -26,7 +26,8 @@ contract CommonTestBase is Test {
 
   address public constant USDC_MAINNET = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
 
-  address public constant EURE_GNOSIS = 0xcB444e90D8198415266c6a2724b7900fb12FC56E;
+  address public constant EURE_GNOSIS  = 0xcB444e90D8198415266c6a2724b7900fb12FC56E;
+  address public constant USDCE_GNOSIS = 0x2a22f9c3b484c3629090FeED35F17Ff8F88f76F0;
 
   /**
    * @notice deal doesn't support amounts stored in a script right now.
@@ -47,6 +48,12 @@ contract CommonTestBase is Test {
     } else if (block.chainid == ChainIds.GNOSIS) {
       // EURe
       if (asset == EURE_GNOSIS) {
+        vm.prank(0xBA12222222228d8Ba445958a75a0704d566BF2C8);
+        IERC20(asset).transfer(user, amount);
+        return true;
+      }
+      // USDC.e
+      if (asset == USDCE_GNOSIS) {
         vm.prank(0xBA12222222228d8Ba445958a75a0704d566BF2C8);
         IERC20(asset).transfer(user, amount);
         return true;
