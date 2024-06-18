@@ -5,7 +5,7 @@ import { IMetaMorpho, MarketParams } from 'lib/metamorpho/src/interfaces/IMetaMo
 import { Gnosis }                    from 'lib/spark-address-registry/src/Gnosis.sol';
 import { XChainForwarders }          from 'lib/xchain-helpers/src/XChainForwarders.sol';
 
-import { SparkPayloadEthereum, Ethereum, IEngine, EngineFlags, Rates } from 'src/SparkPayloadEthereum.sol';
+import { SparkPayloadEthereum, Ethereum } from 'src/SparkPayloadEthereum.sol';
 
 /**
  * @title  June 27, 2024 Spark Ethereum Proposal

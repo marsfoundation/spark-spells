@@ -2,7 +2,6 @@
 pragma solidity ^0.8.10;
 
 import { IERC20 }        from 'lib/erc20-helpers/src/interfaces/IERC20.sol';
-import { IExecutorBase } from 'lib/spark-gov-relay/src/interfaces/IExecutorBase.sol';
 
 import { SparkPayloadGnosis, Gnosis, IEngine, Rates, EngineFlags } from 'src/SparkPayloadGnosis.sol';
 
