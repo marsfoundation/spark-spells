@@ -31,7 +31,7 @@ contract SparkGnosis_20240627 is SparkPayloadGnosis {
             priceFeed:          USDCE_PRICE_FEED,
             rateStrategyParams: Rates.RateStrategyParams({
                 optimalUsageRatio:             _bpsToRay(95_00),
-                baseVariableBorrowRate:        _bpsToRay(0),
+                baseVariableBorrowRate:        0,
                 variableRateSlope1:            _bpsToRay(9_00),
                 variableRateSlope2:            _bpsToRay(15_00),
                 stableRateSlope1:              0,
