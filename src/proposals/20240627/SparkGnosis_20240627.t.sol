@@ -3,8 +3,6 @@ pragma solidity ^0.8.10;
 
 import '../../SparkTestBase.sol';
 
-import { IL2BridgeExecutor } from 'spark-gov-relay/interfaces/IL2BridgeExecutor.sol';
-
 contract SparkGnosis_20240627Test is SparkGnosisTestBase {
 
     address public constant USDCE            = 0x2a22f9c3b484c3629090FeED35F17Ff8F88f76F0;
