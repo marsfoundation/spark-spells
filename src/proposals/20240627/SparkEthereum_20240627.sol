@@ -17,7 +17,7 @@ import { SparkPayloadEthereum, Ethereum } from 'src/SparkPayloadEthereum.sol';
  *         https://vote.makerdao.com/polling/QmdQYTQe
  */
 contract SparkEthereum_20240627 is SparkPayloadEthereum {
-    address public constant GNOSIS_PAYLOAD = 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a; // TODO: Replace after deployment
+    address public constant GNOSIS_PAYLOAD = 0xd5A8d293Ce8B31123C285d55d0232b3C31c4D217;
 
     function _postExecute()
         internal override

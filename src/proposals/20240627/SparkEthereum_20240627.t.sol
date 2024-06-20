@@ -24,14 +24,10 @@ contract SparkEthereum_20240627Test is SparkEthereumTestBase {
         mainnet = new Domain(getChain('mainnet'));
         gnosis  = new GnosisDomain(getChain('gnosis_chain'), mainnet);
 
-        mainnet.rollFork(20118549);  // June 18, 2024
-        gnosis.rollFork(34526700);   // June 18, 2024
+        mainnet.rollFork(20134486);  // June 20, 2024
+        gnosis.rollFork(34563897);   // June 20, 2024
 
-        gnosis.selectFork();
-        new SparkGnosis_20240627();
-
-        mainnet.selectFork();
-        payload = deployPayload();
+        payload = 0xc96420Dbe9568e2a65DD57daAD069FDEd37265fa;
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
     }
