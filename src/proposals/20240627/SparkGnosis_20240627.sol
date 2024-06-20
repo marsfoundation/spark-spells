@@ -20,7 +20,7 @@ contract SparkGnosis_20240627 is SparkPayloadGnosis {
     address public constant USDCE_PRICE_FEED = 0x6FC2871B6d9A94866B7260896257Fd5b50c09900;
 
     function newListings()
-        public view override returns (IEngine.Listing[] memory)
+        public pure override returns (IEngine.Listing[] memory)
     {
         IEngine.Listing[] memory listings = new IEngine.Listing[](1);
 
