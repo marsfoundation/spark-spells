@@ -312,12 +312,13 @@ contract ProtocolV3TestBase is CommonTestBase {
     ReserveConfig memory borrowConfig,
     uint256 collateralAmount
   ) internal view returns (uint256) {
+    // Intentionally introducing a slight rounding error to not trigger the LTV edge case failure condition
     return collateralAmount
       * _getTokenPrice(pool, collateralConfig)
-      * collateralConfig.ltv
-      * (10 ** borrowConfig.decimals)
       / _getTokenPrice(pool, borrowConfig)
+      * (10 ** borrowConfig.decimals)
       / (10 ** collateralConfig.decimals)
+      * collateralConfig.ltv
       / 100_00;
   }
 
@@ -560,8 +561,8 @@ contract ProtocolV3TestBase is CommonTestBase {
     address pool = abi.decode(params, (address));
     assertEq(IERC20(asset).balanceOf(address(this)), amount, 'UNDERLYING_NOT_AMOUNT');
 
-    // Temporary measure while USDC/EURe deal gets fixed, set the balance to amount + premium either way
-    uint256 dealAmount = asset == USDC_MAINNET || asset == EURE_GNOSIS ? premium : amount + premium;
+    // Temporary measure while USDC/EURe/USDC.e deal gets fixed, set the balance to amount + premium either way
+    uint256 dealAmount = asset == USDC_MAINNET || asset == EURE_GNOSIS || asset == USDCE_GNOSIS ? premium : amount + premium;
     deal2(asset, address(this), dealAmount);
 
     vm.startPrank(address(this));
