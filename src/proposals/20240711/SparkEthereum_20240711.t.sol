@@ -20,22 +20,44 @@ contract SparkEthereum_20240711Test is SparkEthereumTestBase {
     }
 
     function testCapIncrease() public {
-            _assertSupplyCapConfig({
-                asset:            WEETH,
-                max:              50_000,
-                gap:              5000,
-                increaseCooldown: 12 hours
-            });
+        // Supply cap should be 50_000 WETH before
+        _assertSupplyCapConfig({
+            asset:            WEETH,
+            max:              50_000,
+            gap:              5000,
+            increaseCooldown: 12 hours
+        });
 
-            executePayload(payload);
+        executePayload(payload);
 
-            _assertSupplyCapConfig({
-                asset:            WEETH,
-                max:              200_000,
-                gap:              5000,
-                increaseCooldown: 12 hours
-            });
+        // Supply cap should be 200_000 WETH after
+        _assertSupplyCapConfig({
+            asset:            WEETH,
+            max:              200_000,
+            gap:              5000,
+            increaseCooldown: 12 hours
+        });
     }
 
+    function testDebtCeilingIncrease() public {
+        ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', pool);
 
+        ReserveConfig memory weethConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'weETH');
+        
+        // Debt ceiling should be 50_000_000 DAI before
+        assertEq(weethConfigBefore.debtCeiling, 50_000_000_00); // In units of cents - conversion happens in the config engine
+
+        executePayload(payload);
+
+        ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
+
+        ReserveConfig memory weethConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'weETH');
+
+        // Debt ceiling should be 200_000_000 DAI after
+        assertEq(weethConfigAfter.debtCeiling, 200_000_000_00); // In units of cents - conversion happens in the config engine
+
+        // The rest of the configuration should remain the same
+        weethConfigBefore.debtCeiling = weethConfigAfter.debtCeiling;
+        _validateReserveConfig(weethConfigBefore, allConfigsAfter);
+    }
 }
