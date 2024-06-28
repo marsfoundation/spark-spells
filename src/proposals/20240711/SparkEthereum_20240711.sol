@@ -13,9 +13,6 @@ import { SparkPayloadEthereum, Ethereum, IEngine, EngineFlags } from 'src/SparkP
  */
 contract SparkEthereum_20240711 is SparkPayloadEthereum {
 
-    // TODO: Get address from registry
-    address internal constant WEETH = 0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee;
-
     function collateralsUpdates()
         public pure override returns (IEngine.CollateralUpdate[] memory)
     {
@@ -23,7 +20,7 @@ contract SparkEthereum_20240711 is SparkPayloadEthereum {
 
         // Increase weETH isolation mode debt ceiling to 200 million DAI (Increase for 150 million DAI)
         collateralUpdates[0] = IEngine.CollateralUpdate({
-            asset:          WEETH,
+            asset:          Ethereum.WEETH,
             ltv:            EngineFlags.KEEP_CURRENT,
             liqThreshold:   EngineFlags.KEEP_CURRENT,
             liqBonus:       EngineFlags.KEEP_CURRENT,
@@ -39,7 +36,7 @@ contract SparkEthereum_20240711 is SparkPayloadEthereum {
         internal override
     {   
         // Increase max supply cap to 200,000 weETH (Increase for 150,000 weETH)
-        ICapAutomator(Ethereum.CAP_AUTOMATOR).setSupplyCapConfig({asset: WEETH, max: 200_000, gap: 5_000, increaseCooldown: 12 hours});
+        ICapAutomator(Ethereum.CAP_AUTOMATOR).setSupplyCapConfig({asset: Ethereum.WEETH, max: 200_000, gap: 5_000, increaseCooldown: 12 hours});
     }
 
 }

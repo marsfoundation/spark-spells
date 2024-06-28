@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import './AaveV3PayloadBase.sol';
 
-import { Gnosis } from 'spark-address-registry/src/Gnosis.sol';
+import { Gnosis } from 'spark-address-registry/Gnosis.sol';
 
 /**
  * @dev Base smart contract for Gnosis Chain.

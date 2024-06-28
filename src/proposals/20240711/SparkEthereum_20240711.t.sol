@@ -5,9 +5,6 @@ import 'src/SparkTestBase.sol';
 
 contract SparkEthereum_20240711Test is SparkEthereumTestBase {
 
-    // TODO: Get address from registry
-    address internal constant WEETH = 0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee;
-
     constructor() {
         id = '20240711';
     }
@@ -22,7 +19,7 @@ contract SparkEthereum_20240711Test is SparkEthereumTestBase {
     function testCapIncrease() public {
         // Supply cap should be 50_000 WETH before
         _assertSupplyCapConfig({
-            asset:            WEETH,
+            asset:            Ethereum.WEETH,
             max:              50_000,
             gap:              5000,
             increaseCooldown: 12 hours
@@ -32,7 +29,7 @@ contract SparkEthereum_20240711Test is SparkEthereumTestBase {
 
         // Supply cap should be 200_000 WETH after
         _assertSupplyCapConfig({
-            asset:            WEETH,
+            asset:            Ethereum.WEETH,
             max:              200_000,
             gap:              5000,
             increaseCooldown: 12 hours
