@@ -1,0 +1,20 @@
+{
+  "name": "forker",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "check": "biome check .",
+    "check:fix": "biome check --write --unsafe ."
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@biomejs/biome": "^1.8.3",
+    "fetch-retry": "^6.0.0",
+    "viem": "^2.16.5"
+  }
+}
