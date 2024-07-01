@@ -9,7 +9,7 @@ import { SparkPayloadEthereum, Ethereum, IEngine, EngineFlags } from 'src/SparkP
  * @notice Increase Capacity of weETH
  * @author Wonderland
  * Forum:  https://forum.makerdao.com/t/jun-27-2024-proposed-changes-to-spark-for-upcoming-spell/24552
- * Vote:   *TODO*
+ * Vote:   https://vote.makerdao.com/polling/QmTBsxR5#poll-detail
  */
 contract SparkEthereum_20240711 is SparkPayloadEthereum {
 
