@@ -17,8 +17,8 @@ import { ReserveConfiguration } from 'sparklend-v1-core/contracts/protocol/libra
 import { WadRayMath }           from 'sparklend-v1-core/contracts/protocol/libraries/math/WadRayMath.sol';
 import { DataTypes }            from 'sparklend-v1-core/contracts/protocol/libraries/types/DataTypes.sol';
 
-import { Ethereum } from 'spark-address-registry/src/Ethereum.sol';
-import { Gnosis }   from 'spark-address-registry/src/Gnosis.sol';
+import { Ethereum } from 'spark-address-registry/Ethereum.sol';
+import { Gnosis }   from 'spark-address-registry/Gnosis.sol';
 
 import { IERC20 }    from 'erc20-helpers/interfaces/IERC20.sol';
 import { SafeERC20 } from 'erc20-helpers/SafeERC20.sol';

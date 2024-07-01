@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import './AaveV3PayloadBase.sol';
 
-import { Ethereum } from 'spark-address-registry/src/Ethereum.sol';
+import { Ethereum } from 'spark-address-registry/Ethereum.sol';
 
 import { IL2BridgeExecutor } from 'spark-gov-relay/interfaces/IL2BridgeExecutor.sol';
 
