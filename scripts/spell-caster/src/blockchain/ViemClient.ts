@@ -16,5 +16,4 @@ export function getViemClient(rpc: string, forkChainId: number, defaultAccount: 
         })
       },
     }))
-  // .extend();
 }
