@@ -9,6 +9,7 @@ import { SparkPayloadEthereum, Ethereum, IEngine, EngineFlags } from 'src/SparkP
  * @notice Increase Capacity of weETH
  * @author Wonderland
  * Forum:  https://forum.makerdao.com/t/jun-27-2024-proposed-changes-to-spark-for-upcoming-spell/24552
+ *         https://forum.makerdao.com/t/stability-scope-parameter-changes-14/24594
  * Vote:   https://vote.makerdao.com/polling/QmTBsxR5#poll-detail
  */
 contract SparkEthereum_20240711 is SparkPayloadEthereum {
@@ -47,7 +48,7 @@ contract SparkEthereum_20240711 is SparkPayloadEthereum {
             Ethereum.DAI,
             DAI_IRM
         );
-        
+
         // Increase max supply cap to 200,000 weETH (Increase for 150,000 weETH)
         ICapAutomator(Ethereum.CAP_AUTOMATOR).setSupplyCapConfig({asset: Ethereum.WEETH, max: 200_000, gap: 5_000, increaseCooldown: 12 hours});
     }
