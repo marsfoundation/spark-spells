@@ -6,7 +6,7 @@ import { SparkPayloadEthereum, Ethereum, IEngine, EngineFlags } from 'src/SparkP
 
 /**
  * @title  Jul 11, 2024 Spark Ethereum Proposal
- * @notice Increase Capacity of weETH
+ * @notice Increase Capacity of weETH and reduce DAI rates
  * @author Wonderland
  * Forum:  https://forum.makerdao.com/t/jun-27-2024-proposed-changes-to-spark-for-upcoming-spell/24552
  *         https://forum.makerdao.com/t/stability-scope-parameter-changes-14/24594
