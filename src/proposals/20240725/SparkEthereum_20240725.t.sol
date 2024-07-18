@@ -12,8 +12,8 @@ contract SparkEthereum_20240725Test is SparkEthereumTestBase {
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('mainnet').rpcUrl, 20332800);
-        payload = deployPayload();
+        vm.createSelectFork(getChain('mainnet').rpcUrl, 20336135);
+        payload = 0xc585A1AF765D392D8267a710b811ab41CbD989a3;
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
     }
