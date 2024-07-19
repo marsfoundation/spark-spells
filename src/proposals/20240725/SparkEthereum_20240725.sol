@@ -23,7 +23,7 @@ contract SparkEthereum_20240725 is SparkPayloadEthereum {
             MarketParams({
                 loanToken:       Ethereum.DAI,
                 collateralToken: PT_SUSDE_24OCT2024,
-                oracle:          Ethereum.MORPHO_SUSDE_ORACLE,
+                oracle:          Ethereum.MORPHO_USDE_ORACLE,
                 irm:             Ethereum.MORPHO_DEFAULT_IRM,
                 lltv:            0.86e18
             }),

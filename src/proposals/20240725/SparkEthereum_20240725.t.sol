@@ -12,8 +12,8 @@ contract SparkEthereum_20240725Test is SparkEthereumTestBase {
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('mainnet').rpcUrl, 20336135);
-        payload = 0xc585A1AF765D392D8267a710b811ab41CbD989a3;
+        vm.createSelectFork(getChain('mainnet').rpcUrl, 20340930);
+        payload = deployPayload();
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
     }
@@ -22,7 +22,7 @@ contract SparkEthereum_20240725Test is SparkEthereumTestBase {
         MarketParams memory ptsusde = MarketParams({
             loanToken:       Ethereum.DAI,
             collateralToken: PT_SUSDE_24OCT2024,
-            oracle:          Ethereum.MORPHO_SUSDE_ORACLE,
+            oracle:          Ethereum.MORPHO_USDE_ORACLE,
             irm:             Ethereum.MORPHO_DEFAULT_IRM,
             lltv:            0.86e18
         });
