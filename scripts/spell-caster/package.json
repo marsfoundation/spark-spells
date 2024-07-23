@@ -4,7 +4,10 @@
   "type": "module",
   "scripts": {
     "check": "biome check .",
-    "check:fix": "biome check --write --unsafe ."
+    "check:fix": "biome check --write --unsafe .",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "fix": "bun run check:fix && bun run test && bun run typecheck"
   },
   "devDependencies": {
     "@types/bun": "latest"

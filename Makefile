@@ -1,1 +1,1 @@
-execute-payload-mainnet :; NODE_ENV=mainnet node ./tenderly.js ${payload}
+spell-caster :; cd ./scripts/spell-caster && bun install && bun src/index.ts ${spell}

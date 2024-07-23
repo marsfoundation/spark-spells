@@ -1,4 +1,4 @@
-import { solidFetch } from '../utils/solidFetch'
+import { solidFetch } from '../../utils/solidFetch'
 
 export interface CreateTenderlyForkArgs {
   name: string

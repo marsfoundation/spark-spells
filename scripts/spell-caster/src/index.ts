@@ -1,10 +1,10 @@
 import assert from 'node:assert'
 import { zeroAddress } from 'viem'
-import { getViemClient } from './blockchain/ViemClient'
 import { getConfig } from './config'
 import { executeSpell } from './executeSpell'
-import { createTenderlyVNet, getRandomChainId } from './tenderly'
-import buildAppUrl from './utils/buildAppUrl'
+import { EthereumClient } from './periphery/ethereum'
+import { buildAppUrl } from './periphery/spark-app'
+import { createTenderlyVNet, getRandomChainId } from './periphery/tenderly'
 import { deployContract } from './utils/forge'
 import { getChainIdFromSpellName } from './utils/getChainIdFromSpellName'
 
@@ -15,9 +15,11 @@ async function main(spellName?: string) {
 
   const config = getConfig()
   const originChainId = getChainIdFromSpellName(spellName)
-  const chain = config.chains[originChainId]
+  const chain = config.networks[originChainId]
   assert(chain, `Chain not found for chainId: ${originChainId}`)
   const forkChainId = getRandomChainId()
+
+  console.log(`Executing spell ${spellName} on ${chain.name} (chainId=${originChainId})`)
 
   const rpc = await createTenderlyVNet({
     account: config.tenderly.account,
@@ -26,13 +28,14 @@ async function main(spellName?: string) {
     originChainId: originChainId,
     forkChainId,
   })
-  const client = getViemClient(rpc, forkChainId, deployer)
+  const ethereumClient = new EthereumClient(rpc, forkChainId, deployer)
 
   const spellAddress = await deployContract(spellName, rpc, deployer)
 
-  await executeSpell({ spellAddress, chain, client })
+  await executeSpell({ spellAddress, network: chain, ethereumClient })
 
-  console.log(`Staging URL: ${buildAppUrl({ rpc, originChainId })}`)
+  console.log(`Fork Network RPC: ${rpc}`)
+  console.log(`Spark App URL: ${buildAppUrl({ rpc, originChainId })}`)
 }
 
 const arg1 = process.argv[2]

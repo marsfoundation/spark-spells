@@ -1,26 +1,30 @@
 import assert from 'node:assert'
-import { Address, encodeFunctionData } from 'viem'
-import { getViemClient } from './blockchain/ViemClient'
-import { ChainConfig } from './config'
+import { type Address, encodeFunctionData } from 'viem'
+import type { NetworkConfig } from './config'
+import type { IEthereumClient } from './periphery/ethereum'
 
-export async function executeSpell({
-  spellAddress,
-  chain,
-  client,
-}: {
+interface ExecuteSpellArgs {
   spellAddress: Address
-  chain: ChainConfig
-  client: ReturnType<typeof getViemClient>
-}) {
-  const code = await client.getCode({ address: spellAddress })
-  assert(code, `Spell not deployed (address=${spellAddress})`)
-  await client.setCode({
-    address: chain.sparkSpellExecutor,
-    bytecode: code,
+  network: NetworkConfig
+  ethereumClient: IEthereumClient
+}
+
+export async function executeSpell({ spellAddress, network, ethereumClient }: ExecuteSpellArgs): Promise<void> {
+  const originalSpellExecutorBytecode = await ethereumClient.getBytecode({
+    address: network.sparkSpellExecutor,
   })
 
-  await client.sendTransaction({
-    to: chain.sparkSpellExecutor,
+  const spellBytecode = await ethereumClient.getBytecode({
+    address: spellAddress,
+  })
+  assert(spellBytecode, `Spell not deployed (address=${spellAddress})`)
+  await ethereumClient.setBytecode({
+    address: network.sparkSpellExecutor,
+    bytecode: spellBytecode,
+  })
+
+  await ethereumClient.sendTransaction({
+    to: network.sparkSpellExecutor,
     data: encodeFunctionData({
       abi: [
         {
@@ -33,5 +37,10 @@ export async function executeSpell({
       ],
       functionName: 'execute',
     }),
+  })
+
+  await ethereumClient.setBytecode({
+    address: network.sparkSpellExecutor,
+    bytecode: originalSpellExecutorBytecode,
   })
 }

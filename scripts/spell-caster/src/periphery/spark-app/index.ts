@@ -1,9 +1,8 @@
-export default function buildAppUrl({
-  rpc,
-  originChainId,
-}: {
+interface BuildAppUrlArgs {
   rpc: string
   originChainId: number
-}): string {
+}
+
+export function buildAppUrl({ rpc, originChainId }: BuildAppUrlArgs): string {
   return `https://spark-app-staging.vercel.app/?rpc=${rpc}&chainId=${originChainId}`
 }
