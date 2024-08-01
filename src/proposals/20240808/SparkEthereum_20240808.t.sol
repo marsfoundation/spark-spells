@@ -28,6 +28,7 @@ contract SparkEthereum_20240808Test is SparkEthereumTestBase {
     address public constant OLD_WETH_INTEREST_RATE_STRATEGY = 0xE27c3f9d35e00ae48144b35DD157F72AaF36c77e;
     address public constant NEW_WETH_INTEREST_RATE_STRATEGY = 0x6fd32465a23aa0DBaE0D813B7157D8CB2b08Dae4;
 
+    // Not a special number, the APR just happens to be 2.8%
     uint256 public constant LST_ORACLE_YIELD = 0.028604597378813033e18;
 
     constructor() {
@@ -41,8 +42,7 @@ contract SparkEthereum_20240808Test is SparkEthereumTestBase {
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
     }
 
-    function testOracleDeploy() public {
-        // Not a special number, the APR just happens to be 2.8%
+    function testOracleDeployment() public {
         vm.prank(address(0));  // Whitelist allows address(0)
         assertEq(IRateSource(LST_SOURCE).getAPR(),   LST_ORACLE_YIELD);
         assertEq(IRateSource(LST_SOURCE).decimals(), 18);
@@ -71,6 +71,9 @@ contract SparkEthereum_20240808Test is SparkEthereumTestBase {
 
         ReserveConfig memory wethConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'WETH');
 
+        uint256 expectedSlope1 = LST_ORACLE_YIELD * 10 ** 9;
+        assertEq(expectedSlope1, 0.028604597378813033e27);
+
         _validateInterestRateStrategy(
             wethConfigAfter.interestRateStrategy,
             NEW_WETH_INTEREST_RATE_STRATEGY,
@@ -78,11 +81,11 @@ contract SparkEthereum_20240808Test is SparkEthereumTestBase {
                 addressesProvider:             address(poolAddressesProvider),
                 optimalUsageRatio:             0.9e27,
                 optimalStableToTotalDebtRatio: 0,
-                baseStableBorrowRate:          LST_ORACLE_YIELD * 10 ** 9,
+                baseStableBorrowRate:          expectedSlope1,
                 stableRateSlope1:              0,
                 stableRateSlope2:              0,
                 baseVariableBorrowRate:        0,
-                variableRateSlope1:            0.028604597378813033e27,  // Decimals are 27 instead of 18
+                variableRateSlope1:            expectedSlope1,  // Decimals are 27 instead of 18
                 variableRateSlope2:            1.2e27
             })
         );
