@@ -5,9 +5,10 @@ import { Ethereum, SparkPayloadEthereum } from 'src/SparkPayloadEthereum.sol';
 
 /**
  * @title  Aug 08, 2024 Spark Ethereum Proposal
- * @notice Activate Lido LST Interest Rate Model (IRM)
+ * @notice Activate Lido LST Interest Rate Model (IRM), Decrease DAI Borrow Rate
  * @author Phoenix Labs
  * Forum:  https://forum.makerdao.com/t/jul-27-2024-proposed-changes-to-spark-for-upcoming-spell/24755
+ *         https://forum.makerdao.com/t/stability-scope-parameter-changes-15-sfs-dsr-spark-effective-dai-borrow-rate-reduction/24834
  * Vote:   https://vote.makerdao.com/polling/QmdFCRfK
  */
 contract SparkEthereum_20240808 is SparkPayloadEthereum {
