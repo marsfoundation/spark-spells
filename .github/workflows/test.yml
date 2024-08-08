@@ -42,3 +42,14 @@ jobs:
         run: |
           forge test -vvv
         id: test
+
+      # submits a PR comment with a spell simulation
+      - name: Spell Caster
+        uses: marsfoundation/spell-caster@action
+        if: github.event_name == 'pull_request'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          TENDERLY_API_KEY: ${{ secrets.TENDERLY_ACCESS_KEY }}
+          TENDERLY_PROJECT: ${{ secrets.TENDERLY_PROJECT }}
+          TENDERLY_ACCOUNT: ${{ secrets.TENDERLY_USER }}
+          
