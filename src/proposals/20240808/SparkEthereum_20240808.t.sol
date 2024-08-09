@@ -44,8 +44,8 @@ contract SparkEthereum_20240808Test is SparkEthereumTestBase {
     address public constant OLD_WETH_INTEREST_RATE_STRATEGY = 0xE27c3f9d35e00ae48144b35DD157F72AaF36c77e;
     address public constant NEW_WETH_INTEREST_RATE_STRATEGY = 0x6fd32465a23aa0DBaE0D813B7157D8CB2b08Dae4;
 
-    // Not a special number, the APR just happens to be 3.0%
-    uint256 public constant LST_ORACLE_YIELD = 0.030465303564745507e18;
+    // Not a special number, the APR just happens to be 3.1%
+    uint256 public constant LST_ORACLE_YIELD = 0.030744664374802374e18;
 
     uint256 public constant DAI_IRM_SPREAD = 0.009389740368586287841344000e27;
 
@@ -54,8 +54,8 @@ contract SparkEthereum_20240808Test is SparkEthereumTestBase {
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('mainnet').rpcUrl, 20484105);  // Aug 8, 2024
-        payload = deployPayload();
+        vm.createSelectFork(getChain('mainnet').rpcUrl, 20491144);  // Aug 9, 2024
+        payload = 0x4622245a1aaf0fb752F9cAC0A29616792b33F089;
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
 
@@ -139,7 +139,7 @@ contract SparkEthereum_20240808Test is SparkEthereumTestBase {
         ReserveConfig memory wethConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'WETH');
 
         uint256 expectedSlope1 = LST_ORACLE_YIELD * 10 ** 9;
-        assertEq(expectedSlope1, 0.030465303564745507e27);
+        assertEq(expectedSlope1, 0.030744664374802374e27);
 
         _validateInterestRateStrategy(
             wethConfigAfter.interestRateStrategy,
