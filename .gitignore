@@ -16,3 +16,5 @@ docs/
 # repo specific artifacts
 reports/*
 !reports/.empty
+
+node_modules/
