@@ -55,7 +55,7 @@ contract SparkEthereum_20240808Test is SparkEthereumTestBase {
 
     function setUp() public {
         vm.createSelectFork(getChain('mainnet').rpcUrl, 20491144);  // Aug 9, 2024
-        payload = 0x4622245a1aaf0fb752F9cAC0A29616792b33F089;
+        payload = deployPayload();
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
 
@@ -156,6 +156,26 @@ contract SparkEthereum_20240808Test is SparkEthereumTestBase {
                 variableRateSlope2:            1.2e27
             })
         );
+    }
+
+    function testWBTCParamChanges() public {
+        ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', pool);
+
+        ReserveConfig memory wbtcConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'WBTC');
+
+        assertEq(wbtcConfigBefore.ltv,              74_00);
+        assertEq(wbtcConfigBefore.borrowingEnabled, true);
+
+        executePayload(payload);
+
+        ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
+
+        ReserveConfig memory wethConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'WBTC');
+
+        wbtcConfigBefore.ltv = 0;
+        wbtcConfigBefore.borrowingEnabled = false;
+
+        _validateReserveConfig(wbtcConfigBefore, allConfigsAfter);
     }
 
 }
