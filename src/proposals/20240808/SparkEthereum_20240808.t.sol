@@ -3,6 +3,8 @@ pragma solidity ^0.8.10;
 
 import 'src/SparkTestBase.sol';
 
+import { Errors } from "sparklend-v1-core/contracts/protocol/libraries/helpers/Errors.sol";
+
 interface IPotRateSource {
     function pot() external view returns (address);
 }
@@ -170,12 +172,39 @@ contract SparkEthereum_20240808Test is SparkEthereumTestBase {
 
         ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
 
-        ReserveConfig memory wethConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'WBTC');
-
         wbtcConfigBefore.ltv = 0;
         wbtcConfigBefore.borrowingEnabled = false;
 
         _validateReserveConfig(wbtcConfigBefore, allConfigsAfter);
+    }
+
+    function testWBTCDesiredActionsPrevented() public {
+        IERC20(Ethereum.WBTC).approve(address(pool), type(uint256).max);
+
+        // Can supply and borrow
+        deal(Ethereum.WBTC, address(this), 100e8);
+        pool.supply(Ethereum.WBTC, 50e8, address(this), 0);
+        pool.borrow(Ethereum.WETH, 1e18, 2, 0, address(this));
+        pool.borrow(Ethereum.WBTC, 5e8, 2, 0, address(this));
+
+        executePayload(payload);
+
+        // Cannot borrow other assets anymore
+        vm.expectRevert(bytes(Errors.LTV_VALIDATION_FAILED));
+        pool.borrow(Ethereum.WETH, 1e18, 2, 0, address(this));
+
+        // Cannot borrow WBTC anymore
+        vm.expectRevert(bytes(Errors.BORROWING_NOT_ENABLED));
+        pool.borrow(Ethereum.WBTC, 1e8, 2, 0, address(this));
+
+        // Can supply more
+        pool.supply(Ethereum.WBTC, 25e8, address(this), 0);
+
+        // Can repay loan
+        pool.repay(Ethereum.WBTC, 3e8, 2, address(this));
+
+        // Can withdraw WBTC
+        pool.withdraw(Ethereum.WBTC, 5e8, address(this));
     }
 
 }
