@@ -2,6 +2,7 @@
 pragma solidity ^0.8.10;
 
 import { Ethereum, SparkPayloadEthereum, IEngine, EngineFlags } from 'src/SparkPayloadEthereum.sol';
+import { IKillSwitchOracle } from 'lib/sparklend-kill-switch/src/interfaces/IKillSwitchOracle.sol';
 
 /**
  * @title  Aug 23, 2024 Spark Ethereum Proposal
@@ -13,10 +14,12 @@ import { Ethereum, SparkPayloadEthereum, IEngine, EngineFlags } from 'src/SparkP
  */
 contract SparkEthereum_20240823 is SparkPayloadEthereum {
 
-    address public constant WETH_ORACLE = 0xf07ca0e66A798547E4CB3899EC592e1E99Ef6Cb3;
-    address public constant WSTETH_ORACLE = 0x73CB2C1E77a2A17209e5f9829A22479bbefb3BFc;
-    address public constant RETH_ORACLE = 0x7D35cd22fBF9Bbfc5ebD54e124519Bb664D5681d;
-    address public constant WEETH_ORACLE = 0xb82a6B4006c94B57d30b6046dD68f108bffd7D41;
+    address internal constant WETH_ORACLE = 0xf07ca0e66A798547E4CB3899EC592e1E99Ef6Cb3;
+    address internal constant WSTETH_ORACLE = 0x73CB2C1E77a2A17209e5f9829A22479bbefb3BFc;
+    address internal constant RETH_ORACLE = 0x7D35cd22fBF9Bbfc5ebD54e124519Bb664D5681d;
+    address internal constant WEETH_ORACLE = 0xb82a6B4006c94B57d30b6046dD68f108bffd7D41;
+
+    address internal constant WBTC_BTC_ORACLE  = 0xfdFD9C85aD200c506Cf9e21F1FD8dd01932FBB23;
 
     function priceFeedsUpdates() public pure override returns (IEngine.PriceFeedUpdate[] memory) {
         IEngine.PriceFeedUpdate[] memory updates = new IEngine.PriceFeedUpdate[](4);
@@ -41,8 +44,9 @@ contract SparkEthereum_20240823 is SparkPayloadEthereum {
         return updates;
     }
 
-    // function _postExecute()
-    //     internal override
-    // {
-    // }
+    function _postExecute()
+        internal override
+    {
+        IKillSwitchOracle(Ethereum.KILL_SWITCH_ORACLE).disableOracle(WBTC_BTC_ORACLE);
+    }
 }
