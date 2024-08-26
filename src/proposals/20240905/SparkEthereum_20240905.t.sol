@@ -35,7 +35,7 @@ contract SparkEthereum_20240905Test is SparkEthereumTestBase {
     }
 
     function test_validateOracles() public {
-        vm.startPrank(0x8105f69D9C41644c6A0803fDA7D03Aa70996cFD9);
+        vm.startPrank(Ethereum.AAVE_ORACLE);
         // Less than 1% difference between the old and new oracles
         assertApproxEqRel(IOracle(WETH_ORACLE_OLD).latestAnswer(),   IOracle(WETH_ORACLE).latestAnswer(),   0.01e18);
         assertApproxEqRel(IOracle(WSTETH_ORACLE_OLD).latestAnswer(), IOracle(WSTETH_ORACLE).latestAnswer(), 0.01e18);
