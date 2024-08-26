@@ -17,9 +17,9 @@ contract SparkEthereum_20240823Test is SparkEthereumTestBase {
     address internal constant WEETH_ORACLE_OLD =  0x1A6BDB22b9d7a454D20EAf12DB55D6B5F058183D;
 
     address internal constant WETH_ORACLE = 0xf07ca0e66A798547E4CB3899EC592e1E99Ef6Cb3;
-    address internal constant WSTETH_ORACLE = 0x73CB2C1E77a2A17209e5f9829A22479bbefb3BFc;
-    address internal constant RETH_ORACLE = 0x7D35cd22fBF9Bbfc5ebD54e124519Bb664D5681d;
-    address internal constant WEETH_ORACLE = 0xb82a6B4006c94B57d30b6046dD68f108bffd7D41;
+    address internal constant WSTETH_ORACLE = 0xf77e132799DBB0d83A4fB7df10DA04849340311A;
+    address internal constant RETH_ORACLE = 0x11af58f13419fD3ce4d3A90372200c80Bc62f140;
+    address internal constant WEETH_ORACLE = 0x28897036f8459bFBa886083dD6b4Ce4d2f14a57F;
 
     address internal constant WBTC_BTC_ORACLE  = 0xfdFD9C85aD200c506Cf9e21F1FD8dd01932FBB23;
 
@@ -28,7 +28,7 @@ contract SparkEthereum_20240823Test is SparkEthereumTestBase {
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('mainnet').rpcUrl, 20594398);  // Aug 23, 2024
+        vm.createSelectFork(getChain('mainnet').rpcUrl, 20613541);  // Aug 26, 2024
         payload = deployPayload();
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
