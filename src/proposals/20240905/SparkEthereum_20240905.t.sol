@@ -45,16 +45,12 @@ contract SparkEthereum_20240905Test is SparkEthereumTestBase {
     }
 
     function test_marketConfigChanges() public {
-        ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', pool);
-
         _validateAssetSourceOnOracle(poolAddressesProvider, Ethereum.WETH,   WETH_ORACLE_OLD);
         _validateAssetSourceOnOracle(poolAddressesProvider, Ethereum.WSTETH, WSTETH_ORACLE_OLD);
         // _validateAssetSourceOnOracle(poolAddressesProvider, Ethereum.RETH,   RETH_ORACLE_OLD); // The RETH oracle does not have a decimals function
         _validateAssetSourceOnOracle(poolAddressesProvider, Ethereum.WEETH,  WEETH_ORACLE_OLD);
 
         executePayload(payload);
-
-        ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
 
         _validateAssetSourceOnOracle(poolAddressesProvider, Ethereum.WETH,   WETH_ORACLE);
         _validateAssetSourceOnOracle(poolAddressesProvider, Ethereum.WSTETH, WSTETH_ORACLE);
