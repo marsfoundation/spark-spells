@@ -9,7 +9,7 @@ interface IOracle {
     function latestAnswer() external view returns (int256);
 }
 
-contract SparkEthereum_20240823Test is SparkEthereumTestBase {
+contract SparkEthereum_20240905Test is SparkEthereumTestBase {
 
     address internal constant WETH_ORACLE_OLD =   0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
     address internal constant WSTETH_ORACLE_OLD = 0x8B6851156023f4f5A66F68BEA80851c3D905Ac93;
@@ -24,7 +24,7 @@ contract SparkEthereum_20240823Test is SparkEthereumTestBase {
     address internal constant WBTC_BTC_ORACLE  = 0xfdFD9C85aD200c506Cf9e21F1FD8dd01932FBB23;
 
     constructor() {
-        id = '20240823';
+        id = '20240905';
     }
 
     function setUp() public {

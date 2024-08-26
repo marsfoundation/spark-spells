@@ -46,14 +46,14 @@ struct Caps {
 }
 
 /**
- * @title  Aug 23, 2024 Spark Ethereum Proposal
+ * @title  Sep 09, 2024 Spark Ethereum Proposal
  * @notice Oracle Upgrade to ETH, wstETH, rETH and weETH markets to use Aggor
  *         Remove WBTC/BTC from kill switch
  * @author Wonderland
  * Forum:  https://forum.makerdao.com/t/aug-23-2024-proposal-changes-to-spark-for-upcoming-spell/24940
  * Vote:  TODO
  */
-contract SparkEthereum_20240823 is SparkPayloadEthereum {
+contract SparkEthereum_20240905 is SparkPayloadEthereum {
 
     address internal constant WETH_ORACLE = 0xf07ca0e66A798547E4CB3899EC592e1E99Ef6Cb3;
     address internal constant WSTETH_ORACLE = 0xf77e132799DBB0d83A4fB7df10DA04849340311A;
