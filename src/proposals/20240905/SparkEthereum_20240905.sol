@@ -8,7 +8,7 @@ import { IKillSwitchOracle } from 'lib/sparklend-kill-switch/src/interfaces/IKil
 import { Ethereum, SparkPayloadEthereum, IEngine } from 'src/SparkPayloadEthereum.sol';
 
 /**
- * @title  Sep 09, 2024 Spark Ethereum Proposal
+ * @title  Sep 05, 2024 Spark Ethereum Proposal
  * @notice Oracle Upgrade to ETH, wstETH, rETH and weETH markets to use Aggor
  *         Remove WBTC/BTC from kill switch
  * @author Wonderland
