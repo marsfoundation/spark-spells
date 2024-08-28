@@ -119,7 +119,7 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
     }
 
     function testPayloadBytecodeMatches() public {
-        if(!Address.isContract(payload)) revert("PAYLOAD IS NOT A CONTRACT");
+        require(Address.isContract(payload), "PAYLOAD IS NOT A CONTRACT");
         address expectedPayload = deployPayload();
         address actualPayload   = payload;
 
@@ -248,14 +248,14 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
     }
 
     function executePayload(address payloadAddress) internal override {
-        if(!Address.isContract(payloadAddress)) revert("PAYLOAD IS NOT A CONTRACT");
+        require(Address.isContract(payload), "PAYLOAD IS NOT A CONTRACT");
         vm.prank(Ethereum.PAUSE_PROXY);
         (bool success,) = executor.call(abi.encodeWithSignature(
             'exec(address,bytes)',
             payloadAddress,
             abi.encodeWithSignature('execute()')
         ));
-        if(!success) revert("FAILED TO EXECUTE PAYLOAD");
+        require(success, "FAILED TO EXECUTE PAYLOAD");
     }
 
     function testFreezerMom() public {
@@ -505,7 +505,7 @@ abstract contract SparkGnosisTestBase is SparkTestBase {
     }
 
     function executePayload(address payloadAddress) internal override {
-        if(!Address.isContract(payloadAddress)) revert("PAYLOAD IS NOT A CONTRACT");
+        require(Address.isContract(payload), "PAYLOAD IS NOT A CONTRACT");
         vm.prank(executor);
         IExecutorBase(executor).executeDelegateCall(
             payloadAddress,
