@@ -57,8 +57,8 @@ contract SparkEthereum_20240905Test is SparkEthereumTestBase {
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('mainnet').rpcUrl, 20613541);  // Aug 26, 2024
-        payload = deployPayload();
+        vm.createSelectFork(getChain('mainnet').rpcUrl, 20627330);  // Aug 28, 2024
+        payload = 0x668C84584Ef8EeEd6BFb4FFB2a4Fa03231F8b241;
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
     }
@@ -85,11 +85,11 @@ contract SparkEthereum_20240905Test is SparkEthereumTestBase {
         assertApproxEqRel(oldWSTETHPrice, newWSTETHPrice, 0.01e18);
 
         // Assert LST oracles
-        assertEq(newRETHPrice,   3032.01088588e8);
-        assertEq(newWEETHPrice,  2846.68804265e8);
-        assertEq(newWSTETHPrice, 3201.79875087e8);
+        assertEq(newRETHPrice,   2813.70714851e8);
+        assertEq(newWEETHPrice,  2641.74838638e8);
+        assertEq(newWSTETHPrice, 2971.38590119e8);
 
-        uint256 ethPrice = 2720.27775835e8;
+        uint256 ethPrice = 2524.10804784e8;
 
         // Assert all aggor oracles 
         vm.prank(Ethereum.AAVE_ORACLE);
