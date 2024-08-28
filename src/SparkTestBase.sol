@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import './ProtocolV3TestBase.sol';
 
-import {Address} from './libraries/Address.sol';
+import { Address } from './libraries/Address.sol';
 
 import { InitializableAdminUpgradeabilityProxy } from "sparklend-v1-core/contracts/dependencies/openzeppelin/upgradeability/InitializableAdminUpgradeabilityProxy.sol";
 import { IACLManager }                           from 'sparklend-v1-core/contracts/interfaces/IACLManager.sol';
