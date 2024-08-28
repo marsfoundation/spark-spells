@@ -248,7 +248,7 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
     }
 
     function executePayload(address payloadAddress) internal override {
-        require(Address.isContract(payload), "PAYLOAD IS NOT A CONTRACT");
+        require(Address.isContract(payloadAddress), "PAYLOAD IS NOT A CONTRACT");
         vm.prank(Ethereum.PAUSE_PROXY);
         (bool success,) = executor.call(abi.encodeWithSignature(
             'exec(address,bytes)',
@@ -505,7 +505,7 @@ abstract contract SparkGnosisTestBase is SparkTestBase {
     }
 
     function executePayload(address payloadAddress) internal override {
-        require(Address.isContract(payload), "PAYLOAD IS NOT A CONTRACT");
+        require(Address.isContract(payloadAddress), "PAYLOAD IS NOT A CONTRACT");
         vm.prank(executor);
         IExecutorBase(executor).executeDelegateCall(
             payloadAddress,
