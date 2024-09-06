@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 import './ProtocolV3TestBase.sol';
 
+import { Address } from './libraries/Address.sol';
+
 import { InitializableAdminUpgradeabilityProxy } from "sparklend-v1-core/contracts/dependencies/openzeppelin/upgradeability/InitializableAdminUpgradeabilityProxy.sol";
 import { IACLManager }                           from 'sparklend-v1-core/contracts/interfaces/IACLManager.sol';
 import { IPoolAddressesProviderRegistry }        from 'sparklend-v1-core/contracts/interfaces/IPoolAddressesProviderRegistry.sol';
@@ -117,6 +119,7 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
     }
 
     function testPayloadBytecodeMatches() public {
+        require(Address.isContract(payload), "PAYLOAD IS NOT A CONTRACT");
         address expectedPayload = deployPayload();
         address actualPayload   = payload;
 
@@ -245,13 +248,14 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
     }
 
     function executePayload(address payloadAddress) internal override {
+        require(Address.isContract(payloadAddress), "PAYLOAD IS NOT A CONTRACT");
         vm.prank(Ethereum.PAUSE_PROXY);
         (bool success,) = executor.call(abi.encodeWithSignature(
             'exec(address,bytes)',
             payloadAddress,
             abi.encodeWithSignature('execute()')
         ));
-        assertEq(success, true, "FAILED TO EXECUTE PAYLOAD");
+        require(success, "FAILED TO EXECUTE PAYLOAD");
     }
 
     function testFreezerMom() public {
@@ -501,6 +505,7 @@ abstract contract SparkGnosisTestBase is SparkTestBase {
     }
 
     function executePayload(address payloadAddress) internal override {
+        require(Address.isContract(payloadAddress), "PAYLOAD IS NOT A CONTRACT");
         vm.prank(executor);
         IExecutorBase(executor).executeDelegateCall(
             payloadAddress,
