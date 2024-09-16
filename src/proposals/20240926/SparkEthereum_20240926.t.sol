@@ -10,19 +10,15 @@ interface ITolled {
 contract SparkEthereum_20240926Test is SparkEthereumTestBase {
 
     address internal constant CBBTC            = 0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf;
-    address internal constant CBBTC_PRICE_FEED = 0x24C392CDbF32Cf911B258981a66d5541d85269ce;
+    address internal constant CBBTC_PRICE_FEED = 0xb9ED698c9569c5abea716D1E64c089610a3768B6;
 
     constructor() {
         id = '20240926';
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('mainnet').rpcUrl, 20753858);  // Sep 15, 2024
+        vm.createSelectFork(getChain('mainnet').rpcUrl, 20761848);  // Sep 16, 2024
         payload = deployPayload();
-
-        // TODO remove this when actually tolled
-        vm.prank(0x40C33e796be78148CeC983C2202335A0962d172A);
-        ITolled(CBBTC_PRICE_FEED).kiss(Ethereum.SPARK_PROXY);
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
     }
@@ -30,7 +26,7 @@ contract SparkEthereum_20240926Test is SparkEthereumTestBase {
     function testCollateralOnboarding() public {
         ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', pool);
 
-        assertEq(allConfigsBefore.length, 9);
+        assertEq(allConfigsBefore.length, 10);
 
         _assertSupplyCapConfig({
             asset:            CBBTC,
@@ -49,7 +45,7 @@ contract SparkEthereum_20240926Test is SparkEthereumTestBase {
 
         ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
 
-        assertEq(allConfigsAfter.length, 10);
+        assertEq(allConfigsAfter.length, 11);
 
         ReserveConfig memory cbbtc = ReserveConfig({
             symbol:                  'cbBTC',
@@ -109,46 +105,6 @@ contract SparkEthereum_20240926Test is SparkEthereumTestBase {
             asset:            CBBTC,
             max:              500,
             gap:              50,
-            increaseCooldown: 12 hours
-        });
-    }
-
-    function testWBTCOffboarding() public {
-        ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', pool);
-
-        ReserveConfig memory wbtcBefore = _findReserveConfigBySymbol(allConfigsBefore, 'WBTC');
-        assertEq(wbtcBefore.liquidationThreshold, 75_00);
-
-        _assertSupplyCapConfig({
-            asset:            Ethereum.WBTC,
-            max:              10_000,
-            gap:              500,
-            increaseCooldown: 12 hours
-        });
-        _assertBorrowCapConfig({
-            asset:            Ethereum.WBTC,
-            max:              2_000,
-            gap:              100,
-            increaseCooldown: 12 hours
-        });
-
-        executePayload(payload);
-
-        ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
-
-        wbtcBefore.liquidationThreshold = 70_00;
-        _validateReserveConfig(wbtcBefore, allConfigsAfter);
-
-        _assertSupplyCapConfig({
-            asset:            Ethereum.WBTC,
-            max:              5_000,
-            gap:              200,
-            increaseCooldown: 12 hours
-        });
-        _assertBorrowCapConfig({
-            asset:            Ethereum.WBTC,
-            max:              1,
-            gap:              1,
             increaseCooldown: 12 hours
         });
     }

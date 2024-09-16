@@ -9,16 +9,15 @@ import { ICapAutomator } from "lib/sparklend-cap-automator/src/interfaces/ICapAu
 
 /**
  * @title  Sep 26, 2024 Spark Ethereum Proposal
- * @notice cbBTC Onboarding, WBTC Offboarding Parameters Update 1
+ * @notice cbBTC Onboarding
  * @author Phoenix Labs
  * Forum:  https://forum.makerdao.com/t/sep-12-2024-proposed-changes-to-spark-for-upcoming-spell/25076
- *         http://forum.makerdao.com/t/wbtc-changes-and-risk-mitigation-10-august-2024/24844/26
  * Vote:   TODO
  */
 contract SparkEthereum_20240926 is SparkPayloadEthereum {
 
     address internal constant CBBTC            = 0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf;
-    address internal constant CBBTC_PRICE_FEED = 0x24C392CDbF32Cf911B258981a66d5541d85269ce;
+    address internal constant CBBTC_PRICE_FEED = 0xb9ED698c9569c5abea716D1E64c089610a3768B6;
 
     function newListings()
         public pure override returns (IEngine.Listing[] memory)
@@ -59,32 +58,12 @@ contract SparkEthereum_20240926 is SparkPayloadEthereum {
         return listings;
     }
 
-    function collateralsUpdates() public pure override returns (IEngine.CollateralUpdate[] memory) {
-        IEngine.CollateralUpdate[] memory updates = new IEngine.CollateralUpdate[](1);
-
-        updates[0] = IEngine.CollateralUpdate({
-            asset:          Ethereum.WBTC,
-            ltv:            EngineFlags.KEEP_CURRENT,
-            liqThreshold:   70_00,
-            liqBonus:       EngineFlags.KEEP_CURRENT,
-            debtCeiling:    EngineFlags.KEEP_CURRENT,
-            liqProtocolFee: EngineFlags.KEEP_CURRENT,
-            eModeCategory:  EngineFlags.KEEP_CURRENT
-        });
-
-        return updates;
-    }
-
     function _postExecute()
         internal override
     {
         // cbBTC onboarding
         ICapAutomator(Ethereum.CAP_AUTOMATOR).setSupplyCapConfig({asset: CBBTC, max: 3_000, gap: 500, increaseCooldown: 12 hours});
         ICapAutomator(Ethereum.CAP_AUTOMATOR).setBorrowCapConfig({asset: CBBTC, max: 500, gap: 50, increaseCooldown: 12 hours});
-
-        // WBTC offboarding
-        ICapAutomator(Ethereum.CAP_AUTOMATOR).setSupplyCapConfig({asset: Ethereum.WBTC, max: 5_000, gap: 200, increaseCooldown: 12 hours});
-        ICapAutomator(Ethereum.CAP_AUTOMATOR).setBorrowCapConfig({asset: Ethereum.WBTC, max: 1, gap: 1, increaseCooldown: 12 hours});
 
         // Making an initial deposit right after the listing to prevent spToken value manipulation
         IERC20(CBBTC).approve(address(LISTING_ENGINE.POOL()), 1e6);
