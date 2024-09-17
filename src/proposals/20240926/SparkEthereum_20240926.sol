@@ -12,7 +12,7 @@ import { ICapAutomator } from "lib/sparklend-cap-automator/src/interfaces/ICapAu
  * @notice cbBTC Onboarding
  * @author Phoenix Labs
  * Forum:  https://forum.makerdao.com/t/sep-12-2024-proposed-changes-to-spark-for-upcoming-spell/25076
- * Vote:   TODO
+ * Vote:   https://vote.makerdao.com/polling/QmPFkXna#poll-detail
  */
 contract SparkEthereum_20240926 is SparkPayloadEthereum {
 
