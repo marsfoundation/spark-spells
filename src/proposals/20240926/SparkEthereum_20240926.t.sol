@@ -3,8 +3,8 @@ pragma solidity ^0.8.10;
 
 import 'src/SparkTestBase.sol';
 
-interface ITolled {
-    function kiss(address) external;
+interface IPriceFeed {
+    function latestAnswer() external view returns (int256);
 }
 
 contract SparkEthereum_20240926Test is SparkEthereumTestBase {
@@ -21,6 +21,11 @@ contract SparkEthereum_20240926Test is SparkEthereumTestBase {
         payload = deployPayload();
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
+    }
+
+    function testPriceFeed() public {
+        vm.prank(Ethereum.AAVE_ORACLE);
+        assertEq(IPriceFeed(CBBTC_PRICE_FEED).latestAnswer(), 58_827e8);
     }
 
     function testCollateralOnboarding() public {

@@ -58,12 +58,20 @@ contract SparkEthereum_20240926 is SparkPayloadEthereum {
         return listings;
     }
 
-    function _postExecute()
-        internal override
-    {
+    function _postExecute() internal override {
         // cbBTC onboarding
-        ICapAutomator(Ethereum.CAP_AUTOMATOR).setSupplyCapConfig({asset: CBBTC, max: 3_000, gap: 500, increaseCooldown: 12 hours});
-        ICapAutomator(Ethereum.CAP_AUTOMATOR).setBorrowCapConfig({asset: CBBTC, max: 500, gap: 50, increaseCooldown: 12 hours});
+        ICapAutomator(Ethereum.CAP_AUTOMATOR).setSupplyCapConfig({
+            asset: CBBTC,
+            max: 3_000,
+            gap: 500,
+            increaseCooldown: 12 hours
+        });
+        ICapAutomator(Ethereum.CAP_AUTOMATOR).setBorrowCapConfig({
+            asset: CBBTC,
+            max: 500,
+            gap: 50,
+            increaseCooldown: 12 hours
+        });
 
         // Making an initial deposit right after the listing to prevent spToken value manipulation
         IERC20(CBBTC).approve(address(LISTING_ENGINE.POOL()), 1e6);
