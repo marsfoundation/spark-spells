@@ -17,15 +17,15 @@ contract SparkEthereum_20240926Test is SparkEthereumTestBase {
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('mainnet').rpcUrl, 20761848);  // Sep 16, 2024
-        payload = deployPayload();
+        vm.createSelectFork(getChain('mainnet').rpcUrl, 20784138);  // Sep 19, 2024
+        payload = 0xc80621140bEe6A105C180Ae7cb0a084c2409C738;
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
     }
 
     function testPriceFeed() public {
         vm.prank(Ethereum.AAVE_ORACLE);
-        assertEq(IPriceFeed(CBBTC_PRICE_FEED).latestAnswer(), 58_827e8);
+        assertEq(IPriceFeed(CBBTC_PRICE_FEED).latestAnswer(), 62_418.1e8);
     }
 
     function testCollateralOnboarding() public {
