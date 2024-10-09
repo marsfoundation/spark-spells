@@ -40,7 +40,7 @@ jobs:
           BASE_RPC_URL: ${{secrets.BASE_RPC_URL}}
           GOERLI_RPC_URL: ${{secrets.GOERLI_RPC_URL}}
         run: |
-          forge test -vvv
+          forge test -vvv --evm-version cancun
         id: test
 
       # submits a PR comment with a spell simulation
