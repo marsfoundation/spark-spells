@@ -40,11 +40,9 @@ contract SparkEthereum_20241017Test is SparkEthereumTestBase {
     }
 
     function testPriceFeeds() public {
-        vm.prank(Ethereum.AAVE_ORACLE);
+        vm.startPrank(Ethereum.AAVE_ORACLE);
         assertEq(IPriceFeed(SUSDS_PRICE_FEED).latestAnswer(), 1.00362036e8);
-
-        vm.prank(Ethereum.AAVE_ORACLE);
-        assertEq(IPriceFeed(SDAI_PRICE_FEED).latestAnswer(), 1.11239740e8);
+        assertEq(IPriceFeed(SDAI_PRICE_FEED).latestAnswer(),  1.11239740e8);
     }
 
     function testValidatePriceFeedChange() public {
@@ -136,7 +134,7 @@ contract SparkEthereum_20241017Test is SparkEthereumTestBase {
             gap:              50_000_000,
             increaseCooldown: 12 hours
         });
-        
+
         _assertBorrowCapConfig({
             asset:            SUSDS,
             max:              0,
@@ -194,7 +192,7 @@ contract SparkEthereum_20241017Test is SparkEthereumTestBase {
         _assertMorphoCap(ptUsde27Mar, 100_000_000e18);
         
         assertEq(IMorphoChainlinkOracle(PT_26DEC2024_PRICE_FEED).price(), 0.968457700722983258e36);
-        assertEq(IMorphoChainlinkOracle(PT_27MAR2025_PRICE_FEED).price(), 0.90808058726534754e36);
+        assertEq(IMorphoChainlinkOracle(PT_27MAR2025_PRICE_FEED).price(), 0.908080587265347540e36);
     }
 
     function testWBTCChanges() public {

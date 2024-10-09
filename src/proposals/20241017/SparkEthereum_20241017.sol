@@ -105,9 +105,9 @@ contract SparkEthereum_20241017 is SparkPayloadEthereum {
 
         // sUSDS onboarding
         capAutomator.setSupplyCapConfig({
-            asset: SUSDS,
-            max: 500_000_000,
-            gap: 50_000_000,
+            asset:            SUSDS,
+            max:              500_000_000,
+            gap:              50_000_000,
             increaseCooldown: 12 hours
         });
 
@@ -141,18 +141,18 @@ contract SparkEthereum_20241017 is SparkPayloadEthereum {
         // Reduce supply cap max from 10,000 WBTC to 5,000 WBTC
         // Reduce supply cap gap from 500 WBTC to 200 WBTC
         capAutomator.setSupplyCapConfig({
-            asset: Ethereum.WBTC,
-            max: 5_000,
-            gap: 200,
+            asset:            Ethereum.WBTC,
+            max:              5_000,
+            gap:              200,
             increaseCooldown: 12 hours
         });
 
         // Reduce borrow cap max from 2,000 WBTC to 1 WBTC
         // Reduce borrow cap gap from 100 WBTC to 1 WBTC
         capAutomator.setBorrowCapConfig({
-            asset: Ethereum.WBTC,
-            max: 1,
-            gap: 1,
+            asset:            Ethereum.WBTC,
+            max:              1,
+            gap:              1,
             increaseCooldown: 12 hours
         });
     }
