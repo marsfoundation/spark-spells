@@ -3,15 +3,16 @@ pragma solidity ^0.8.10;
 
 import 'src/SparkTestBase.sol';
 
-interface IPriceFeed {
-    function latestAnswer() external view returns (int256);
-}
-
 interface IMorphoChainlinkOracle {
     function price() external view returns (uint256);
 }
 
+interface IPriceFeed {
+    function latestAnswer() external view returns (int256);
+}
+
 contract SparkEthereum_20241017Test is SparkEthereumTestBase {
+
     address internal constant SUSDS            = 0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD;
     address internal constant SUSDS_PRICE_FEED = 0x27f3A665c75aFdf43CfbF6B3A859B698f46ef656;
 
@@ -20,6 +21,7 @@ contract SparkEthereum_20241017Test is SparkEthereumTestBase {
 
     address internal constant PT_SUSDE_26DEC2024      = 0xEe9085fC268F6727d5D4293dBABccF901ffDCC29;
     address internal constant PT_26DEC2024_PRICE_FEED = 0x81E5E28F33D314e9211885d6f0F4080E755e4595;
+
     address internal constant PT_SUSDE_27MAR2025      = 0xE00bd3Df25fb187d6ABBB620b3dfd19839947b81;
     address internal constant PT_27MAR2025_PRICE_FEED = 0x38d130cEe60CDa080A3b3aC94C79c34B6Fc919A7;
 
