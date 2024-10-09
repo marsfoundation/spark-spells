@@ -19,11 +19,11 @@ contract SparkEthereum_20241017Test is SparkEthereumTestBase {
     address internal constant SDAI_OLD_PRICE_FEED = 0xb9E6DBFa4De19CCed908BcbFe1d015190678AB5f;
     address internal constant SDAI_PRICE_FEED     = 0x0c0864837C7e65458aCD3C665222203217019436;
 
-    address internal constant PT_SUSDE_26DEC2024      = 0xEe9085fC268F6727d5D4293dBABccF901ffDCC29;
     address internal constant PT_26DEC2024_PRICE_FEED = 0x81E5E28F33D314e9211885d6f0F4080E755e4595;
+    address internal constant PT_SUSDE_26DEC2024      = 0xEe9085fC268F6727d5D4293dBABccF901ffDCC29;
 
-    address internal constant PT_SUSDE_27MAR2025      = 0xE00bd3Df25fb187d6ABBB620b3dfd19839947b81;
     address internal constant PT_27MAR2025_PRICE_FEED = 0x38d130cEe60CDa080A3b3aC94C79c34B6Fc919A7;
+    address internal constant PT_SUSDE_27MAR2025      = 0xE00bd3Df25fb187d6ABBB620b3dfd19839947b81;
 
     constructor() {
         id = '20241017';
@@ -151,11 +151,6 @@ contract SparkEthereum_20241017Test is SparkEthereumTestBase {
             oracle.getSourceOfAsset(SUSDS) == SUSDS_PRICE_FEED,
             '_validateAssetSourceOnOracle() : INVALID_PRICE_SOURCE'
         );
-
-        // require(
-        //     IOracleLike(oracle.getSourceOfAsset(SUSDS)).decimals() == 8,
-        //     '_validateAssetSourceOnOracle() : INVALID_PRICE_SOURCE_DECIMALS'
-        // );
     }
 
     function testMorphoVaults() public {
