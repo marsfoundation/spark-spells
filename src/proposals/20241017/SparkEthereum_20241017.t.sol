@@ -43,8 +43,8 @@ contract SparkEthereum_20241017Test is SparkEthereumTestBase {
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('mainnet').rpcUrl, 20937250);  // Oct 10, 2024
-        payload = 0xcc3B9e79261A7064A0f734Cc749A8e3762e0a187;
+        vm.createSelectFork(getChain('mainnet').rpcUrl, 20937397);  // Oct 10, 2024
+        payload = 0x74b3D0E74f2711f30442536832D7fBCB0F42C195;
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
     }
@@ -55,7 +55,7 @@ contract SparkEthereum_20241017Test is SparkEthereumTestBase {
         int256 sdaiPrice  = IPriceFeed(SDAI_PRICE_FEED).latestAnswer();
 
         assertEq(susdsPrice, 1.00388405e8);
-        assertEq(sdaiPrice,  1.11264822e8);
+        assertEq(sdaiPrice,  1.11265482e8);
 
         // Remove 19 decimals from the chi values
         assertEq(IPot(SUSDS).chi() / 1e19,        uint256(susdsPrice));
@@ -82,12 +82,12 @@ contract SparkEthereum_20241017Test is SparkEthereumTestBase {
         IAaveOracle oracle = IAaveOracle(Ethereum.AAVE_ORACLE);
 
         assertEq(oracle.getSourceOfAsset(Ethereum.SDAI), SDAI_OLD_PRICE_FEED);
-        assertEq(oracle.getAssetPrice(Ethereum.SDAI),    1.11233556e8);
+        assertEq(oracle.getAssetPrice(Ethereum.SDAI),    1.11234216e8);
 
         executePayload(payload);
 
         assertEq(oracle.getSourceOfAsset(Ethereum.SDAI), SDAI_PRICE_FEED);
-        assertEq(oracle.getAssetPrice(Ethereum.SDAI),    1.11264822e8);
+        assertEq(oracle.getAssetPrice(Ethereum.SDAI),    1.11265482e8);
     }
 
     function testCollateralOnboarding() public {
@@ -222,8 +222,8 @@ contract SparkEthereum_20241017Test is SparkEthereumTestBase {
         uint256 ptUsde26DecPrice = IMorphoChainlinkOracle(PT_26DEC2024_PRICE_FEED).price();
         uint256 ptUsde27MarPrice = IMorphoChainlinkOracle(PT_27MAR2025_PRICE_FEED).price();
 
-        assertEq(ptUsde26DecPrice, 0.969097369672754947e36);
-        assertEq(ptUsde27MarPrice, 0.908933479198376459e36);
+        assertEq(ptUsde26DecPrice, 0.969105874238964993e36);
+        assertEq(ptUsde27MarPrice, 0.908944818619989853e36);
 
         uint256 timeSkip = 60 days;
 
@@ -240,8 +240,8 @@ contract SparkEthereum_20241017Test is SparkEthereumTestBase {
         uint256 ptUsde27MarYearlyPriceIncrease = (newPtUsde27MarPrice - ptUsde27MarPrice) * ONE_YEAR / (timeSkip);
 
         // Calculated yield should equal the expected one
-        assertApproxEqAbs(ptUsde26DecYearlyPriceIncrease / 1e18, PT_SUSDE_26DEC2024_YIELD, 3);
-        assertApproxEqAbs(ptUsde27MarYearlyPriceIncrease / 1e18, PT_SUSDE_27MAR2025_YIELD, 3);
+        assertApproxEqAbs(ptUsde26DecYearlyPriceIncrease / 1e18, PT_SUSDE_26DEC2024_YIELD, 4);
+        assertApproxEqAbs(ptUsde27MarYearlyPriceIncrease / 1e18, PT_SUSDE_27MAR2025_YIELD, 4);
 
         assertLt(IMorphoChainlinkOracle(PT_26DEC2024_PRICE_FEED).price(), 1e36);
 
