@@ -7,6 +7,10 @@ interface IMorphoChainlinkOracle {
     function price() external view returns (uint256);
 }
 
+interface IMorphoPT {
+    function expiry() external view returns (uint256);
+}
+
 interface IPot {
     function chi() external view returns (uint256);
     function drip() external returns (uint256);
@@ -24,19 +28,23 @@ contract SparkEthereum_20241017Test is SparkEthereumTestBase {
     address internal constant SDAI_OLD_PRICE_FEED = 0xb9E6DBFa4De19CCed908BcbFe1d015190678AB5f;
     address internal constant SDAI_PRICE_FEED     = 0x0c0864837C7e65458aCD3C665222203217019436;
 
-    address internal constant PT_26DEC2024_PRICE_FEED = 0x81E5E28F33D314e9211885d6f0F4080E755e4595;
-    address internal constant PT_SUSDE_26DEC2024      = 0xEe9085fC268F6727d5D4293dBABccF901ffDCC29;
+    address internal constant PT_26DEC2024_PRICE_FEED  = 0x81E5E28F33D314e9211885d6f0F4080E755e4595;
+    address internal constant PT_SUSDE_26DEC2024       = 0xEe9085fC268F6727d5D4293dBABccF901ffDCC29;
+    uint256 internal constant PT_SUSDE_26DEC2024_YIELD = 0.15e18;
 
-    address internal constant PT_27MAR2025_PRICE_FEED = 0x38d130cEe60CDa080A3b3aC94C79c34B6Fc919A7;
-    address internal constant PT_SUSDE_27MAR2025      = 0xE00bd3Df25fb187d6ABBB620b3dfd19839947b81;
+    address internal constant PT_27MAR2025_PRICE_FEED  = 0x38d130cEe60CDa080A3b3aC94C79c34B6Fc919A7;
+    address internal constant PT_SUSDE_27MAR2025       = 0xE00bd3Df25fb187d6ABBB620b3dfd19839947b81;
+    uint256 internal constant PT_SUSDE_27MAR2025_YIELD = 0.20e18;
+
+    uint256 internal constant ONE_YEAR = 365 days;
 
     constructor() {
         id = '20241017';
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('mainnet').rpcUrl, 20933532);  // Oct 10, 2024
-        payload = deployPayload();
+        vm.createSelectFork(getChain('mainnet').rpcUrl, 20937250);  // Oct 10, 2024
+        payload = 0xcc3B9e79261A7064A0f734Cc749A8e3762e0a187;
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
     }
@@ -46,8 +54,8 @@ contract SparkEthereum_20241017Test is SparkEthereumTestBase {
         int256 susdsPrice = IPriceFeed(SUSDS_PRICE_FEED).latestAnswer();
         int256 sdaiPrice  = IPriceFeed(SDAI_PRICE_FEED).latestAnswer();
 
-        assertEq(susdsPrice, 1.00380891e8);
-        assertEq(sdaiPrice,  1.11256555e8);
+        assertEq(susdsPrice, 1.00388405e8);
+        assertEq(sdaiPrice,  1.11264822e8);
 
         // Remove 19 decimals from the chi values
         assertEq(IPot(SUSDS).chi() / 1e19,        uint256(susdsPrice));
@@ -74,12 +82,12 @@ contract SparkEthereum_20241017Test is SparkEthereumTestBase {
         IAaveOracle oracle = IAaveOracle(Ethereum.AAVE_ORACLE);
 
         assertEq(oracle.getSourceOfAsset(Ethereum.SDAI), SDAI_OLD_PRICE_FEED);
-        assertEq(oracle.getAssetPrice(Ethereum.SDAI),    1.11251958e8);
+        assertEq(oracle.getAssetPrice(Ethereum.SDAI),    1.11233556e8);
 
         executePayload(payload);
 
         assertEq(oracle.getSourceOfAsset(Ethereum.SDAI), SDAI_PRICE_FEED);
-        assertEq(oracle.getAssetPrice(Ethereum.SDAI),    1.11256555e8);
+        assertEq(oracle.getAssetPrice(Ethereum.SDAI),    1.11264822e8);
     }
 
     function testCollateralOnboarding() public {
@@ -211,8 +219,39 @@ contract SparkEthereum_20241017Test is SparkEthereumTestBase {
         _assertMorphoCap(ptUsde26Dec, 100_000_000e18);
         _assertMorphoCap(ptUsde27Mar, 100_000_000e18);
         
-        assertEq(IMorphoChainlinkOracle(PT_26DEC2024_PRICE_FEED).price(), 0.968884641362252664e36);
-        assertEq(IMorphoChainlinkOracle(PT_27MAR2025_PRICE_FEED).price(), 0.908649841451040082e36);
+        uint256 ptUsde26DecPrice = IMorphoChainlinkOracle(PT_26DEC2024_PRICE_FEED).price();
+        uint256 ptUsde27MarPrice = IMorphoChainlinkOracle(PT_27MAR2025_PRICE_FEED).price();
+
+        assertEq(ptUsde26DecPrice, 0.969097369672754947e36);
+        assertEq(ptUsde27MarPrice, 0.908933479198376459e36);
+
+        uint256 timeSkip = 60 days;
+
+        skip(timeSkip);
+
+        uint256 newPtUsde26DecPrice = IMorphoChainlinkOracle(PT_26DEC2024_PRICE_FEED).price();
+        uint256 newPtUsde27MarPrice = IMorphoChainlinkOracle(PT_27MAR2025_PRICE_FEED).price();
+
+        // Price for both feeds increases over time
+        assertGt(newPtUsde26DecPrice, ptUsde26DecPrice);
+        assertGt(newPtUsde27MarPrice, ptUsde27MarPrice);
+
+        uint256 ptUsde26DecYearlyPriceIncrease = (newPtUsde26DecPrice - ptUsde26DecPrice) * ONE_YEAR / (timeSkip);
+        uint256 ptUsde27MarYearlyPriceIncrease = (newPtUsde27MarPrice - ptUsde27MarPrice) * ONE_YEAR / (timeSkip);
+
+        // Calculated yield should equal the expected one
+        assertApproxEqAbs(ptUsde26DecYearlyPriceIncrease / 1e18, PT_SUSDE_26DEC2024_YIELD, 3);
+        assertApproxEqAbs(ptUsde27MarYearlyPriceIncrease / 1e18, PT_SUSDE_27MAR2025_YIELD, 3);
+
+        assertLt(IMorphoChainlinkOracle(PT_26DEC2024_PRICE_FEED).price(), 1e36);
+
+        // Prices on maturiy should be 1e36
+        vm.warp(IMorphoPT(PT_SUSDE_26DEC2024).expiry());
+        assertLt(IMorphoChainlinkOracle(PT_27MAR2025_PRICE_FEED).price(), 1e36);
+        assertEq(IMorphoChainlinkOracle(PT_26DEC2024_PRICE_FEED).price(), 1e36);
+
+        vm.warp(IMorphoPT(PT_SUSDE_27MAR2025).expiry());
+        assertEq(IMorphoChainlinkOracle(PT_27MAR2025_PRICE_FEED).price(), 1e36);
     }
 
     function testWBTCChanges() public {
