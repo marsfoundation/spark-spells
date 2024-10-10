@@ -113,8 +113,8 @@ contract SparkEthereum_20241017 is SparkPayloadEthereum {
         });
 
         // Making an initial deposit right after the listing to prevent spToken value manipulation
-        IERC20(SUSDS).approve(address(LISTING_ENGINE.POOL()), 1e6);
-        LISTING_ENGINE.POOL().deposit(SUSDS, 1e6, address(this), 0);
+        IERC20(SUSDS).approve(address(LISTING_ENGINE.POOL()), 1e18);
+        LISTING_ENGINE.POOL().deposit(SUSDS, 1e18, address(this), 0);
 
         // Onboard Pendle sUSDe PTs to Morpho Spark DAI Vault
         IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).submitCap(

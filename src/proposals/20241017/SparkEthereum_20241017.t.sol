@@ -7,6 +7,11 @@ interface IMorphoChainlinkOracle {
     function price() external view returns (uint256);
 }
 
+interface IPot {
+    function chi() external view returns (uint256);
+    function drip() external returns (uint256);
+}
+
 interface IPriceFeed {
     function latestAnswer() external view returns (int256);
 }
@@ -30,33 +35,51 @@ contract SparkEthereum_20241017Test is SparkEthereumTestBase {
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('mainnet').rpcUrl, 20926079);  // Oct 09, 2024
+        vm.createSelectFork(getChain('mainnet').rpcUrl, 20933532);  // Oct 10, 2024
         payload = deployPayload();
-        
-        // TODO: Remove when the spark proxy has enough susds
-        // Transfer SUSDS to spark proxy 
-        vm.prank(0xf568680e62Adc0b05c90aAF89866dBa6F25aBBe2);
-        IERC20(SUSDS).transfer(Ethereum.SPARK_PROXY, 1e6);
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
     }
 
     function testPriceFeeds() public {
         vm.startPrank(Ethereum.AAVE_ORACLE);
-        assertEq(IPriceFeed(SUSDS_PRICE_FEED).latestAnswer(), 1.00362036e8);
-        assertEq(IPriceFeed(SDAI_PRICE_FEED).latestAnswer(),  1.11239740e8);
+        int256 susdsPrice = IPriceFeed(SUSDS_PRICE_FEED).latestAnswer();
+        int256 sdaiPrice  = IPriceFeed(SDAI_PRICE_FEED).latestAnswer();
+
+        assertEq(susdsPrice, 1.00380891e8);
+        assertEq(sdaiPrice,  1.11256555e8);
+
+        // Remove 19 decimals from the chi values
+        assertEq(IPot(SUSDS).chi() / 1e19,        uint256(susdsPrice));
+        assertEq(IPot(Ethereum.POT).chi() / 1e19, uint256(sdaiPrice));
+
+        // Drip the pot in the future to update the chi values
+        skip(100 days);
+        IPot(SUSDS).drip();
+        IPot(Ethereum.POT).drip();
+
+        int256 newSusdsPrice = IPriceFeed(SUSDS_PRICE_FEED).latestAnswer();
+        int256 newSdaiPrice  = IPriceFeed(SDAI_PRICE_FEED).latestAnswer();
+
+        // Price for both feeds should have increased
+        assertGt(newSusdsPrice, susdsPrice);
+        assertGt(newSdaiPrice,  sdaiPrice);
+
+        // Remove 19 decimals from the chi values
+        assertEq(IPot(SUSDS).chi() / 1e19,        uint256(newSusdsPrice));
+        assertEq(IPot(Ethereum.POT).chi() / 1e19, uint256(newSdaiPrice));
     }
 
     function testValidatePriceFeedChange() public {
         IAaveOracle oracle = IAaveOracle(Ethereum.AAVE_ORACLE);
 
         assertEq(oracle.getSourceOfAsset(Ethereum.SDAI), SDAI_OLD_PRICE_FEED);
-        assertEq(oracle.getAssetPrice(Ethereum.SDAI),    1.11215106e8);
+        assertEq(oracle.getAssetPrice(Ethereum.SDAI),    1.11251958e8);
 
         executePayload(payload);
 
         assertEq(oracle.getSourceOfAsset(Ethereum.SDAI), SDAI_PRICE_FEED);
-        assertEq(oracle.getAssetPrice(Ethereum.SDAI),    1.11239740e8);
+        assertEq(oracle.getAssetPrice(Ethereum.SDAI),    1.11256555e8);
     }
 
     function testCollateralOnboarding() public {
@@ -188,8 +211,8 @@ contract SparkEthereum_20241017Test is SparkEthereumTestBase {
         _assertMorphoCap(ptUsde26Dec, 100_000_000e18);
         _assertMorphoCap(ptUsde27Mar, 100_000_000e18);
         
-        assertEq(IMorphoChainlinkOracle(PT_26DEC2024_PRICE_FEED).price(), 0.968457700722983258e36);
-        assertEq(IMorphoChainlinkOracle(PT_27MAR2025_PRICE_FEED).price(), 0.908080587265347540e36);
+        assertEq(IMorphoChainlinkOracle(PT_26DEC2024_PRICE_FEED).price(), 0.968884641362252664e36);
+        assertEq(IMorphoChainlinkOracle(PT_27MAR2025_PRICE_FEED).price(), 0.908649841451040082e36);
     }
 
     function testWBTCChanges() public {
