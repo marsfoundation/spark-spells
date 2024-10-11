@@ -245,12 +245,18 @@ contract SparkEthereum_20241017Test is SparkEthereumTestBase {
 
         assertLt(IMorphoChainlinkOracle(PT_26DEC2024_PRICE_FEED).price(), 1e36);
 
-        // Prices on maturiy should be 1e36
+        // Prices on maturity should be 1e36
         vm.warp(IMorphoPT(PT_SUSDE_26DEC2024).expiry());
         assertLt(IMorphoChainlinkOracle(PT_27MAR2025_PRICE_FEED).price(), 1e36);
         assertEq(IMorphoChainlinkOracle(PT_26DEC2024_PRICE_FEED).price(), 1e36);
 
         vm.warp(IMorphoPT(PT_SUSDE_27MAR2025).expiry());
+        assertEq(IMorphoChainlinkOracle(PT_27MAR2025_PRICE_FEED).price(), 1e36);
+
+        skip(ONE_YEAR);
+
+        // Prices should remain to be 1e36
+        assertEq(IMorphoChainlinkOracle(PT_26DEC2024_PRICE_FEED).price(), 1e36);
         assertEq(IMorphoChainlinkOracle(PT_27MAR2025_PRICE_FEED).price(), 1e36);
     }
 
