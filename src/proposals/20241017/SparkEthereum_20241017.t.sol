@@ -221,11 +221,13 @@ contract SparkEthereum_20241017Test is SparkEthereumTestBase {
         
         // Commented because of an open issue with Foundry with the evm version
         // https://github.com/foundry-rs/foundry/issues/6228
+        // To run the following tests, use the flag --evm-version cancun
+
         // uint256 ptUsde26DecPrice = IMorphoChainlinkOracle(PT_26DEC2024_PRICE_FEED).price();
         // uint256 ptUsde27MarPrice = IMorphoChainlinkOracle(PT_27MAR2025_PRICE_FEED).price();
 
-        // assertEq(ptUsde26DecPrice, 0.969105874238964993e36);
-        // assertEq(ptUsde27MarPrice, 0.908944818619989853e36);
+        // assertEq(ptUsde26DecPrice, 0.970544002092846271e36);
+        // assertEq(ptUsde27MarPrice, 0.910862322425164891e36);
 
         // uint256 timeSkip = 60 days;
 
