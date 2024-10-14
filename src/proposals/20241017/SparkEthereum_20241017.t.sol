@@ -221,7 +221,7 @@ contract SparkEthereum_20241017Test is SparkEthereumTestBase {
         
         // Commented because of an open issue with Foundry with the evm version
         // https://github.com/foundry-rs/foundry/issues/6228
-        // To run the following tests, use the flag --evm-version cancun
+        // NOTE: Can run this test individually after commenting out these assertions with forge t --mt testMorphoVaults -vvv --evm-version cancun
 
         // uint256 ptUsde26DecPrice = IMorphoChainlinkOracle(PT_26DEC2024_PRICE_FEED).price();
         // uint256 ptUsde27MarPrice = IMorphoChainlinkOracle(PT_27MAR2025_PRICE_FEED).price();
