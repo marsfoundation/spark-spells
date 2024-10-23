@@ -5,7 +5,7 @@ import './AaveV3PayloadBase.sol';
 
 import { Ethereum } from 'spark-address-registry/Ethereum.sol';
 
-import { IL2BridgeExecutor } from 'spark-gov-relay/interfaces/IL2BridgeExecutor.sol';
+import { IExecutor } from 'spark-gov-relay/src/interfaces/IExecutor.sol';
 
 /**
  * @dev Base smart contract for Ethereum.
@@ -30,7 +30,7 @@ abstract contract SparkPayloadEthereum is
         calldatas[0]         = '';
         withDelegatecalls[0] = true;
 
-        return abi.encodeCall(IL2BridgeExecutor.queue, (
+        return abi.encodeCall(IExecutor.queue, (
             targets,
             values,
             signatures,
