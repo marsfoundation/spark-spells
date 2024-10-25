@@ -101,28 +101,28 @@ contract SparkEthereum_20241107 is SparkPayloadEthereum {
             mintRecipients: mintRecipients
         });
 
-        // --- Send USDS and sUSDS to Base ---
+    //     // --- Send USDS and sUSDS to Base ---
 
-        // Mint USDS and sUSDS
-        AllocatorVault(Ethereum.ALLOCATOR_VAULT).draw(USDS_MINT_AMOUNT);
-        AllocatorBuffer(Ethereum.ALLOCATOR_BUFFER).approve(Ethereum.USDS, address(this), USDS_MINT_AMOUNT);
-        IERC20(Ethereum.USDS).transferFrom(Ethereum.ALLOCATOR_BUFFER, address(this), USDS_MINT_AMOUNT);
-        IERC20(Ethereum.USDS).approve(Ethereum.SUSDS, SUSDS_DEPOSIT_AMOUNT);
-        uint256 susdsShares = IERC4626(Ethereum.SUSDS).deposit(SUSDS_DEPOSIT_AMOUNT, address(this));
+    //     // Mint USDS and sUSDS
+    //     AllocatorVault(Ethereum.ALLOCATOR_VAULT).draw(USDS_MINT_AMOUNT);
+    //     AllocatorBuffer(Ethereum.ALLOCATOR_BUFFER).approve(Ethereum.USDS, address(this), USDS_MINT_AMOUNT);
+    //     IERC20(Ethereum.USDS).transferFrom(Ethereum.ALLOCATOR_BUFFER, address(this), USDS_MINT_AMOUNT);
+    //     IERC20(Ethereum.USDS).approve(Ethereum.SUSDS, SUSDS_DEPOSIT_AMOUNT);
+    //     uint256 susdsShares = IERC4626(Ethereum.SUSDS).deposit(SUSDS_DEPOSIT_AMOUNT, address(this));
 
-        // Bridge to Base
-        IERC20(Ethereum.USDS).approve(Ethereum.BASE_TOKEN_BRIDGE, USDS_BRIDGE_AMOUNT);
-        IERC20(Ethereum.SUSDS).approve(Ethereum.BASE_TOKEN_BRIDGE, susdsShares);
-        ITokenBridge(Ethereum.BASE_TOKEN_BRIDGE).bridgeERC20To(Ethereum.USDS, Base.USDS, Base.ALM_PROXY, USDS_BRIDGE_AMOUNT, 5_000_000, "");  // TODO can probably tighten this gas limit
-        ITokenBridge(Ethereum.BASE_TOKEN_BRIDGE).bridgeERC20To(Ethereum.SUSDS, Base.SUSDS, Base.ALM_PROXY, susdsShares, 5_000_000, "");  // TODO can probably tighten this gas limit
+    //     // Bridge to Base
+    //     IERC20(Ethereum.USDS).approve(Ethereum.BASE_TOKEN_BRIDGE, USDS_BRIDGE_AMOUNT);
+    //     IERC20(Ethereum.SUSDS).approve(Ethereum.BASE_TOKEN_BRIDGE, susdsShares);
+    //     ITokenBridge(Ethereum.BASE_TOKEN_BRIDGE).bridgeERC20To(Ethereum.USDS, Base.USDS, Base.ALM_PROXY, USDS_BRIDGE_AMOUNT, 5_000_000, "");  // TODO can probably tighten this gas limit
+    //     ITokenBridge(Ethereum.BASE_TOKEN_BRIDGE).bridgeERC20To(Ethereum.SUSDS, Base.SUSDS, Base.ALM_PROXY, susdsShares, 5_000_000, "");  // TODO can probably tighten this gas limit
 
-        // --- Trigger Base Payload ---
-        OptimismForwarder.sendMessageL1toL2({
-            l1CrossDomain: OptimismForwarder.L1_CROSS_DOMAIN_BASE,
-            target:        Base.SPARK_RECEIVER,
-            message:       encodePayloadQueue(BASE_PAYLOAD),
-            gasLimit:      5_000_000
-        });
+    //     // --- Trigger Base Payload ---
+    //     OptimismForwarder.sendMessageL1toL2({
+    //         l1CrossDomain: OptimismForwarder.L1_CROSS_DOMAIN_BASE,
+    //         target:        Base.SPARK_RECEIVER,
+    //         message:       encodePayloadQueue(BASE_PAYLOAD),
+    //         gasLimit:      5_000_000
+    //     });
     }
-    
+
 }
