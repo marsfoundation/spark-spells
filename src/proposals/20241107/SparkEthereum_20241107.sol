@@ -42,7 +42,7 @@ interface ITokenBridge {
 contract SparkEthereum_20241107 is SparkPayloadEthereum {
 
     address constant FREEZER = 0x298b375f24CeDb45e936D7e21d6Eb05e344adFb5;  // Gov. facilitator multisig
-    address constant RELAYER = 0x8a25A24EDE9482C4Fc0738F99611BE58F1c839AB;  // TODO ALM Planner multisig
+    address constant RELAYER = 0x8a25A24EDE9482C4Fc0738F99611BE58F1c839AB;
 
     uint256 constant USDS_MINT_AMOUNT     = 9_000_000e18;
     uint256 constant SUSDS_DEPOSIT_AMOUNT = 8_000_000e18;
