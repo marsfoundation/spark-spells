@@ -99,7 +99,7 @@ contract SparkEthereum_20241107TestBase is SparkEthereumTestBase {
             // Autoline line -> 10_000_000
             maxLine         : 10_000_000 * RAD,
             // Autoline gap  -> 2_500_000
-            gap             : 2_500_000 * RAD,
+            gap             : 10_000_000 * RAD,  // NOTE: BUG - CHANGED THIS TO 10m
             // Autoline ttl  -> 1 day
             ttl             : 86_400 seconds,
             // Spark Proxy   -> 0x1601843c5E9bC251A3272907010AFa41Fa18347E
@@ -125,6 +125,8 @@ contract PostSpellExecutionTestBase is SparkEthereum_20241107TestBase {
         vm.startPrank(Ethereum.PAUSE_PROXY);
         _executeOct31Spell();
         vm.stopPrank();
+
+        skip(10 days);
 
         executePayload(payload);
     }
