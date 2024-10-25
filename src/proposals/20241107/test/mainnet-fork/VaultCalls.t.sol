@@ -3,6 +3,8 @@ pragma solidity ^0.8.21;
 
 import "./SparkEthereum_20241107TestBase.t.sol";
 
+import { AllocatorInit, AllocatorIlkConfig } from "dss-allocator/deploy/AllocatorInit.sol";
+
 interface IWardLike {
     function rely(address) external;
 }
@@ -11,171 +13,91 @@ contract MainnetControllerMintUSDSTests is SparkEthereum_20241107TestBase {
 
     function test_first() public {
         vm.startPrank(Ethereum.PAUSE_PROXY);
-        IWardLike(Ethereum.ALLOCATOR_VAULT).rely(Ethereum.SPARK_PROXY);
-        IWardLike(Ethereum.ALLOCATOR_BUFFER).rely(Ethereum.SPARK_PROXY);
+        _executeOct31Spell();
         vm.stopPrank();
 
         executePayload(payload);
     }
 
-//     function test_mintUSDS_notRelayer() external {
-//         vm.expectRevert(abi.encodeWithSignature(
-//             "AccessControlUnauthorizedAccount(address,bytes32)",
-//             address(this),
-//             RELAYER
-//         ));
-//         mainnetController.mintUSDS(1e18);
-//     }
+    // NOTE: Code taken from WIP Oct 31 spell
+    function _executeOct31Spell() internal {
 
-//     function test_mintUSDS_frozen() external {
-//         vm.prank(freezer);
-//         mainnetController.freeze();
+        address LOG = 0xdA0Ab1e0017DEbCd72Be8599041a2aa3bA7e740F;
 
-//         vm.prank(relayer);
-//         vm.expectRevert("MainnetController/not-active");
-//         mainnetController.mintUSDS(1e18);
-//     }
+        DssInstance memory dss = MCD.loadFromChainlog(LOG);
 
-//     function test_mintUSDS() external {
-//         ( uint256 ink, uint256 art ) = dss.vat.urns(ilk, vault);
-//         ( uint256 Art,,,, )          = dss.vat.ilks(ilk);
+        // Constants defined in spell,
+        address ALLOCATOR_ROLES          = 0x9A865A710399cea85dbD9144b7a09C889e94E803;
+        address ALLOCATOR_REGISTRY       = 0xCdCFA95343DA7821fdD01dc4d0AeDA958051bB3B;
+        address PIP_ALLOCATOR_SPARK_A    = 0xc7B91C401C02B73CBdF424dFaaa60950d5040dB7;
+        address ALLOCATOR_SPARK_BUFFER   = 0xc395D150e71378B47A1b8E9de0c1a83b75a08324;
+        address ALLOCATOR_SPARK_VAULT    = 0x691a6c29e9e96dd897718305427Ad5D534db16BA;
+        address ALLOCATOR_SPARK_OWNER    = 0xBE8E3e3618f7474F8cB1d074A26afFef007E98FB;
+        address SPARK_ALM_PROXY          = 0x1601843c5E9bC251A3272907010AFa41Fa18347E;
 
-//         assertEq(dss.vat.dai(USDS_JOIN), VAT_DAI_USDS_JOIN);
 
-//         assertEq(Art, 0);
-//         assertEq(ink, INK);
-//         assertEq(art, 0);
+        // ---------- Init Allocator ILK for Spark Subdao ----------
+        // Forum: TODO
+        //
+        // Init ALLOCATOR-SPARK-A ilk on vat, jug and spotter
+        // Set duty on jug to 5.2%
+        // Set line on vat
+        // Increase Global Line on vat
+        // Setup AutoLine for ALLOCATOR-SPARK-A:
+        // line: 10_000_000
+        // gap: 2_500_000
+        // ttl: 86_400 seconds
+        // Set spotter.pip for ALLOCATOR-SPARK-A to AllocatorOracle contract
+        // Set spotter.mat for ALLOCATOR-SPARK-A to RAY
+        // poke ALLOCATOR-SPARK-A (spotter.poke)
+        // Add AllocatorBuffer address to AllocatorRegistry
+        // Initiate the allocator vault by calling vat.slip & vat.grab
+        // Set jug on AllocatorVault
+        // Allow vault to pull funds from the buffer by giving max USDS approval
+        // Set the allocator proxy as the ALLOCATOR-SPARK-A ilk admin instead of the Pause Proxy on AllocatorRoles
+        // Move ownership of AllocatorVault & AllocatorBuffer to AllocatorProxy (SparkProxy)
+        // Add Allocator contracts to chainlog (ALLOCATOR_ROLES, ALLOCATOR_REGISTRY, ALLOCATOR_SPARK_A_VAULT, ALLOCATOR_SPARK_A_BUFFER, PIP_ALLOCATOR_SPARK_A)
+        // Add ALLOCATOR-SPARK-A ilk to IlkRegistry
 
-//         assertEq(usds.balanceOf(address(almProxy)), 0);
-//         assertEq(usds.totalSupply(),                USDS_SUPPLY);
 
-//         vm.prank(relayer);
-//         mainnetController.mintUSDS(1e18);
+        // Allocator shared contracts instance
+        AllocatorSharedInstance memory allocatorSharedInstance = AllocatorSharedInstance({
+            oracle:   PIP_ALLOCATOR_SPARK_A,
+            roles:    ALLOCATOR_ROLES,
+            registry: ALLOCATOR_REGISTRY
+        });
 
-//         ( ink, art ) = dss.vat.urns(ilk, vault);
-//         ( Art,,,, )  = dss.vat.ilks(ilk);
+        // Allocator ALLOCATOR-SPARK-A ilk contracts instance
+        AllocatorIlkInstance memory allocatorIlkInstance = AllocatorIlkInstance({
+            owner:  ALLOCATOR_SPARK_OWNER,
+            vault:  ALLOCATOR_SPARK_VAULT,
+            buffer: ALLOCATOR_SPARK_BUFFER
+        });
 
-//         assertEq(dss.vat.dai(USDS_JOIN), VAT_DAI_USDS_JOIN + 1e45);
+        // Allocator init config
+        AllocatorIlkConfig memory allocatorIlkCfg = AllocatorIlkConfig({
+            // Init ilk for ALLOCATOR-SPARK-A
+            ilk             : "ALLOCATOR-SPARK-A",
+            // jug.duty      -> 5.2%
+            duty            : FIVE_PT_TWO_PCT_RATE,
+            // Autoline line -> 10_000_000
+            maxLine         : 10_000_000 * RAD,
+            // Autoline gap  -> 2_500_000
+            gap             : 2_500_000 * RAD,
+            // Autoline ttl  -> 1 day
+            ttl             : 86_400 seconds,
+            // Spark Proxy   -> 0x1601843c5E9bC251A3272907010AFa41Fa18347E
+            allocatorProxy  : SPARK_ALM_PROXY,
+            // Ilk Registry  -> 0x5a464c28d19848f44199d003bef5ecc87d090f87
+            ilkRegistry     : ILK_REGISTRY
+        });
 
-//         assertEq(Art, 1e18);
-//         assertEq(ink, INK);
-//         assertEq(art, 1e18);
+        // Init allocator shared contracts
+        AllocatorInit.initShared(dss, allocatorSharedInstance);
 
-//         assertEq(usds.balanceOf(address(almProxy)), 1e18);
-//         assertEq(usds.totalSupply(),                USDS_SUPPLY + 1e18);
-//     }
+        // Init allocator system for ALLOCATOR-SPARK-A ilk
+        AllocatorInit.initIlk(dss, allocatorSharedInstance, allocatorIlkInstance, allocatorIlkCfg);
 
-//     function test_mintUSDS_rateLimited() external {
-//         bytes32 key = mainnetController.LIMIT_USDS_MINT();
-//         vm.startPrank(relayer);
-
-//         assertEq(rateLimits.getCurrentRateLimit(key), 5_000_000e18);
-//         assertEq(usds.balanceOf(address(almProxy)),   0);
-
-//         mainnetController.mintUSDS(1_000_000e18);
-
-//         assertEq(rateLimits.getCurrentRateLimit(key), 4_000_000e18);
-//         assertEq(usds.balanceOf(address(almProxy)),   1_000_000e18);
-
-//         skip(1 hours);
-
-//         assertEq(rateLimits.getCurrentRateLimit(key), 4_249_999.9999999999999984e18);
-//         assertEq(usds.balanceOf(address(almProxy)),   1_000_000e18);
-
-//         mainnetController.mintUSDS(4_249_999.9999999999999984e18);
-
-//         assertEq(rateLimits.getCurrentRateLimit(key), 0);
-//         assertEq(usds.balanceOf(address(almProxy)),   5_249_999.9999999999999984e18);
-
-//         vm.expectRevert("RateLimits/rate-limit-exceeded");
-//         mainnetController.mintUSDS(1);
-
-//         vm.stopPrank();
-//     }
-
-// }
-
-// contract MainnetControllerBurnUSDSTests is ForkTestBase {
-
-//     function test_burnUSDS_notRelayer() external {
-//         vm.expectRevert(abi.encodeWithSignature(
-//             "AccessControlUnauthorizedAccount(address,bytes32)",
-//             address(this),
-//             RELAYER
-//         ));
-//         mainnetController.burnUSDS(1e18);
-//     }
-
-//     function test_burnUSDS_frozen() external {
-//         vm.prank(freezer);
-//         mainnetController.freeze();
-
-//         vm.prank(relayer);
-//         vm.expectRevert("MainnetController/not-active");
-//         mainnetController.burnUSDS(1e18);
-//     }
-
-//     function test_burnUSDS() external {
-//         // Setup
-//         vm.prank(relayer);
-//         mainnetController.mintUSDS(1e18);
-
-//         ( uint256 ink, uint256 art ) = dss.vat.urns(ilk, vault);
-//         ( uint256 Art,,,, )          = dss.vat.ilks(ilk);
-
-//         assertEq(dss.vat.dai(USDS_JOIN), VAT_DAI_USDS_JOIN + 1e45);
-
-//         assertEq(Art, 1e18);
-//         assertEq(ink, INK);
-//         assertEq(art, 1e18);
-
-//         assertEq(usds.balanceOf(address(almProxy)), 1e18);
-//         assertEq(usds.totalSupply(),                USDS_SUPPLY + 1e18);
-
-//         vm.prank(relayer);
-//         mainnetController.burnUSDS(1e18);
-
-//         ( ink, art ) = dss.vat.urns(ilk, vault);
-//         ( Art,,,, )  = dss.vat.ilks(ilk);
-
-//         assertEq(dss.vat.dai(USDS_JOIN), VAT_DAI_USDS_JOIN);
-
-//         assertEq(Art, 0);
-//         assertEq(ink, INK);
-//         assertEq(art, 0);
-
-//         assertEq(usds.balanceOf(address(almProxy)), 0);
-//         assertEq(usds.totalSupply(),                USDS_SUPPLY);
-//     }
-
-//     function test_burnUSDS_rateLimited() external {
-//         bytes32 key = mainnetController.LIMIT_USDS_MINT();
-//         vm.startPrank(relayer);
-
-//         assertEq(rateLimits.getCurrentRateLimit(key), 5_000_000e18);
-//         assertEq(usds.balanceOf(address(almProxy)),   0);
-
-//         mainnetController.mintUSDS(1_000_000e18);
-
-//         assertEq(rateLimits.getCurrentRateLimit(key), 4_000_000e18);
-//         assertEq(usds.balanceOf(address(almProxy)),   1_000_000e18);
-
-//         mainnetController.burnUSDS(500_000e18);
-
-//         assertEq(rateLimits.getCurrentRateLimit(key), 4_500_000e18);
-//         assertEq(usds.balanceOf(address(almProxy)),   500_000e18);
-
-//         skip(4 hours);
-
-//         assertEq(rateLimits.getCurrentRateLimit(key), 5_000_000e18);
-//         assertEq(usds.balanceOf(address(almProxy)),   500_000e18);
-
-//         mainnetController.burnUSDS(500_000e18);
-
-//         assertEq(rateLimits.getCurrentRateLimit(key), 5_000_000e18);
-//         assertEq(usds.balanceOf(address(almProxy)),   0);
-
-//         vm.stopPrank();
-//     }
+    }
 
 }
