@@ -113,8 +113,8 @@ contract SparkEthereum_20241107 is SparkPayloadEthereum {
         // Bridge to Base
         IERC20(Ethereum.USDS).approve(Ethereum.BASE_TOKEN_BRIDGE, USDS_BRIDGE_AMOUNT);
         IERC20(Ethereum.SUSDS).approve(Ethereum.BASE_TOKEN_BRIDGE, susdsShares);
-        ITokenBridge(Ethereum.BASE_TOKEN_BRIDGE).bridgeERC20To(Ethereum.USDS, Base.USDS, Base.ALM_PROXY, USDS_BRIDGE_AMOUNT, 5_000_000, "");
-        ITokenBridge(Ethereum.BASE_TOKEN_BRIDGE).bridgeERC20To(Ethereum.SUSDS, Base.SUSDS, Base.ALM_PROXY, susdsShares, 5_000_000, "");
+        ITokenBridge(Ethereum.BASE_TOKEN_BRIDGE).bridgeERC20To(Ethereum.USDS, Base.USDS, Base.ALM_PROXY, USDS_BRIDGE_AMOUNT, 5_000_000, "");  // TODO can probably tighten this gas limit
+        ITokenBridge(Ethereum.BASE_TOKEN_BRIDGE).bridgeERC20To(Ethereum.SUSDS, Base.SUSDS, Base.ALM_PROXY, susdsShares, 5_000_000, "");  // TODO can probably tighten this gas limit
 
         // --- Trigger Base Payload ---
         OptimismForwarder.sendMessageL1toL2({
