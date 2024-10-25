@@ -12,6 +12,8 @@ import { DssInstance, MCD } from "dss-test/MCD.sol";
 
 import 'src/SparkTestBase.sol';
 
+import { DssSpellAction } from "spells-mainnet/src/DssSpell.sol";
+
 interface ChainlogLike {
     function getAddress(bytes32) external view returns (address);
 }
@@ -122,11 +124,11 @@ contract PostSpellExecutionTestBase is SparkEthereum_20241107TestBase {
     function setUp() public override {
         super.setUp();
 
-        vm.startPrank(Ethereum.PAUSE_PROXY);
-        _executeOct31Spell();
-        vm.stopPrank();
+        address spell = address(new DssSpellAction());
 
-        skip(10 days);
+        vm.etch(Ethereum.PAUSE_PROXY, spell.code);
+
+        DssSpellAction(Ethereum.PAUSE_PROXY).execute();
 
         executePayload(payload);
     }
