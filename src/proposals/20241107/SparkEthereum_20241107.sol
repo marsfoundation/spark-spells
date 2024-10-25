@@ -46,7 +46,7 @@ contract SparkEthereum_20241107 is SparkPayloadEthereum {
 
     uint256 constant USDS_MINT_AMOUNT     = 9_000_000e18;
     uint256 constant SUSDS_DEPOSIT_AMOUNT = 8_000_000e18;
-    uint256 constant USDS_BRIDGE_AMOUNT = 1_000_000e18;
+    uint256 constant USDS_BRIDGE_AMOUNT   = 1_000_000e18;
 
     address constant BASE_PAYLOAD = address(0);
 
