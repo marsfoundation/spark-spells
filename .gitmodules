@@ -40,3 +40,6 @@
 [submodule "lib/dss-test"]
 	path = lib/dss-test
 	url = https://github.com/makerdao/dss-test
+[submodule "lib/spells-mainnet"]
+	path = lib/spells-mainnet
+	url = https://github.com/makerdao/spells-mainnet
