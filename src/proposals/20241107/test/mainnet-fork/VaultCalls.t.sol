@@ -3,10 +3,19 @@ pragma solidity ^0.8.21;
 
 import "./SparkEthereum_20241107TestBase.t.sol";
 
+interface IWardLike {
+    function rely(address) external;
+}
+
 contract MainnetControllerMintUSDSTests is SparkEthereum_20241107TestBase {
 
     function test_first() public {
-        // executePayload(payload);
+        vm.startPrank(Ethereum.PAUSE_PROXY);
+        IWardLike(Ethereum.ALLOCATOR_VAULT).rely(Ethereum.SPARK_PROXY);
+        IWardLike(Ethereum.ALLOCATOR_BUFFER).rely(Ethereum.SPARK_PROXY);
+        vm.stopPrank();
+
+        executePayload(payload);
     }
 
 //     function test_mintUSDS_notRelayer() external {
