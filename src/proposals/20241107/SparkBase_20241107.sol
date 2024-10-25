@@ -24,7 +24,7 @@ import {
 contract SparkBase_20241107 is SparkPayloadBase {
 
     address constant FREEZER = address(0);  // TODO Gov. facilitator multisig
-    address constant RELAYER = address(0);  // TODO ALM Planner multisig
+    address constant RELAYER = 0x8a25A24EDE9482C4Fc0738F99611BE58F1c839AB;
 
     function execute() internal {
         // --- Activate Mainnet Controller ---

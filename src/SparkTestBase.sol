@@ -67,7 +67,8 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
     }
 
     function deployPayload() internal returns (address) {
-        return deployCode(string(abi.encodePacked('Spark', domain, '_', id, '.sol')));
+        string memory fullName = string(abi.encodePacked('Spark', domain, '_', id));
+        return deployCode(string(abi.encodePacked(fullName, '.sol:', fullName)));
     }
 
     function testSpellExecutionDiff() public {
@@ -532,7 +533,8 @@ abstract contract SparkBaseTestBase is Test {
     }
 
     function deployPayload() internal returns (address) {
-        return deployCode(string(abi.encodePacked('Spark', domain, '_', id, '.sol')));
+        string memory fullName = string(abi.encodePacked('Spark', domain, '_', id));
+        return deployCode(string(abi.encodePacked(fullName, '.sol:', fullName)));
     }
 
     function executePayload(address payloadAddress) internal {

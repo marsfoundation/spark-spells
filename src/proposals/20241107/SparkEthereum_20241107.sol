@@ -42,11 +42,11 @@ interface ITokenBridge {
 contract SparkEthereum_20241107 is SparkPayloadEthereum {
 
     address constant FREEZER = 0x298b375f24CeDb45e936D7e21d6Eb05e344adFb5;  // Gov. facilitator multisig
-    address constant RELAYER = address(0);  // TODO ALM Planner multisig
+    address constant RELAYER = 0x8a25A24EDE9482C4Fc0738F99611BE58F1c839AB;
 
     uint256 constant USDS_MINT_AMOUNT     = 9_000_000e18;
     uint256 constant SUSDS_DEPOSIT_AMOUNT = 8_000_000e18;
-    uint256 constant USDS_BRIDGE_AMOUNT = 1_000_000e18;
+    uint256 constant USDS_BRIDGE_AMOUNT   = 1_000_000e18;
 
     address constant BASE_PAYLOAD = address(0);
 
@@ -113,8 +113,8 @@ contract SparkEthereum_20241107 is SparkPayloadEthereum {
         // Bridge to Base
         IERC20(Ethereum.USDS).approve(Ethereum.BASE_TOKEN_BRIDGE, USDS_BRIDGE_AMOUNT);
         IERC20(Ethereum.SUSDS).approve(Ethereum.BASE_TOKEN_BRIDGE, susdsShares);
-        ITokenBridge(Ethereum.BASE_TOKEN_BRIDGE).bridgeERC20To(Ethereum.USDS, Base.USDS, Base.ALM_PROXY, USDS_BRIDGE_AMOUNT, 5_000_000, "");
-        ITokenBridge(Ethereum.BASE_TOKEN_BRIDGE).bridgeERC20To(Ethereum.SUSDS, Base.SUSDS, Base.ALM_PROXY, susdsShares, 5_000_000, "");
+        ITokenBridge(Ethereum.BASE_TOKEN_BRIDGE).bridgeERC20To(Ethereum.USDS, Base.USDS, Base.ALM_PROXY, USDS_BRIDGE_AMOUNT, 5_000_000, "");  // TODO can probably tighten this gas limit
+        ITokenBridge(Ethereum.BASE_TOKEN_BRIDGE).bridgeERC20To(Ethereum.SUSDS, Base.SUSDS, Base.ALM_PROXY, susdsShares, 5_000_000, "");  // TODO can probably tighten this gas limit
 
         // --- Trigger Base Payload ---
         OptimismForwarder.sendMessageL1toL2({
