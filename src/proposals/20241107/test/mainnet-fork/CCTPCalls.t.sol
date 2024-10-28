@@ -38,7 +38,7 @@ contract MainnetControllerTransferUSDCToCCTPFailureTests is PostSpellExecutionTe
 
         vm.startPrank(relayer);
         mainnetController.mintUSDS(1_000_000e18);
-        mainnetController.swapUSDCToUSDS(1_000_000e6);
+        mainnetController.swapUSDSToUSDC(1_000_000e6);
         vm.stopPrank();
     }
 
@@ -60,89 +60,22 @@ contract MainnetControllerTransferUSDCToCCTPFailureTests is PostSpellExecutionTe
         mainnetController.transferUSDCToCCTP(1e6, CCTPForwarder.DOMAIN_ID_CIRCLE_BASE);
     }
 
-    // function test_transferUSDCToCCTP_cctpRateLimitedBoundary() external {
-    //     vm.startPrank(SPARK_PROXY);
+    function test_transferUSDCToCCTP_domainRateLimitedBoundary() external {
+        vm.startPrank(relayer);
+        vm.expectRevert("RateLimits/rate-limit-exceeded");
+        mainnetController.transferUSDCToCCTP(1_000_000e6 + 1, CCTPForwarder.DOMAIN_ID_CIRCLE_BASE);
 
-    //     // Set this so second modifier will be passed in success case
-    //     rateLimits.setUnlimitedRateLimitData(
-    //         RateLimitHelpers.makeDomainKey(
-    //             mainnetController.LIMIT_USDC_TO_DOMAIN(),
-    //             CCTPForwarder.DOMAIN_ID_CIRCLE_BASE
-    //         )
-    //     );
+        mainnetController.transferUSDCToCCTP(1_000_000e6, CCTPForwarder.DOMAIN_ID_CIRCLE_BASE);
+    }
 
-    //     // Rate limit will be constant 10m (higher than setup)
-    //     rateLimits.setRateLimitData(mainnetController.LIMIT_USDC_TO_CCTP(), 10_000_000e6, 0);
+    // NOTE: Skipped this test because CCTP rate limit is unlimited
+    // function test_transferUSDCToCCTP_domainRateLimitedBoundary() external {}
 
-    //     // Set this for success case
-    //     mainnetController.setMintRecipient(
-    //         CCTPForwarder.DOMAIN_ID_CIRCLE_BASE,
-    //         bytes32(uint256(uint160(makeAddr("mintRecipient"))))
-    //     );
-
-    //     vm.stopPrank();
-
-    //     deal(address(usdc), address(almProxy), 10_000_000e6 + 1);
-
-    //     vm.startPrank(relayer);
-    //     vm.expectRevert("RateLimits/rate-limit-exceeded");
-    //     mainnetController.transferUSDCToCCTP(10_000_000e6 + 1, CCTPForwarder.DOMAIN_ID_CIRCLE_BASE);
-
-    //     mainnetController.transferUSDCToCCTP(10_000_000e6, CCTPForwarder.DOMAIN_ID_CIRCLE_BASE);
-    // }
-
-    // function test_transferUSDCToCCTP_domainRateLimitedBoundary() external {
-    //     vm.startPrank(SPARK_PROXY);
-
-    //     // Set this so first modifier will be passed in success case
-    //     rateLimits.setUnlimitedRateLimitData(mainnetController.LIMIT_USDC_TO_CCTP());
-
-    //     // Rate limit will be constant 10m (higher than setup)
-    //     rateLimits.setRateLimitData(
-    //         RateLimitHelpers.makeDomainKey(
-    //             mainnetController.LIMIT_USDC_TO_DOMAIN(),
-    //             CCTPForwarder.DOMAIN_ID_CIRCLE_BASE
-    //         ),
-    //         10_000_000e6,
-    //         0
-    //     );
-
-    //     // Set this for success case
-    //     mainnetController.setMintRecipient(
-    //         CCTPForwarder.DOMAIN_ID_CIRCLE_BASE,
-    //         bytes32(uint256(uint160(makeAddr("mintRecipient"))))
-    //     );
-
-    //     vm.stopPrank();
-
-    //     deal(address(usdc), address(almProxy), 10_000_000e6 + 1);
-
-    //     vm.startPrank(relayer);
-    //     vm.expectRevert("RateLimits/rate-limit-exceeded");
-    //     mainnetController.transferUSDCToCCTP(10_000_000e6 + 1, CCTPForwarder.DOMAIN_ID_CIRCLE_BASE);
-
-    //     mainnetController.transferUSDCToCCTP(10_000_000e6, CCTPForwarder.DOMAIN_ID_CIRCLE_BASE);
-    // }
-
-    // function test_transferUSDCToCCTP_invalidMintRecipient() external {
-    //     // Configure to pass modifiers
-    //     vm.startPrank(SPARK_PROXY);
-
-    //     rateLimits.setUnlimitedRateLimitData(
-    //         RateLimitHelpers.makeDomainKey(
-    //             mainnetController.LIMIT_USDC_TO_DOMAIN(),
-    //             CCTPForwarder.DOMAIN_ID_CIRCLE_ARBITRUM_ONE
-    //         )
-    //     );
-
-    //     rateLimits.setUnlimitedRateLimitData(mainnetController.LIMIT_USDC_TO_CCTP());
-
-    //     vm.stopPrank();
-
-    //     vm.prank(relayer);
-    //     vm.expectRevert("MainnetController/domain-not-configured");
-    //     mainnetController.transferUSDCToCCTP(1e6, CCTPForwarder.DOMAIN_ID_CIRCLE_ARBITRUM_ONE);
-    // }
+    function test_transferUSDCToCCTP_notBaseDomain() external {
+        vm.prank(relayer);
+        vm.expectRevert("RateLimits/zero-maxAmount");
+        mainnetController.transferUSDCToCCTP(1_000_000e6, CCTPForwarder.DOMAIN_ID_CIRCLE_ARBITRUM_ONE);
+    }
 
 }
 
