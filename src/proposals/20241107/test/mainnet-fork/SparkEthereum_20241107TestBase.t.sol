@@ -42,7 +42,8 @@ contract PostSpellExecutionTestBase is SparkEthereum_20241107TestBase {
     address constant POCKET    = 0x37305B1cD40574E4C5Ce33f8e8306Be057fD7341;
     address constant USDS_JOIN = 0x3C0f895007CA717Aa01c8693e59DF1e8C3777FEB;
 
-    address constant VAULT = Ethereum.ALLOCATOR_VAULT;
+    address constant BUFFER = Ethereum.ALLOCATOR_BUFFER;
+    address constant VAULT  = Ethereum.ALLOCATOR_VAULT;
 
     address constant PSM = Ethereum.PSM;
 
@@ -74,7 +75,7 @@ contract PostSpellExecutionTestBase is SparkEthereum_20241107TestBase {
     uint256 USDS_BAL_SUSDS;
     uint256 VAT_DAI_USDS_JOIN;
 
-    function setUp() public override {
+    function setUp() public override virtual {
         super.setUp();
 
         address spell = address(new DssSpellAction());
