@@ -43,3 +43,6 @@
 [submodule "lib/spells-mainnet"]
 	path = lib/spells-mainnet
 	url = https://github.com/makerdao/spells-mainnet
+[submodule "lib/openzeppelin-contracts"]
+	path = lib/openzeppelin-contracts
+	url = https://github.com/openzeppelin/openzeppelin-contracts
