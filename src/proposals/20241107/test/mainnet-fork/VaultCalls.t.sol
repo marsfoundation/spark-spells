@@ -52,32 +52,40 @@ contract MainnetControllerMintUSDSTests is PostSpellExecutionTestBase {
         assertEq(usds.totalSupply(),                USDS_SUPPLY + 1_000_000e18);
     }
 
-    // function test_mintUSDS_rateLimited() external {
-    //     bytes32 key = mainnetController.LIMIT_USDS_MINT();
-    //     vm.startPrank(relayer);
+    function test_mintUSDS_rateLimited() external {
+        bytes32 key = mainnetController.LIMIT_USDS_MINT();
+        vm.startPrank(relayer);
 
-    //     assertEq(rateLimits.getCurrentRateLimit(key), 5_000_000e18);
-    //     assertEq(usds.balanceOf(address(almProxy)),   0);
+        assertEq(rateLimits.getCurrentRateLimit(key), 1_000_000e18);
+        assertEq(usds.balanceOf(address(almProxy)),   0);
 
-    //     mainnetController.mintUSDS(1_000_000e18);
+        mainnetController.mintUSDS(400_000e18);
 
-    //     assertEq(rateLimits.getCurrentRateLimit(key), 4_000_000e18);
-    //     assertEq(usds.balanceOf(address(almProxy)),   1_000_000e18);
+        assertEq(rateLimits.getCurrentRateLimit(key), 600_000e18);
+        assertEq(usds.balanceOf(address(almProxy)),   400_000e18);
 
-    //     skip(1 hours);
+        skip(1 hours);
 
-    //     assertEq(rateLimits.getCurrentRateLimit(key), 4_249_999.9999999999999984e18);
-    //     assertEq(usds.balanceOf(address(almProxy)),   1_000_000e18);
+        // Rate limit increases by 500k per day (133 wei rounding error)
+        assertEq(rateLimits.getCurrentRateLimit(key), 600_000e18 + uint256(500_000e18) / 24 - 133);
+        assertEq(usds.balanceOf(address(almProxy)),   400_000e18);
 
-    //     mainnetController.mintUSDS(4_249_999.9999999999999984e18);
+        // Can't mint full 600k cause vat ceiling gets hit because of 1 hour of interest
+        mainnetController.mintUSDS(600_000e18 - 100e18);
 
-    //     assertEq(rateLimits.getCurrentRateLimit(key), 0);
-    //     assertEq(usds.balanceOf(address(almProxy)),   5_249_999.9999999999999984e18);
+        assertEq(rateLimits.getCurrentRateLimit(key), uint256(500_000e18) / 24 - 133 + 100e18);
+        assertEq(usds.balanceOf(address(almProxy)),   999_900e18);
 
-    //     vm.expectRevert("RateLimits/rate-limit-exceeded");
-    //     mainnetController.mintUSDS(1);
+        skip(23 hours);
 
-    //     vm.stopPrank();
-    // }
+        // Rate limit goes up to 500k + 100 (3200 rounding error)
+        assertEq(rateLimits.getCurrentRateLimit(key), uint256(500_000e18) + 100e18 - 3200);
+
+        // NOTE: This test is skipped because the vat ceiling is lower than the rate limits
+        // vm.expectRevert("RateLimits/rate-limit-exceeded");
+        // mainnetController.mintUSDS(1);
+
+        // vm.stopPrank();
+    }
 
 }
