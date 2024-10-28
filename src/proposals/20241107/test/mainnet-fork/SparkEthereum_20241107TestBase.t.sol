@@ -34,6 +34,9 @@ contract SparkEthereum_20241107TestBase is SparkEthereumTestBase {
 
 contract PostSpellExecutionTestBase is SparkEthereum_20241107TestBase {
 
+    // NOTE: Rate limit rounding errors are 133/hour. So rounding values of 133 and 3200 (133 * 24)
+    //       will be used throughout testing.
+
     bytes32 constant ilk = "ALLOCATOR-SPARK-A";
 
     address constant freezer = 0x298b375f24CeDb45e936D7e21d6Eb05e344adFb5;  // Gov. facilitator multisig
@@ -42,10 +45,10 @@ contract PostSpellExecutionTestBase is SparkEthereum_20241107TestBase {
     address constant POCKET    = 0x37305B1cD40574E4C5Ce33f8e8306Be057fD7341;
     address constant USDS_JOIN = 0x3C0f895007CA717Aa01c8693e59DF1e8C3777FEB;
 
-    address constant BUFFER = Ethereum.ALLOCATOR_BUFFER;
-    address constant VAULT  = Ethereum.ALLOCATOR_VAULT;
-
-    address constant PSM = Ethereum.PSM;
+    address constant BUFFER   = Ethereum.ALLOCATOR_BUFFER;
+    address constant DAI_USDS = Ethereum.DAI_USDS;
+    address constant PSM      = Ethereum.PSM;
+    address constant VAULT    = Ethereum.ALLOCATOR_VAULT;
 
     uint256 constant INK                  = 1e12 * 1e18;  // Ink initialization amount
     uint256 constant USDS_MINT_AMOUNT     = 9_000_000e18;
