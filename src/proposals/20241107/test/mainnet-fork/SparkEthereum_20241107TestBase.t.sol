@@ -32,7 +32,7 @@ contract SparkEthereum_20241107TestBase is SparkEthereumTestBase {
 
 }
 
-contract PostSpellExecutionTestBase is SparkEthereum_20241107TestBase {
+contract PostSpellExecutionEthereumTestBase is SparkEthereum_20241107TestBase {
 
     // NOTE: Rate limit rounding errors are 133/hour. So rounding values of 133 and 3200 (133 * 24)
     //       will be used throughout testing.

@@ -3,7 +3,7 @@ pragma solidity ^0.8.21;
 
 import "./SparkEthereum_20241107TestBase.t.sol";
 
-contract MainnetControllerMintUSDSTests is PostSpellExecutionTestBase {
+contract MainnetControllerMintUSDSTests is PostSpellExecutionEthereumTestBase {
 
     function test_mintUSDS_notRelayer() external {
         vm.expectRevert(abi.encodeWithSignature(
@@ -110,7 +110,7 @@ contract MainnetControllerMintUSDSTests is PostSpellExecutionTestBase {
 
 }
 
-contract MainnetControllerBurnUSDSTests is PostSpellExecutionTestBase {
+contract MainnetControllerBurnUSDSTests is PostSpellExecutionEthereumTestBase {
 
     function test_burnUSDS_notRelayer() external {
         vm.expectRevert(abi.encodeWithSignature(

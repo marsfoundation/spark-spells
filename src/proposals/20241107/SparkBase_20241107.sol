@@ -26,7 +26,7 @@ contract SparkBase_20241107 is SparkPayloadBase {
     address constant FREEZER = address(0);  // TODO Gov. facilitator multisig
     address constant RELAYER = 0x8a25A24EDE9482C4Fc0738F99611BE58F1c839AB;
 
-    function execute() internal {
+    function execute() external {
         // --- Activate Mainnet Controller ---
         RateLimitData memory rateLimitData18 = RateLimitData({
             maxAmount : 1_000_000e18,

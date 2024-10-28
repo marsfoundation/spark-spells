@@ -3,7 +3,7 @@ pragma solidity >=0.8.0;
 
 import "./SparkEthereum_20241107TestBase.t.sol";
 
-contract SUSDSTestBase is PostSpellExecutionTestBase {
+contract SUSDSTestBase is PostSpellExecutionEthereumTestBase {
 
     uint256 SUSDS_CONVERTED_ASSETS;
     uint256 SUSDS_CONVERTED_SHARES;

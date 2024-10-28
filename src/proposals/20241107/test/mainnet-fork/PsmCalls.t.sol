@@ -12,7 +12,7 @@ interface IPSMLike {
     function rush() external view returns (uint256);
 }
 
-contract MainnetControllerSwapUSDSToUSDCFailureTests is PostSpellExecutionTestBase {
+contract MainnetControllerSwapUSDSToUSDCFailureTests is PostSpellExecutionEthereumTestBase {
 
     function test_swapUSDSToUSDC_notRelayer() external {
         vm.expectRevert(abi.encodeWithSignature(
@@ -34,7 +34,7 @@ contract MainnetControllerSwapUSDSToUSDCFailureTests is PostSpellExecutionTestBa
 
 }
 
-contract MainnetControllerSwapUSDSToUSDCTests is PostSpellExecutionTestBase {
+contract MainnetControllerSwapUSDSToUSDCTests is PostSpellExecutionEthereumTestBase {
 
     function test_swapUSDSToUSDC() external {
         vm.prank(relayer);
@@ -118,7 +118,7 @@ contract MainnetControllerSwapUSDSToUSDCTests is PostSpellExecutionTestBase {
 
 }
 
-contract MainnetControllerSwapUSDCToUSDSFailureTests is PostSpellExecutionTestBase {
+contract MainnetControllerSwapUSDCToUSDSFailureTests is PostSpellExecutionEthereumTestBase {
 
     function test_swapUSDCToUSDS_notRelayer() external {
         vm.expectRevert(abi.encodeWithSignature(
@@ -143,7 +143,7 @@ contract MainnetControllerSwapUSDCToUSDSFailureTests is PostSpellExecutionTestBa
 
 }
 
-contract MainnetControllerSwapUSDCToUSDSTests is PostSpellExecutionTestBase {
+contract MainnetControllerSwapUSDCToUSDSTests is PostSpellExecutionEthereumTestBase {
 
     function setUp() override public {
         super.setUp();

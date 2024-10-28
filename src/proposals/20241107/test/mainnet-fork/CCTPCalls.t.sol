@@ -31,7 +31,7 @@ import { CCTPForwarder }     from "xchain-helpers/forwarders/CCTPForwarder.sol";
 
 import "./SparkEthereum_20241107TestBase.t.sol";
 
-contract MainnetControllerTransferUSDCToCCTPFailureTests is PostSpellExecutionTestBase {
+contract MainnetControllerTransferUSDCToCCTPFailureTests is PostSpellExecutionEthereumTestBase {
 
     function setUp() override public {
         super.setUp();
