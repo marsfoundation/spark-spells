@@ -5,6 +5,8 @@ import 'src/SparkTestBase.sol';
 
 import { DssSpellAction } from "spells-mainnet/src/DssSpell.sol";
 
+import { MainnetController } from 'lib/spark-alm-controller/src/MainnetController.sol';
+
 interface ChainlogLike {
     function getAddress(bytes32) external view returns (address);
 }
@@ -14,6 +16,11 @@ interface IWardLike {
 }
 
 contract SparkEthereum_20241107TestBase is SparkEthereumTestBase {
+
+    address constant FREEZER = 0x298b375f24CeDb45e936D7e21d6Eb05e344adFb5;  // Gov. facilitator multisig
+    address constant RELAYER = 0x8a25A24EDE9482C4Fc0738F99611BE58F1c839AB;
+
+    MainnetController constant mainnetController = MainnetController(Ethereum.ALM_CONTROLLER);
 
     constructor() {
         id = '20241107';
