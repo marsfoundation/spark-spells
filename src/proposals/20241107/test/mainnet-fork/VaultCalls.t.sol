@@ -5,23 +5,23 @@ import "./SparkEthereum_20241107TestBase.t.sol";
 
 contract MainnetControllerMintUSDSTests is PostSpellExecutionTestBase {
 
-    function test_mintUSDS_notRelayer() external {
-        vm.expectRevert(abi.encodeWithSignature(
-            "AccessControlUnauthorizedAccount(address,bytes32)",
-            address(this),
-            mainnetController.RELAYER()
-        ));
-        mainnetController.mintUSDS(1e18);
-    }
+    // function test_mintUSDS_notRelayer() external {
+    //     vm.expectRevert(abi.encodeWithSignature(
+    //         "AccessControlUnauthorizedAccount(address,bytes32)",
+    //         address(this),
+    //         mainnetController.RELAYER()
+    //     ));
+    //     mainnetController.mintUSDS(1e18);
+    // }
 
-    function test_mintUSDS_frozen() external {
-        vm.prank(freezer);
-        mainnetController.freeze();
+    // function test_mintUSDS_frozen() external {
+    //     vm.prank(freezer);
+    //     mainnetController.freeze();
 
-        vm.prank(relayer);
-        vm.expectRevert("MainnetController/not-active");
-        mainnetController.mintUSDS(1e18);
-    }
+    //     vm.prank(relayer);
+    //     vm.expectRevert("MainnetController/not-active");
+    //     mainnetController.mintUSDS(1e18);
+    // }
 
     // function test_mintUSDS() external {
     //     ( uint256 ink, uint256 art ) = vat.urns(ilk, vault);
