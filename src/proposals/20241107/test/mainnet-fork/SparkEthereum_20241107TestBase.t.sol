@@ -42,7 +42,14 @@ contract PostSpellExecutionTestBase is SparkEthereum_20241107TestBase {
     address constant POCKET    = 0x37305B1cD40574E4C5Ce33f8e8306Be057fD7341;
     address constant USDS_JOIN = 0x3C0f895007CA717Aa01c8693e59DF1e8C3777FEB;
 
+    address constant VAULT = Ethereum.ALLOCATOR_VAULT;
+
     address constant PSM = Ethereum.PSM;
+
+    uint256 constant INK                  = 1e12 * 1e18;  // Ink initialization amount
+    uint256 constant USDS_MINT_AMOUNT     = 9_000_000e18;
+    uint256 constant SUSDS_DEPOSIT_AMOUNT = 8_000_000e18;
+    uint256 constant USDS_BRIDGE_AMOUNT   = 1_000_000e18;
 
     IERC20   constant dai   = IERC20(Ethereum.DAI);
     IERC20   constant usdc  = IERC20(Ethereum.USDC);

@@ -5,52 +5,52 @@ import "./SparkEthereum_20241107TestBase.t.sol";
 
 contract MainnetControllerMintUSDSTests is PostSpellExecutionTestBase {
 
-    // function test_mintUSDS_notRelayer() external {
-    //     vm.expectRevert(abi.encodeWithSignature(
-    //         "AccessControlUnauthorizedAccount(address,bytes32)",
-    //         address(this),
-    //         mainnetController.RELAYER()
-    //     ));
-    //     mainnetController.mintUSDS(1e18);
-    // }
+    function test_mintUSDS_notRelayer() external {
+        vm.expectRevert(abi.encodeWithSignature(
+            "AccessControlUnauthorizedAccount(address,bytes32)",
+            address(this),
+            mainnetController.RELAYER()
+        ));
+        mainnetController.mintUSDS(1e18);
+    }
 
-    // function test_mintUSDS_frozen() external {
-    //     vm.prank(freezer);
-    //     mainnetController.freeze();
+    function test_mintUSDS_frozen() external {
+        vm.prank(freezer);
+        mainnetController.freeze();
 
-    //     vm.prank(relayer);
-    //     vm.expectRevert("MainnetController/not-active");
-    //     mainnetController.mintUSDS(1e18);
-    // }
+        vm.prank(relayer);
+        vm.expectRevert("MainnetController/not-active");
+        mainnetController.mintUSDS(1e18);
+    }
 
-    // function test_mintUSDS() external {
-    //     ( uint256 ink, uint256 art ) = vat.urns(ilk, vault);
-    //     ( uint256 Art,,,, )          = vat.ilks(ilk);
+    function test_mintUSDS() external {
+        ( uint256 ink, uint256 art ) = vat.urns(ilk, VAULT);
+        ( uint256 Art,,,, )          = vat.ilks(ilk);
 
-    //     assertEq(vat.dai(USDS_JOIN), VAT_DAI_USDS_JOIN);
+        assertEq(vat.dai(USDS_JOIN), VAT_DAI_USDS_JOIN);
 
-    //     assertEq(Art, 0);
-    //     assertEq(ink, INK);
-    //     assertEq(art, 0);
+        assertEq(Art, USDS_MINT_AMOUNT);
+        assertEq(ink, INK);
+        assertEq(art, USDS_MINT_AMOUNT);
 
-    //     assertEq(usds.balanceOf(address(almProxy)), 0);
-    //     assertEq(usds.totalSupply(),                USDS_SUPPLY);
+        assertEq(usds.balanceOf(address(almProxy)), 0);
+        assertEq(usds.totalSupply(),                USDS_SUPPLY);
 
-    //     vm.prank(relayer);
-    //     mainnetController.mintUSDS(1e18);
+        vm.prank(relayer);
+        mainnetController.mintUSDS(1_000_000e18);
 
-    //     ( ink, art ) = vat.urns(ilk, vault);
-    //     ( Art,,,, )  = vat.ilks(ilk);
+        ( ink, art ) = vat.urns(ilk, VAULT);
+        ( Art,,,, )  = vat.ilks(ilk);
 
-    //     assertEq(vat.dai(USDS_JOIN), VAT_DAI_USDS_JOIN + 1e45);
+        assertEq(vat.dai(USDS_JOIN), VAT_DAI_USDS_JOIN + 1_000_000e45);
 
-    //     assertEq(Art, 1e18);
-    //     assertEq(ink, INK);
-    //     assertEq(art, 1e18);
+        assertEq(Art, USDS_MINT_AMOUNT + 1_000_000e18);
+        assertEq(ink, INK);
+        assertEq(art, USDS_MINT_AMOUNT + 1_000_000e18);
 
-    //     assertEq(usds.balanceOf(address(almProxy)), 1e18);
-    //     assertEq(usds.totalSupply(),                USDS_SUPPLY + 1e18);
-    // }
+        assertEq(usds.balanceOf(address(almProxy)), 1_000_000e18);
+        assertEq(usds.totalSupply(),                USDS_SUPPLY + 1_000_000e18);
+    }
 
     // function test_mintUSDS_rateLimited() external {
     //     bytes32 key = mainnetController.LIMIT_USDS_MINT();
