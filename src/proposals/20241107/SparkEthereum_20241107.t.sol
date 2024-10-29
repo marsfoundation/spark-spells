@@ -3,6 +3,8 @@ pragma solidity ^0.8.10;
 
 import 'src/SparkTestBase.sol';
 
+import { DssSpellAction } from "spells-mainnet/src/DssSpell.sol";
+
 contract SparkEthereum_20241107Test is SparkEthereumTestBase {
 
     constructor() {
@@ -14,6 +16,11 @@ contract SparkEthereum_20241107Test is SparkEthereumTestBase {
         payload = deployPayload();
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
+
+        // Maker Core spell execution
+        address spell = address(new DssSpellAction());
+        vm.etch(Ethereum.PAUSE_PROXY, spell.code);
+        DssSpellAction(Ethereum.PAUSE_PROXY).execute();
     }
     
 }
