@@ -34,3 +34,6 @@
 [submodule "lib/spark-alm-controller"]
 	path = lib/spark-alm-controller
 	url = https://github.com/marsfoundation/spark-alm-controller
+[submodule "lib/spells-mainnet"]
+	path = lib/spells-mainnet
+	url = https://github.com/makerdao/spells-mainnet
