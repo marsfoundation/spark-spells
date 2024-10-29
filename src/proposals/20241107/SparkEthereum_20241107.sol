@@ -48,7 +48,7 @@ contract SparkEthereum_20241107 is SparkPayloadEthereum {
     address internal constant PT_26DEC2024_PRICE_FEED = 0x81E5E28F33D314e9211885d6f0F4080E755e4595;
     address internal constant PT_SUSDE_26DEC2024      = 0xEe9085fC268F6727d5D4293dBABccF901ffDCC29;
 
-    address internal constant WETH_IRM = address(0);  // TODO deploy
+    address internal constant WETH_IRM = 0xf4268AeC16d13446381F8a2c9bB05239323756ca;
 
     address internal constant FREEZER = 0x90D8c80C028B4C09C0d8dcAab9bbB057F0513431;  // Gov. facilitator multisig
     address internal constant RELAYER = 0x8a25A24EDE9482C4Fc0738F99611BE58F1c839AB;

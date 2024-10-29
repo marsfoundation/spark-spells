@@ -12,12 +12,13 @@ contract SparkEthereum_20241107Test is SparkEthereumTestBase {
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('mainnet').rpcUrl, 21043334);  // Oct 25, 2024
+        vm.createSelectFork(getChain('mainnet').rpcUrl, 21071612);  // Oct 29, 2024
         payload = deployPayload();
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
 
         // Maker Core spell execution
+        skip(1 hours);  // office hours restriction in maker core spell
         address spell = address(new DssSpellAction());
         vm.etch(Ethereum.PAUSE_PROXY, spell.code);
         DssSpellAction(Ethereum.PAUSE_PROXY).execute();
