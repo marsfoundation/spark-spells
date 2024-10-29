@@ -50,7 +50,7 @@ contract SparkEthereum_20241107 is SparkPayloadEthereum {
 
     address internal constant WETH_IRM = address(0);  // TODO deploy
 
-    address internal constant FREEZER = 0x298b375f24CeDb45e936D7e21d6Eb05e344adFb5;  // Gov. facilitator multisig
+    address internal constant FREEZER = 0x90D8c80C028B4C09C0d8dcAab9bbB057F0513431;  // Gov. facilitator multisig
     address internal constant RELAYER = 0x8a25A24EDE9482C4Fc0738F99611BE58F1c839AB;
 
     uint256 internal constant USDS_MINT_AMOUNT     = 9_000_000e18;
