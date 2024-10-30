@@ -200,6 +200,8 @@ contract SparkEthereum_20241107Test is SparkEthereumTestBase {
         );
         _assertRateLimit(c.LIMIT_USDS_MINT(),    4_000_000e18, 2_000_000e18 / uint256(1 days));
         _assertRateLimit(c.LIMIT_USDS_TO_USDC(), 4_000_000e6,  2_000_000e6 / uint256(1 days));
+
+        assertEq(c.mintRecipients(CCTPForwarder.DOMAIN_ID_CIRCLE_BASE), bytes32(uint256(uint160(Base.ALM_PROXY))));
     }
 
     function _setupCrossChainTest() internal {
