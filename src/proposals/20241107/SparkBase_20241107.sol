@@ -28,14 +28,6 @@ contract SparkBase_20241107 is SparkPayloadBase {
 
     function execute() external {
         // --- Activate Mainnet Controller ---
-        RateLimitData memory rateLimitData18 = RateLimitData({
-            maxAmount : 1_000_000e18,
-            slope     :   500_000e18 / uint256(1 days)
-        });
-        RateLimitData memory rateLimitData6 = RateLimitData({
-            maxAmount : 1_000_000e6,
-            slope     :   500_000e6 / uint256(1 days)
-        });
         RateLimitData memory unlimitedRateLimit = RateLimitData({
             maxAmount : type(uint256).max,
             slope     : 0
@@ -65,14 +57,29 @@ contract SparkBase_20241107 is SparkPayloadBase {
                 rateLimits : Base.ALM_RATE_LIMITS
             }),
             data: ForeignControllerInit.InitRateLimitData({
-                usdcDepositData          : rateLimitData6,
-                usdcWithdrawData         : rateLimitData6,
-                usdsDepositData          : rateLimitData18,
-                usdsWithdrawData         : rateLimitData18,
-                susdsDepositData         : rateLimitData18,
-                susdsWithdrawData        : rateLimitData18,
+                usdcDepositData          : RateLimitData({
+                    maxAmount : 4_000_000e6,
+                    slope     : 2_000_000e6 / uint256(1 days)
+                }),
+                usdcWithdrawData         : RateLimitData({
+                    maxAmount : 7_000_000e6,
+                    slope     : 2_000_000e6 / uint256(1 days)
+                }),
+                usdsDepositData          : RateLimitData({
+                    maxAmount : 5_000_000e18,
+                    slope     : 2_000_000e18 / uint256(1 days)
+                }),
+                usdsWithdrawData         : unlimitedRateLimit,
+                susdsDepositData         : RateLimitData({
+                    maxAmount : 8_000_000e18,
+                    slope     : 2_000_000e18 / uint256(1 days)
+                }),
+                susdsWithdrawData        : unlimitedRateLimit,
                 usdcToCctpData           : unlimitedRateLimit,
-                cctpToEthereumDomainData : rateLimitData6
+                cctpToEthereumDomainData : RateLimitData({
+                    maxAmount : 4_000_000e6,
+                    slope     : 2_000_000e6 / uint256(1 days)
+                })
             }),
             mintRecipients: mintRecipients
         });
