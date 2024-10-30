@@ -12,6 +12,7 @@ import { Domain, DomainHelpers } from "xchain-helpers/testing/Domain.sol";
 import { CCTPBridgeTesting }     from "xchain-helpers/testing/bridges/CCTPBridgeTesting.sol";
 import { OptimismBridgeTesting } from "xchain-helpers/testing/bridges/OptimismBridgeTesting.sol";
 
+import { IALMProxy }         from "spark-alm-controller/src/interfaces/IALMProxy.sol";
 import { IRateLimits }       from "spark-alm-controller/src/interfaces/IRateLimits.sol";
 import { MainnetController } from "spark-alm-controller/src/MainnetController.sol";
 import { ForeignController } from "spark-alm-controller/src/ForeignController.sol";
@@ -185,6 +186,33 @@ contract SparkEthereum_20241107Test is SparkEthereumTestBase {
             gap:              2_000,
             increaseCooldown: 12 hours
         });
+    }
+
+    function testALMControllerDeployment() public {
+        // Copied from the init library, but no harm checking this here
+        IALMProxy almProxy           = IALMProxy(Ethereum.ALM_PROXY);
+        IRateLimits rateLimits       = IRateLimits(Ethereum.ALM_RATE_LIMITS);
+        MainnetController controller = MainnetController(Ethereum.ALM_CONTROLLER);
+
+        assertEq(almProxy.hasRole(0x0, Ethereum.SPARK_PROXY),   true, "incorrect-admin-almProxy");
+        assertEq(rateLimits.hasRole(0x0, Ethereum.SPARK_PROXY), true, "incorrect-admin-rateLimits");
+        assertEq(controller.hasRole(0x0, Ethereum.SPARK_PROXY), true, "incorrect-admin-controller");
+
+        assertEq(address(controller.proxy()),      Ethereum.ALM_PROXY,            "incorrect-almProxy");
+        assertEq(address(controller.rateLimits()), Ethereum.ALM_RATE_LIMITS,      "incorrect-rateLimits");
+        assertEq(address(controller.vault()),      Ethereum.ALLOCATOR_VAULT,      "incorrect-vault");
+        assertEq(address(controller.buffer()),     Ethereum.ALLOCATOR_BUFFER,     "incorrect-buffer");
+        assertEq(address(controller.psm()),        Ethereum.PSM,                  "incorrect-psm");
+        assertEq(address(controller.daiUsds()),    Ethereum.DAI_USDS,             "incorrect-daiUsds");
+        assertEq(address(controller.cctp()),       Ethereum.CCTP_TOKEN_MESSENGER, "incorrect-cctpMessenger");
+        assertEq(address(controller.susds()),      Ethereum.SUSDS,                "incorrect-susds");
+        assertEq(address(controller.dai()),        Ethereum.DAI,                  "incorrect-dai");
+        assertEq(address(controller.usdc()),       Ethereum.USDC,                 "incorrect-usdc");
+        assertEq(address(controller.usds()),       Ethereum.USDS,                 "incorrect-usds");
+
+        assertEq(controller.psmTo18ConversionFactor(), 1e12, "incorrect-psmTo18ConversionFactor");
+
+        assertEq(controller.active(), true, "controller-not-active");
     }
 
     function testALMControllerConfiguration() public {
