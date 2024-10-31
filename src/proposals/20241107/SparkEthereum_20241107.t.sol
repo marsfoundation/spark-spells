@@ -182,8 +182,8 @@ contract SparkEthereum_20241107Test is SparkEthereumTestBase {
 
         _assertBorrowCapConfig({
             asset:            Ethereum.WSTETH,
-            max:              10_000,
-            gap:              2_000,
+            max:              100_000,
+            gap:              5_000,
             increaseCooldown: 12 hours
         });
     }

@@ -111,8 +111,8 @@ contract SparkEthereum_20241107 is SparkPayloadEthereum {
         // TODO: TBD actual values
         ICapAutomator(Ethereum.CAP_AUTOMATOR).setBorrowCapConfig({
             asset:            Ethereum.WSTETH,
-            max:              10_000,
-            gap:              2_000,
+            max:              100_000,
+            gap:              5_000,
             increaseCooldown: 12 hours
         });
 
