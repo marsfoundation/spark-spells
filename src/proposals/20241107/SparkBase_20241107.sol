@@ -15,10 +15,10 @@ import {
 } from 'lib/spark-alm-controller/deploy/ControllerInit.sol';
 
 /**
- * @title  Nov 7, 2024 Spark Base Proposal
+ * @title  Nov 14, 2024 Spark Base Proposal
  * @notice Activate Spark Liquidity Layer
  * @author Phoenix Labs
- * Forum:  TODO
+ * Forum:  https://forum.sky.money/t/14-nov-2024-proposed-changes-to-spark-for-upcoming-spell/25466
  * Vote:   TODO
  */
 contract SparkBase_20241107 is SparkPayloadBase {

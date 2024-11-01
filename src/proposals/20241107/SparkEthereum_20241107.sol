@@ -37,10 +37,10 @@ interface ITokenBridge {
 }
 
 /**
- * @title  Nov 7, 2024 Spark Ethereum Proposal
- * @notice Activate Spark Liquidity Layer
+ * @title  Nov 14, 2024 Spark Ethereum Proposal
+ * @notice Activate Spark Liquidity Layer, Morpho Supply Caps, WBTC/WETH/WSTETH Market Adjustments
  * @author Phoenix Labs
- * Forum:  TODO
+ * Forum:  https://forum.sky.money/t/14-nov-2024-proposed-changes-to-spark-for-upcoming-spell/25466
  * Vote:   TODO
  */
 contract SparkEthereum_20241107 is SparkPayloadEthereum {
