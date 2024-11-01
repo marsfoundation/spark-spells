@@ -114,7 +114,7 @@ contract SparkEthereum_20241107Test is SparkEthereumTestBase {
         executePayload(payload);
 
         _assertMorphoCap(ptUsde26Dec, 100_000_000e18, 250_000_000e18);
-        _assertMorphoCap(ptUsde27Mar, 100_000_000e18, 150_000_000e18);
+        _assertMorphoCap(ptUsde27Mar, 100_000_000e18, 200_000_000e18);
 
         assertEq(IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).timelock(), 1 days);
 
@@ -124,7 +124,7 @@ contract SparkEthereum_20241107Test is SparkEthereumTestBase {
         IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).acceptCap(ptUsde27Mar);
 
         _assertMorphoCap(ptUsde26Dec, 250_000_000e18);
-        _assertMorphoCap(ptUsde27Mar, 150_000_000e18);
+        _assertMorphoCap(ptUsde27Mar, 200_000_000e18);
     }
 
     function testWETHInterestRateUpdate() public {

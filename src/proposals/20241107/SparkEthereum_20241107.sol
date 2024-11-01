@@ -79,7 +79,6 @@ contract SparkEthereum_20241107 is SparkPayloadEthereum {
 
     function _postExecute() internal override {
         // --- Increase Morpho PT sUSDe Supply Caps ---
-        // TODO: TBD actual values
         IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).submitCap(
             MarketParams({
                 loanToken:       Ethereum.DAI,
@@ -98,7 +97,7 @@ contract SparkEthereum_20241107 is SparkPayloadEthereum {
                 irm:             Ethereum.MORPHO_DEFAULT_IRM,
                 lltv:            0.915e18
             }),
-            150_000_000e18
+            200_000_000e18
         );
 
         // --- Adjust WETH Slope 1 Spread ---
@@ -108,7 +107,6 @@ contract SparkEthereum_20241107 is SparkPayloadEthereum {
         );
 
         // --- Adjust wstETH Borrow Rate Limits ---
-        // TODO: TBD actual values
         ICapAutomator(Ethereum.CAP_AUTOMATOR).setBorrowCapConfig({
             asset:            Ethereum.WSTETH,
             max:              100_000,
@@ -178,15 +176,15 @@ contract SparkEthereum_20241107 is SparkPayloadEthereum {
         // Bridge to Base
         IERC20(Ethereum.USDS).approve(Ethereum.BASE_TOKEN_BRIDGE, USDS_BRIDGE_AMOUNT);
         IERC20(Ethereum.SUSDS).approve(Ethereum.BASE_TOKEN_BRIDGE, susdsShares);
-        ITokenBridge(Ethereum.BASE_TOKEN_BRIDGE).bridgeERC20To(Ethereum.USDS,  Base.USDS,  Base.ALM_PROXY, USDS_BRIDGE_AMOUNT, 5_000_000, "");  // TODO can probably tighten this gas limit
-        ITokenBridge(Ethereum.BASE_TOKEN_BRIDGE).bridgeERC20To(Ethereum.SUSDS, Base.SUSDS, Base.ALM_PROXY, susdsShares,        5_000_000, "");  // TODO can probably tighten this gas limit
+        ITokenBridge(Ethereum.BASE_TOKEN_BRIDGE).bridgeERC20To(Ethereum.USDS,  Base.USDS,  Base.ALM_PROXY, USDS_BRIDGE_AMOUNT, 1_000_000, "");
+        ITokenBridge(Ethereum.BASE_TOKEN_BRIDGE).bridgeERC20To(Ethereum.SUSDS, Base.SUSDS, Base.ALM_PROXY, susdsShares,        1_000_000, "");
 
         // --- Trigger Base Payload ---
         OptimismForwarder.sendMessageL1toL2({
             l1CrossDomain: OptimismForwarder.L1_CROSS_DOMAIN_BASE,
             target:        Base.SPARK_RECEIVER,
             message:       encodePayloadQueue(BASE_PAYLOAD),
-            gasLimit:      5_000_000
+            gasLimit:      1_000_000
         });
     }
     
