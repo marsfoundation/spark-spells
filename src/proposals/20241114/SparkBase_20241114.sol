@@ -23,8 +23,8 @@ import {
  */
 contract SparkBase_20241114 is SparkPayloadBase {
 
-    address constant FREEZER = 0x90D8c80C028B4C09C0d8dcAab9bbB057F0513431;  // Gov. facilitator multisig
-    address constant RELAYER = 0x8a25A24EDE9482C4Fc0738F99611BE58F1c839AB;
+    address internal constant FREEZER = 0x90D8c80C028B4C09C0d8dcAab9bbB057F0513431;  // Gov. facilitator multisig
+    address internal constant RELAYER = 0x8a25A24EDE9482C4Fc0738F99611BE58F1c839AB;
 
     function execute() external {
         // --- Activate Mainnet Controller ---

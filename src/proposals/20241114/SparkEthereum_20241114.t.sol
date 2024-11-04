@@ -25,19 +25,20 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
     using DomainHelpers         for *;
     using OptimismBridgeTesting for *;
 
-    address constant PT_26DEC2024_PRICE_FEED  = 0x81E5E28F33D314e9211885d6f0F4080E755e4595;
-    address constant PT_SUSDE_26DEC2024       = 0xEe9085fC268F6727d5D4293dBABccF901ffDCC29;
+    address internal constant PT_26DEC2024_PRICE_FEED  = 0x81E5E28F33D314e9211885d6f0F4080E755e4595;
+    address internal constant PT_SUSDE_26DEC2024       = 0xEe9085fC268F6727d5D4293dBABccF901ffDCC29;
 
-    address constant PT_27MAR2025_PRICE_FEED  = 0x38d130cEe60CDa080A3b3aC94C79c34B6Fc919A7;
-    address constant PT_SUSDE_27MAR2025       = 0xE00bd3Df25fb187d6ABBB620b3dfd19839947b81;
+    address internal constant PT_27MAR2025_PRICE_FEED  = 0x38d130cEe60CDa080A3b3aC94C79c34B6Fc919A7;
+    address internal constant PT_SUSDE_27MAR2025       = 0xE00bd3Df25fb187d6ABBB620b3dfd19839947b81;
 
-    address constant OLD_WETH_INTEREST_RATE_STRATEGY = 0x6fd32465a23aa0DBaE0D813B7157D8CB2b08Dae4;
-    address constant NEW_WETH_INTEREST_RATE_STRATEGY = 0xf4268AeC16d13446381F8a2c9bB05239323756ca;
+    address internal constant OLD_WETH_INTEREST_RATE_STRATEGY = 0x6fd32465a23aa0DBaE0D813B7157D8CB2b08Dae4;
+    address internal constant NEW_WETH_INTEREST_RATE_STRATEGY = 0xf4268AeC16d13446381F8a2c9bB05239323756ca;
 
-    uint256 constant SUSDS_DEPOSIT_AMOUNT = 8_000_000e18;
-    uint256 constant USDS_BRIDGE_AMOUNT   = 1_000_000e18;
+    uint256 internal constant SUSDS_DEPOSIT_AMOUNT = 8_000_000e18;
+    uint256 internal constant USDS_BRIDGE_AMOUNT   = 1_000_000e18;
 
-    address constant RELAYER = 0x8a25A24EDE9482C4Fc0738F99611BE58F1c839AB;  // Same address on all chains
+    address internal constant FREEZER = 0x90D8c80C028B4C09C0d8dcAab9bbB057F0513431;  // Gov. facilitator multisig
+    address internal constant RELAYER = 0x8a25A24EDE9482C4Fc0738F99611BE58F1c839AB;  // Same address on all chains
 
     Domain mainnet;
     Domain base;
@@ -216,20 +217,27 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
     }
 
     function testALMControllerConfiguration() public {
-        MainnetController c = MainnetController(Ethereum.ALM_CONTROLLER);
+        IALMProxy         almProxy   = IALMProxy(Ethereum.ALM_PROXY);
+        IRateLimits       rateLimits = IRateLimits(Ethereum.ALM_RATE_LIMITS);
+        MainnetController controller = MainnetController(Ethereum.ALM_CONTROLLER);
 
         executePayload(payload);
 
-        _assertRateLimit(c.LIMIT_USDC_TO_CCTP(), type(uint256).max, 0);
+        assertEq(almProxy.hasRole(almProxy.CONTROLLER(), Ethereum.ALM_CONTROLLER),     true, "incorrect-controller-almProxy");
+        assertEq(rateLimits.hasRole(rateLimits.CONTROLLER(), Ethereum.ALM_CONTROLLER), true, "incorrect-controller-rateLimits");
+        assertEq(controller.hasRole(controller.FREEZER(), FREEZER),                    true, "incorrect-freezer-controller");
+        assertEq(controller.hasRole(controller.RELAYER(), RELAYER),                    true, "incorrect-relayer-controller");
+
+        _assertRateLimit(controller.LIMIT_USDC_TO_CCTP(), type(uint256).max, 0);
         _assertRateLimit(
-            RateLimitHelpers.makeDomainKey(c.LIMIT_USDC_TO_DOMAIN(), CCTPForwarder.DOMAIN_ID_CIRCLE_BASE),
+            RateLimitHelpers.makeDomainKey(controller.LIMIT_USDC_TO_DOMAIN(), CCTPForwarder.DOMAIN_ID_CIRCLE_BASE),
             4_000_000e6,
             2_000_000e6 / uint256(1 days)
         );
-        _assertRateLimit(c.LIMIT_USDS_MINT(),    4_000_000e18, 2_000_000e18 / uint256(1 days));
-        _assertRateLimit(c.LIMIT_USDS_TO_USDC(), 4_000_000e6,  2_000_000e6 / uint256(1 days));
+        _assertRateLimit(controller.LIMIT_USDS_MINT(),    4_000_000e18, 2_000_000e18 / uint256(1 days));
+        _assertRateLimit(controller.LIMIT_USDS_TO_USDC(), 4_000_000e6,  2_000_000e6 / uint256(1 days));
 
-        assertEq(c.mintRecipients(CCTPForwarder.DOMAIN_ID_CIRCLE_BASE), bytes32(uint256(uint160(Base.ALM_PROXY))));
+        assertEq(controller.mintRecipients(CCTPForwarder.DOMAIN_ID_CIRCLE_BASE), bytes32(uint256(uint160(Base.ALM_PROXY))));
     }
 
     function _setupCrossChainTest() internal {

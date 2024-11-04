@@ -14,6 +14,9 @@ import { IPSM3 } from "spark-psm/src/interfaces/IPSM3.sol";
 
 contract SparkBase_20241114Test is SparkBaseTestBase {
 
+    address internal constant FREEZER = 0x90D8c80C028B4C09C0d8dcAab9bbB057F0513431;  // Gov. facilitator multisig
+    address constant RELAYER = 0x8a25A24EDE9482C4Fc0738F99611BE58F1c839AB;
+
     constructor() {
         id = '20241114';
     }
@@ -55,48 +58,55 @@ contract SparkBase_20241114Test is SparkBaseTestBase {
     }
 
     function testALMControllerConfiguration() public {
-        ForeignController c = ForeignController(Base.ALM_CONTROLLER);
+        IALMProxy         almProxy   = IALMProxy(Base.ALM_PROXY);
+        IRateLimits       rateLimits = IRateLimits(Base.ALM_RATE_LIMITS);
+        ForeignController controller = ForeignController(Base.ALM_CONTROLLER);
 
         executePayload(payload);
 
+        assertEq(almProxy.hasRole(almProxy.CONTROLLER(), Base.ALM_CONTROLLER),     true, "incorrect-controller-almProxy");
+        assertEq(rateLimits.hasRole(rateLimits.CONTROLLER(), Base.ALM_CONTROLLER), true, "incorrect-controller-rateLimits");
+        assertEq(controller.hasRole(controller.FREEZER(), FREEZER),                true, "incorrect-freezer-controller");
+        assertEq(controller.hasRole(controller.RELAYER(), RELAYER),                true, "incorrect-relayer-controller");
+
         _assertRateLimit(
-            RateLimitHelpers.makeAssetKey(c.LIMIT_PSM_DEPOSIT(), Base.USDC),
+            RateLimitHelpers.makeAssetKey(controller.LIMIT_PSM_DEPOSIT(), Base.USDC),
             4_000_000e6,
             2_000_000e6 / uint256(1 days)
         );
         _assertRateLimit(
-            RateLimitHelpers.makeAssetKey(c.LIMIT_PSM_WITHDRAW(), Base.USDC),
+            RateLimitHelpers.makeAssetKey(controller.LIMIT_PSM_WITHDRAW(), Base.USDC),
             7_000_000e6,
             2_000_000e6 / uint256(1 days)
         );
         _assertRateLimit(
-            RateLimitHelpers.makeAssetKey(c.LIMIT_PSM_DEPOSIT(), Base.USDS),
+            RateLimitHelpers.makeAssetKey(controller.LIMIT_PSM_DEPOSIT(), Base.USDS),
             5_000_000e18,
             2_000_000e18 / uint256(1 days)
         );
         _assertRateLimit(
-            RateLimitHelpers.makeAssetKey(c.LIMIT_PSM_WITHDRAW(), Base.USDS),
+            RateLimitHelpers.makeAssetKey(controller.LIMIT_PSM_WITHDRAW(), Base.USDS),
             type(uint256).max,
             0
         );
         _assertRateLimit(
-            RateLimitHelpers.makeAssetKey(c.LIMIT_PSM_DEPOSIT(), Base.SUSDS),
+            RateLimitHelpers.makeAssetKey(controller.LIMIT_PSM_DEPOSIT(), Base.SUSDS),
             8_000_000e18,
             2_000_000e18 / uint256(1 days)
         );
         _assertRateLimit(
-            RateLimitHelpers.makeAssetKey(c.LIMIT_PSM_WITHDRAW(), Base.SUSDS),
+            RateLimitHelpers.makeAssetKey(controller.LIMIT_PSM_WITHDRAW(), Base.SUSDS),
             type(uint256).max,
             0
         );
-        _assertRateLimit(c.LIMIT_USDC_TO_CCTP(), type(uint256).max, 0);
+        _assertRateLimit(controller.LIMIT_USDC_TO_CCTP(), type(uint256).max, 0);
         _assertRateLimit(
-            RateLimitHelpers.makeDomainKey(c.LIMIT_USDC_TO_DOMAIN(), CCTPForwarder.DOMAIN_ID_CIRCLE_ETHEREUM),
+            RateLimitHelpers.makeDomainKey(controller.LIMIT_USDC_TO_DOMAIN(), CCTPForwarder.DOMAIN_ID_CIRCLE_ETHEREUM),
             4_000_000e6,
             2_000_000e6 / uint256(1 days)
         );
 
-        assertEq(c.mintRecipients(CCTPForwarder.DOMAIN_ID_CIRCLE_ETHEREUM), bytes32(uint256(uint160(Ethereum.ALM_PROXY))));
+        assertEq(controller.mintRecipients(CCTPForwarder.DOMAIN_ID_CIRCLE_ETHEREUM), bytes32(uint256(uint160(Ethereum.ALM_PROXY))));
     }
 
     function _assertRateLimit(
