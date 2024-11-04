@@ -81,26 +81,26 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
 
         ReserveConfig memory wbtcConfig = _findReserveConfigBySymbol(allConfigsBefore, 'WBTC');
 
-        assertEq(wbtcConfig.liquidationThreshold,   70_00);
+        assertEq(wbtcConfig.liquidationThreshold, 70_00);
 
         executePayload(payload);
 
         ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
 
-        wbtcConfig.liquidationThreshold   = 65_00;
+        wbtcConfig.liquidationThreshold = 65_00;
 
         _validateReserveConfig(wbtcConfig, allConfigsAfter);
     }
 
     function testMorphoVaults() public {
-        MarketParams memory ptUsde26Dec =  MarketParams({
+        MarketParams memory ptUsde26Dec = MarketParams({
             loanToken:       Ethereum.DAI,
             collateralToken: PT_SUSDE_26DEC2024,
             oracle:          PT_26DEC2024_PRICE_FEED,
             irm:             Ethereum.MORPHO_DEFAULT_IRM,
             lltv:            0.915e18
         });
-        MarketParams memory ptUsde27Mar =  MarketParams({
+        MarketParams memory ptUsde27Mar = MarketParams({
             loanToken:       Ethereum.DAI,
             collateralToken: PT_SUSDE_27MAR2025,
             oracle:          PT_27MAR2025_PRICE_FEED,
@@ -190,8 +190,8 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
 
     function testALMControllerDeployment() public {
         // Copied from the init library, but no harm checking this here
-        IALMProxy almProxy           = IALMProxy(Ethereum.ALM_PROXY);
-        IRateLimits rateLimits       = IRateLimits(Ethereum.ALM_RATE_LIMITS);
+        IALMProxy         almProxy   = IALMProxy(Ethereum.ALM_PROXY);
+        IRateLimits       rateLimits = IRateLimits(Ethereum.ALM_RATE_LIMITS);
         MainnetController controller = MainnetController(Ethereum.ALM_CONTROLLER);
 
         assertEq(almProxy.hasRole(0x0, Ethereum.SPARK_PROXY),   true, "incorrect-admin-almProxy");
