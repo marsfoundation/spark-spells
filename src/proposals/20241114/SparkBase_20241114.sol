@@ -19,7 +19,7 @@ import {
  * @notice Activate Spark Liquidity Layer
  * @author Phoenix Labs
  * Forum:  https://forum.sky.money/t/14-nov-2024-proposed-changes-to-spark-for-upcoming-spell/25466
- * Vote:   TODO
+ * Vote:   https://vote.makerdao.com/polling/Qmf955yA
  */
 contract SparkBase_20241114 is SparkPayloadBase {
 

@@ -41,7 +41,12 @@ interface ITokenBridge {
  * @notice Activate Spark Liquidity Layer, Morpho Supply Caps, WBTC/WETH/WSTETH Market Adjustments
  * @author Phoenix Labs
  * Forum:  https://forum.sky.money/t/14-nov-2024-proposed-changes-to-spark-for-upcoming-spell/25466
- * Vote:   TODO
+ * Vote:   https://vote.makerdao.com/polling/Qmf955yA
+ *         https://vote.makerdao.com/polling/QmXsXzot
+ *         https://vote.makerdao.com/polling/QmYqM8Yf
+ *         https://vote.makerdao.com/polling/QmNTKFqG
+ *         https://vote.makerdao.com/polling/Qmbohkr5
+ *         https://vote.makerdao.com/polling/QmQizL1F
  */
 contract SparkEthereum_20241114 is SparkPayloadEthereum {
 
