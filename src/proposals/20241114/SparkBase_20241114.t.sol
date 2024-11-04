@@ -15,7 +15,7 @@ import { IPSM3 } from "spark-psm/src/interfaces/IPSM3.sol";
 contract SparkBase_20241114Test is SparkBaseTestBase {
 
     address internal constant FREEZER = 0x90D8c80C028B4C09C0d8dcAab9bbB057F0513431;  // Gov. facilitator multisig
-    address constant RELAYER = 0x8a25A24EDE9482C4Fc0738F99611BE58F1c839AB;
+    address internal constant RELAYER = 0x8a25A24EDE9482C4Fc0738F99611BE58F1c839AB;
 
     constructor() {
         id = '20241114';
