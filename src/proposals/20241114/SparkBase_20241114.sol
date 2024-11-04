@@ -57,20 +57,20 @@ contract SparkBase_20241114 is SparkPayloadBase {
                 rateLimits : Base.ALM_RATE_LIMITS
             }),
             data: ForeignControllerInit.InitRateLimitData({
-                usdcDepositData          : RateLimitData({
+                usdcDepositData : RateLimitData({
                     maxAmount : 4_000_000e6,
                     slope     : 2_000_000e6 / uint256(1 days)
                 }),
-                usdcWithdrawData         : RateLimitData({
+                usdcWithdrawData : RateLimitData({
                     maxAmount : 7_000_000e6,
                     slope     : 2_000_000e6 / uint256(1 days)
                 }),
-                usdsDepositData          : RateLimitData({
+                usdsDepositData : RateLimitData({
                     maxAmount : 5_000_000e18,
                     slope     : 2_000_000e18 / uint256(1 days)
                 }),
-                usdsWithdrawData         : unlimitedRateLimit,
-                susdsDepositData         : RateLimitData({
+                usdsWithdrawData : unlimitedRateLimit,
+                susdsDepositData : RateLimitData({
                     maxAmount : 8_000_000e18,
                     slope     : 2_000_000e18 / uint256(1 days)
                 }),

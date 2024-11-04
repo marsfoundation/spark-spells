@@ -20,6 +20,10 @@ import { RateLimitHelpers }  from "spark-alm-controller/src/RateLimitHelpers.sol
 
 import { DssSpellAction } from "spells-mainnet/src/DssSpell.sol";
 
+interface IVatLike {
+    function ilks(bytes32) external view returns (uint256, uint256, uint256, uint256, uint256);
+}
+
 contract SparkEthereum_20241114Test is SparkEthereumTestBase {
 
     using DomainHelpers         for *;
@@ -75,6 +79,9 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
         address spell = address(new DssSpellAction());
         vm.etch(Ethereum.PAUSE_PROXY, spell.code);
         DssSpellAction(Ethereum.PAUSE_PROXY).execute();
+
+        // Accumulate some interest and make the simulation more realistic
+        skip(2 weeks);
     }
 
     function testWBTCChanges() public {
@@ -238,6 +245,44 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
         _assertRateLimit(controller.LIMIT_USDS_TO_USDC(), 4_000_000e6,  2_000_000e6 / uint256(1 days));
 
         assertEq(controller.mintRecipients(CCTPForwarder.DOMAIN_ID_CIRCLE_BASE), bytes32(uint256(uint160(Base.ALM_PROXY))));
+    }
+
+    function testALMControllerStartingTokenState() public {
+        IVatLike vat = IVatLike(Ethereum.VAT);
+
+        ( uint256 Art, uint256 rate,, uint256 line, ) = vat.ilks("ALLOCATOR-SPARK-A");
+
+        uint256 usdsTotalSupply  = IERC20(Ethereum.USDS).totalSupply();
+        uint256 susdsTotalAssets = IERC4626(Ethereum.SUSDS).totalAssets();
+
+        assertEq(Art,  0);
+        assertEq(rate, 1e27);
+        assertEq(line, 10_000_000e45);
+
+        assertEq(IERC20(Ethereum.USDS).balanceOf(Ethereum.SPARK_PROXY),  0);
+        assertEq(IERC20(Ethereum.USDS).balanceOf(Ethereum.BASE_ESCROW),  0);
+        assertEq(IERC20(Ethereum.SUSDS).balanceOf(Ethereum.SPARK_PROXY), 0);
+        assertEq(IERC20(Ethereum.SUSDS).balanceOf(Ethereum.BASE_ESCROW), 0);
+
+        executePayload(payload);
+
+        ( Art, rate,, line, ) = vat.ilks("ALLOCATOR-SPARK-A");
+
+        uint256 debt = Art * rate / 1e27;
+
+        assertLt(Art,  9_000_000e18);
+        assertGt(Art,  8_950_000e18);
+        assertGt(rate, 1e27);
+        assertEq(debt, 9_000_000e18);
+        assertEq(line, 10_000_000e45);
+
+        // $8m of sUSDS
+        uint256 expectedShares = IERC4626(Ethereum.SUSDS).convertToShares(8_000_000e18);
+
+        assertEq(IERC20(Ethereum.USDS).balanceOf(Ethereum.SPARK_PROXY),  0);
+        assertEq(IERC20(Ethereum.USDS).balanceOf(Ethereum.BASE_ESCROW),  1_000_000e18);
+        assertEq(IERC20(Ethereum.SUSDS).balanceOf(Ethereum.SPARK_PROXY), 0);
+        assertEq(IERC20(Ethereum.SUSDS).balanceOf(Ethereum.BASE_ESCROW), expectedShares);
     }
 
     function _setupCrossChainTest() internal {
