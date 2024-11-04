@@ -24,6 +24,12 @@ interface IVatLike {
     function ilks(bytes32) external view returns (uint256, uint256, uint256, uint256, uint256);
 }
 
+interface IPSMLike {
+    function convertToShares(address, uint256) external view returns (uint256);
+    function convertToAssetValue(uint256) external view returns (uint256);
+    function shares(address) external view returns (uint256);
+}
+
 contract SparkEthereum_20241114Test is SparkEthereumTestBase {
 
     using DomainHelpers         for *;
@@ -298,9 +304,24 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
 
         mainnet.selectFork();
 
-        uint256 susdsShares = IERC4626(Ethereum.SUSDS).convertToShares(SUSDS_DEPOSIT_AMOUNT);
+        uint256 mainnetTimestamp = block.timestamp;
+        uint256 susdsShares      = IERC4626(Ethereum.SUSDS).convertToShares(SUSDS_DEPOSIT_AMOUNT);
+
+        vm.warp(mainnetTimestamp + 1 days);
+
+        uint256 mainnetSUsdsAssets = IERC4626(Ethereum.SUSDS).convertToAssets(susdsShares);
 
         base.selectFork();
+
+        vm.warp(mainnetTimestamp + 1 days);
+
+        uint256 susdsPsmShares  = IPSMLike(Base.PSM3).convertToShares(Base.SUSDS, susdsShares);
+        uint256 baseSUsdsAssets = IPSMLike(Base.PSM3).convertToAssetValue(susdsPsmShares);
+
+        // Ensure cross-chain accounting is correct at the same timestamp
+        assertEq(mainnetSUsdsAssets, baseSUsdsAssets);
+
+        // Bridge assets
 
         assertEq(IERC20(Base.USDS).balanceOf(Base.ALM_PROXY),  0);
         assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), 0);
@@ -311,10 +332,13 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
         assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), susdsShares);
 
         // Deposit USDS and sUSDS
+
         assertEq(IERC20(Base.USDS).balanceOf(Base.ALM_PROXY),  USDS_BRIDGE_AMOUNT);
         assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), susdsShares);
         assertEq(IERC20(Base.USDS).balanceOf(Base.PSM3),       0);
         assertEq(IERC20(Base.SUSDS).balanceOf(Base.PSM3),      0);
+
+        assertEq(IPSMLike(Base.PSM3).shares(Base.ALM_PROXY),  0);
 
         vm.startPrank(RELAYER);
         ForeignController(Base.ALM_CONTROLLER).depositPSM(Base.USDS,  USDS_BRIDGE_AMOUNT);
@@ -325,17 +349,38 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
         assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), 0);
         assertEq(IERC20(Base.USDS).balanceOf(Base.PSM3),       USDS_BRIDGE_AMOUNT);
         assertEq(IERC20(Base.SUSDS).balanceOf(Base.PSM3),      susdsShares);
+
+        // Ensure that value controlled by the ALM proxy in the PSM is equal to total value deposited
+        uint256 proxyPsmShares = IPSMLike(Base.PSM3).shares(Base.ALM_PROXY);
+        assertEq(proxyPsmShares, susdsPsmShares + 1_000_000e18);
+        assertEq(
+            IPSMLike(Base.PSM3).convertToAssetValue(proxyPsmShares),
+            mainnetSUsdsAssets + 1_000_000e18
+        );
     }
 
     function testDepositUSDCPSM3() public {
         _setupCrossChainTest();
 
         mainnet.selectFork();
+        uint256 susdsShares = IERC4626(Ethereum.SUSDS).convertToShares(SUSDS_DEPOSIT_AMOUNT);
+
+        // Do initial deposit of USDS and sUSDS into PSM3
+        base.selectFork();
+
+        OptimismBridgeTesting.relayMessagesToDestination(nativeBridge, true);
+
+        vm.startPrank(RELAYER);
+        ForeignController(Base.ALM_CONTROLLER).depositPSM(Base.USDS,  USDS_BRIDGE_AMOUNT);
+        ForeignController(Base.ALM_CONTROLLER).depositPSM(Base.SUSDS, susdsShares);
+        vm.stopPrank();
+
+        mainnet.selectFork();
 
         // Mint and bridge USDC
         uint256 usdcAmount = 800_000e6;
         uint256 usdcSeed   = 1e6;
-        
+
         vm.startPrank(RELAYER);
         MainnetController(Ethereum.ALM_CONTROLLER).mintUSDS(usdcAmount * 1e12);
         MainnetController(Ethereum.ALM_CONTROLLER).swapUSDSToUSDC(usdcAmount);
@@ -352,6 +397,8 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
         vm.prank(0xF977814e90dA44bFA03b6295A0616a897441aceC);  // Some USDC whale on Base
         IERC20(Base.USDC).transfer(Base.ALM_PROXY, usdcAmount);
 
+        uint256 proxyAssets = IPSMLike(Base.PSM3).convertToAssetValue(IPSMLike(Base.PSM3).shares(Base.ALM_PROXY));
+
         assertEq(IERC20(Base.USDC).balanceOf(Base.ALM_PROXY), usdcAmount);
         assertEq(IERC20(Base.USDC).balanceOf(Base.PSM3),      usdcSeed);
 
@@ -360,7 +407,10 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
         vm.stopPrank();
 
         assertEq(IERC20(Base.USDC).balanceOf(Base.ALM_PROXY), 0);
-        assertEq(IERC20(Base.USDC).balanceOf(Base.PSM3),      usdcAmount + usdcSeed);
+        assertEq(IERC20(Base.USDC).balanceOf(Base.PSM3),      usdcSeed + usdcAmount);
+
+        uint256 proxyAssetsAfter = IPSMLike(Base.PSM3).convertToAssetValue(IPSMLike(Base.PSM3).shares(Base.ALM_PROXY));
+        assertEq(proxyAssetsAfter, proxyAssets + usdcAmount * 1e12);
     }
 
     function deployPayloadBase() internal returns (address) {
@@ -388,5 +438,5 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
         assertEq(rateLimit.lastAmount,  maxAmount);
         assertEq(rateLimit.lastUpdated, block.timestamp);
     }
-    
+
 }

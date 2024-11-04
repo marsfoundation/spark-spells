@@ -74,8 +74,8 @@ contract SparkBase_20241114 is SparkPayloadBase {
                     maxAmount : 8_000_000e18,
                     slope     : 2_000_000e18 / uint256(1 days)
                 }),
-                susdsWithdrawData        : unlimitedRateLimit,
-                usdcToCctpData           : unlimitedRateLimit,
+                susdsWithdrawData : unlimitedRateLimit,
+                usdcToCctpData    : unlimitedRateLimit,
                 cctpToEthereumDomainData : RateLimitData({
                     maxAmount : 4_000_000e6,
                     slope     : 2_000_000e6 / uint256(1 days)
