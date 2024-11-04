@@ -43,7 +43,7 @@ interface ITokenBridge {
  * Forum:  https://forum.sky.money/t/14-nov-2024-proposed-changes-to-spark-for-upcoming-spell/25466
  * Vote:   TODO
  */
-contract SparkEthereum_20241107 is SparkPayloadEthereum {
+contract SparkEthereum_20241114 is SparkPayloadEthereum {
 
     address internal constant PT_26DEC2024_PRICE_FEED = 0x81E5E28F33D314e9211885d6f0F4080E755e4595;
     address internal constant PT_SUSDE_26DEC2024      = 0xEe9085fC268F6727d5D4293dBABccF901ffDCC29;
