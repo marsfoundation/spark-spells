@@ -6,7 +6,6 @@ import 'src/SparkTestBase.sol';
 import { IERC4626 } from 'forge-std/interfaces/IERC4626.sol';
 
 import { CCTPForwarder }         from "xchain-helpers/forwarders/CCTPForwarder.sol";
-import { OptimismReceiver }      from "xchain-helpers/receivers/OptimismReceiver.sol";
 import { Bridge }                from "xchain-helpers/testing/Bridge.sol";
 import { Domain, DomainHelpers } from "xchain-helpers/testing/Domain.sol";
 import { CCTPBridgeTesting }     from "xchain-helpers/testing/bridges/CCTPBridgeTesting.sol";
@@ -26,6 +25,10 @@ interface IPSMLike {
     function convertToShares(address, uint256) external view returns (uint256);
     function convertToAssetValue(uint256) external view returns (uint256);
     function shares(address) external view returns (uint256);
+}
+
+interface IVariableKinkIRM {
+    function getVariableRateSlope1Spread() external view returns (int256);
 }
 
 contract SparkEthereum_20241114Test is SparkEthereumTestBase {
@@ -72,7 +75,7 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
         basePayload = deployPayloadBase();
 
         nativeBridge = OptimismBridgeTesting.createNativeBridge(mainnet, base);
-        cctpBridge = CCTPBridgeTesting.createCircleBridge(mainnet, base);
+        cctpBridge   = CCTPBridgeTesting.createCircleBridge(mainnet, base);
 
         mainnet.selectFork();
 
@@ -163,6 +166,10 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
 
         uint256 expectedSlope1 = expectedOldSlope1 - 0.005e27;
         assertEq(expectedSlope1, 0.023991774151952311e27);
+        assertEq(
+            IVariableKinkIRM(NEW_WETH_INTEREST_RATE_STRATEGY).getVariableRateSlope1Spread(),
+            -0.005e27
+        );
 
         values.baseStableBorrowRate = expectedSlope1;
         values.variableRateSlope1   = expectedSlope1;
