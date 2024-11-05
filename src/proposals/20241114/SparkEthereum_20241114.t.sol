@@ -18,8 +18,6 @@ import { MainnetController } from "spark-alm-controller/src/MainnetController.so
 import { ForeignController } from "spark-alm-controller/src/ForeignController.sol";
 import { RateLimitHelpers }  from "spark-alm-controller/src/RateLimitHelpers.sol";
 
-import { DssSpellAction } from "spells-mainnet/src/DssSpell.sol";
-
 interface IVatLike {
     function ilks(bytes32) external view returns (uint256, uint256, uint256, uint256, uint256);
 }
