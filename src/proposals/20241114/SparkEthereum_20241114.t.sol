@@ -63,8 +63,8 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
     }
 
     function setUp() public {
-        mainnet = getChain('mainnet').createFork(21071612);  // Oct 30, 2024
-        base    = getChain('base').createFork(21752609);     // Oct 30, 2024
+        mainnet = getChain('mainnet').createFork(21122303);  // Nov 5, 2024
+        base    = getChain('base').createFork(22015320);     // Nov 5, 2024
 
         mainnet.selectFork();
         payload = deployPayload();
@@ -79,15 +79,6 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
         mainnet.selectFork();
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
-
-        // Maker Core spell execution
-        skip(1 hours);  // office hours restriction in maker core spell
-        address spell = address(new DssSpellAction());
-        vm.etch(Ethereum.PAUSE_PROXY, spell.code);
-        DssSpellAction(Ethereum.PAUSE_PROXY).execute();
-
-        // Accumulate some interest and make the simulation more realistic
-        skip(2 weeks);
     }
 
     function testWBTCChanges() public {
@@ -148,7 +139,7 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
 
         assertEq(wethConfigBefore.interestRateStrategy, OLD_WETH_INTEREST_RATE_STRATEGY);
 
-        uint256 expectedOldSlope1 = 0.028564144275278442e27;
+        uint256 expectedOldSlope1 = 0.028991774151952311e27;
         InterestStrategyValues memory values = InterestStrategyValues({
             addressesProvider:             address(poolAddressesProvider),
             optimalUsageRatio:             0.9e27,
@@ -173,7 +164,7 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
         ReserveConfig memory wethConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'WETH');
 
         uint256 expectedSlope1 = expectedOldSlope1 - 0.005e27;
-        assertEq(expectedSlope1, 0.023564144275278442e27);
+        assertEq(expectedSlope1, 0.023991774151952311e27);
 
         values.baseStableBorrowRate = expectedSlope1;
         values.variableRateSlope1   = expectedSlope1;
@@ -257,9 +248,6 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
         IVatLike vat = IVatLike(Ethereum.VAT);
 
         ( uint256 Art, uint256 rate,, uint256 line, ) = vat.ilks("ALLOCATOR-SPARK-A");
-
-        uint256 usdsTotalSupply  = IERC20(Ethereum.USDS).totalSupply();
-        uint256 susdsTotalAssets = IERC4626(Ethereum.SUSDS).totalAssets();
 
         assertEq(Art,  0);
         assertEq(rate, 1e27);
