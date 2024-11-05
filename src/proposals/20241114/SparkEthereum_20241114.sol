@@ -44,7 +44,6 @@ interface ITokenBridge {
  * Vote:   https://vote.makerdao.com/polling/Qmf955yA
  *         https://vote.makerdao.com/polling/QmXsXzot
  *         https://vote.makerdao.com/polling/QmYqM8Yf
- *         https://vote.makerdao.com/polling/QmNTKFqG
  *         https://vote.makerdao.com/polling/Qmbohkr5
  *         https://vote.makerdao.com/polling/QmQizL1F
  */
