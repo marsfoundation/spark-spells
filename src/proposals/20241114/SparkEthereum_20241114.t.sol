@@ -483,8 +483,6 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
 
         CCTPBridgeTesting.relayMessagesToSource(cctpBridge, true);
 
-        mainnet.selectFork();
-
         assertEq(usdc.balanceOf(Ethereum.ALM_PROXY), 400_000e6);
 
         // Planner performs second action, swap USDC to USDS and burn
