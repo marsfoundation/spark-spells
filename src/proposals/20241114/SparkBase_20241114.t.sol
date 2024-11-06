@@ -17,6 +17,8 @@ contract SparkBase_20241114Test is SparkBaseTestBase {
     address internal constant FREEZER = 0x90D8c80C028B4C09C0d8dcAab9bbB057F0513431;  // Gov. facilitator multisig
     address internal constant RELAYER = 0x8a25A24EDE9482C4Fc0738F99611BE58F1c839AB;
 
+    address internal constant DEPLOYER = 0x6F3066538A648b9CFad0679DF0a7e40882A23AA4;
+
     constructor() {
         id = '20241114';
     }
@@ -28,13 +30,17 @@ contract SparkBase_20241114Test is SparkBaseTestBase {
 
     function testALMControllerDeployment() public {
         // Copied from the init library, but no harm checking this here
-        IALMProxy almProxy           = IALMProxy(Base.ALM_PROXY);
-        IRateLimits rateLimits       = IRateLimits(Base.ALM_RATE_LIMITS);
+        IALMProxy         almProxy   = IALMProxy(Base.ALM_PROXY);
+        IRateLimits       rateLimits = IRateLimits(Base.ALM_RATE_LIMITS);
         ForeignController controller = ForeignController(Base.ALM_CONTROLLER);
 
         assertEq(almProxy.hasRole(0x0, Base.SPARK_EXECUTOR), true,   "incorrect-admin-almProxy");
         assertEq(rateLimits.hasRole(0x0, Base.SPARK_EXECUTOR), true, "incorrect-admin-rateLimits");
         assertEq(controller.hasRole(0x0, Base.SPARK_EXECUTOR), true, "incorrect-admin-controller");
+        
+        assertEq(almProxy.hasRole(0x0, DEPLOYER), false,   "incorrect-admin-almProxy");
+        assertEq(rateLimits.hasRole(0x0, DEPLOYER), false, "incorrect-admin-rateLimits");
+        assertEq(controller.hasRole(0x0, DEPLOYER), false, "incorrect-admin-controller");
 
         assertEq(address(controller.proxy()),      Base.ALM_PROXY,            "incorrect-almProxy");
         assertEq(address(controller.rateLimits()), Base.ALM_RATE_LIMITS,      "incorrect-rateLimits");
