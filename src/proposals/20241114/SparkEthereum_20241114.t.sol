@@ -25,6 +25,14 @@ interface IPSMLike {
     function convertToShares(address, uint256) external view returns (uint256);
     function convertToAssetValue(uint256) external view returns (uint256);
     function shares(address) external view returns (uint256);
+    function swapExactIn(
+        address assetIn,
+        address assetOut,
+        uint256 amountIn,
+        uint256 minAmountOut,
+        address receiver,
+        uint256 referralCode
+    ) external returns (uint256 amountOut);
 }
 
 interface IVariableKinkIRM {
@@ -410,6 +418,108 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
 
         uint256 proxyAssetsAfter = IPSMLike(Base.PSM3).convertToAssetValue(IPSMLike(Base.PSM3).shares(Base.ALM_PROXY));
         assertEq(proxyAssetsAfter, proxyAssets + usdcAmount * 1e12);
+    }
+
+    function testMoveFundsToMainnet() public {
+        _setupCrossChainTest();
+
+        mainnet.selectFork();
+
+        uint256 susdsShares = IERC4626(Ethereum.SUSDS).convertToShares(SUSDS_DEPOSIT_AMOUNT);
+
+        base.selectFork();
+
+        uint256 usdcAmount = 800_000e6;
+        uint256 usdcSeed   = 1e6;
+
+        // Perform setup
+        // NOTE: Using transfers and deals instead of controller actions + bridging because of OOG error
+
+        vm.prank(0xF977814e90dA44bFA03b6295A0616a897441aceC);  // Some USDC whale on Base
+        IERC20(Base.USDC).transfer(Base.ALM_PROXY, usdcAmount);
+
+        deal(Base.USDS,  Base.ALM_PROXY, USDS_BRIDGE_AMOUNT);
+        deal(Base.SUSDS, Base.ALM_PROXY, susdsShares);
+
+        // Deposit USDC, sUSDS, and USDS into PSM3
+
+        vm.startPrank(RELAYER);
+        ForeignController(Base.ALM_CONTROLLER).depositPSM(Base.USDS,  USDS_BRIDGE_AMOUNT);  // NOTE: Done manually with EOA
+        ForeignController(Base.ALM_CONTROLLER).depositPSM(Base.SUSDS, susdsShares);         // NOTE: Done manually with EOA
+        ForeignController(Base.ALM_CONTROLLER).depositPSM(Base.USDC,  usdcAmount);          // NOTE: Done automatically with Planner
+        vm.stopPrank();
+
+        IERC20 usdcBase = IERC20(Base.USDC);
+        IERC20 usdc     = IERC20(Ethereum.USDC);
+
+        // External user performs a swap, putting the USDC balance over the max, triggering a Planner action to withdraw
+
+        vm.prank(0xF977814e90dA44bFA03b6295A0616a897441aceC);  // USDC whale on Base
+        usdcBase.transfer(address(this), 399_999e6);
+
+        usdcBase.approve(Base.PSM3, 399_999e6);
+        IPSMLike(Base.PSM3).swapExactIn(Base.USDC, Base.USDS, 399_999e6, 0, address(this), 0);
+
+        assertEq(usdcBase.balanceOf(Base.PSM3),      1_200_000e6);
+        assertEq(usdcBase.balanceOf(Base.ALM_PROXY), 0);
+
+        mainnet.selectFork();
+
+        assertEq(usdc.balanceOf(Ethereum.ALM_PROXY), 0);
+
+        base.selectFork();
+
+        // Planner performs first action, withdraw from PSM and bridge to mainnet
+
+        vm.startPrank(RELAYER);
+        ForeignController(Base.ALM_CONTROLLER).withdrawPSM(Base.USDC, 400_000e6);
+        ForeignController(Base.ALM_CONTROLLER).transferUSDCToCCTP(400_000e6, CCTPForwarder.DOMAIN_ID_CIRCLE_ETHEREUM);
+        vm.stopPrank();
+
+        assertEq(usdcBase.balanceOf(Base.PSM3),      800_000e6);
+        assertEq(usdcBase.balanceOf(Base.ALM_PROXY), 0);
+
+        CCTPBridgeTesting.relayMessagesToSource(cctpBridge, true);
+
+        mainnet.selectFork();
+
+        assertEq(usdc.balanceOf(Ethereum.ALM_PROXY), 400_000e6);
+
+        // Planner performs second action, swap USDC to USDS and burn
+
+        skip(2 days);  // Ensure that some time has passed since spell execution and actions
+
+        IVatLike vat = IVatLike(Ethereum.VAT);
+
+        ( uint256 Art1, uint256 rate1,, uint256 line1, ) = vat.ilks("ALLOCATOR-SPARK-A");
+
+        uint256 debt1 = Art1 * rate1 / 1e27;
+
+        assertLt(Art1,  9_000_000e18);
+        assertGt(Art1,  8_950_000e18);
+        assertGt(rate1, 1e27);
+        assertEq(debt1, 9_000_000e18);
+        assertEq(line1, 10_000_000e45);
+
+        vm.startPrank(RELAYER);
+        MainnetController(Ethereum.ALM_CONTROLLER).swapUSDCToUSDS(400_000e6);
+        MainnetController(Ethereum.ALM_CONTROLLER).burnUSDS(400_000e18);
+        vm.stopPrank();
+
+        ( uint256 Art2, uint256 rate2,, uint256 line2, ) = vat.ilks("ALLOCATOR-SPARK-A");
+
+        uint256 debt2 = Art2 * rate2 / 1e27;
+
+        assertLt(Art2,  9_000_000e18 - 400_000e18);
+        assertGt(Art2,  8_950_000e18 - 400_000e18);
+        assertEq(Art2,  Art1 - 400_000e18 * 1e27 / rate2);
+        assertGt(rate2, rate1);
+        assertGt(debt2, debt1 - 400_000e18);
+        assertLt(debt2, debt1 - 400_000e18 + 3_000e18);  // Some interest has accrued
+        assertEq(line2, line1);
+
+        assertEq(IERC20(Ethereum.USDC).balanceOf(Ethereum.ALM_PROXY), 0);
+        assertEq(IERC20(Ethereum.USDS).balanceOf(Ethereum.ALM_PROXY), 0);
     }
 
     function deployPayloadBase() internal returns (address) {
