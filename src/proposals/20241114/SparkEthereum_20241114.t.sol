@@ -391,10 +391,7 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
         assertEq(IERC20(Base.USDC).balanceOf(Base.ALM_PROXY), 0);
         assertEq(IERC20(Base.USDC).balanceOf(Base.PSM3),      usdcSeed);
 
-        // FIXME this is causing a MemoryOOG error, doing a workaround for now
-        //CCTPBridgeTesting.relayMessagesToDestination(cctpBridge, true);
-        vm.prank(0xF977814e90dA44bFA03b6295A0616a897441aceC);  // Some USDC whale on Base
-        IERC20(Base.USDC).transfer(Base.ALM_PROXY, usdcAmount);
+        CCTPBridgeTesting.relayMessagesToDestination(cctpBridge, true);
 
         uint256 proxyAssets = IPSMLike(Base.PSM3).convertToAssetValue(IPSMLike(Base.PSM3).shares(Base.ALM_PROXY));
 
