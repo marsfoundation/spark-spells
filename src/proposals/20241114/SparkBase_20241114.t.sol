@@ -34,11 +34,11 @@ contract SparkBase_20241114Test is SparkBaseTestBase {
         IRateLimits       rateLimits = IRateLimits(Base.ALM_RATE_LIMITS);
         ForeignController controller = ForeignController(Base.ALM_CONTROLLER);
 
-        assertEq(almProxy.hasRole(0x0,   Base.SPARK_EXECUTOR), true,   "incorrect-admin-almProxy");
+        assertEq(almProxy.hasRole(0x0,   Base.SPARK_EXECUTOR), true, "incorrect-admin-almProxy");
         assertEq(rateLimits.hasRole(0x0, Base.SPARK_EXECUTOR), true, "incorrect-admin-rateLimits");
         assertEq(controller.hasRole(0x0, Base.SPARK_EXECUTOR), true, "incorrect-admin-controller");
 
-        assertEq(almProxy.hasRole(0x0,   DEPLOYER), false,   "incorrect-admin-almProxy");
+        assertEq(almProxy.hasRole(0x0,   DEPLOYER), false, "incorrect-admin-almProxy");
         assertEq(rateLimits.hasRole(0x0, DEPLOYER), false, "incorrect-admin-rateLimits");
         assertEq(controller.hasRole(0x0, DEPLOYER), false, "incorrect-admin-controller");
 

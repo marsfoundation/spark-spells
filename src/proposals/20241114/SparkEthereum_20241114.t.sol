@@ -210,7 +210,7 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
         assertEq(rateLimits.hasRole(0x0, Ethereum.SPARK_PROXY), true, "incorrect-admin-rateLimits");
         assertEq(controller.hasRole(0x0, Ethereum.SPARK_PROXY), true, "incorrect-admin-controller");
 
-        assertEq(almProxy.hasRole(0x0, DEPLOYER),   false,   "incorrect-admin-almProxy");
+        assertEq(almProxy.hasRole(0x0, DEPLOYER),   false, "incorrect-admin-almProxy");
         assertEq(rateLimits.hasRole(0x0, DEPLOYER), false, "incorrect-admin-rateLimits");
         assertEq(controller.hasRole(0x0, DEPLOYER), false, "incorrect-admin-controller");
 
