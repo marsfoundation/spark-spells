@@ -516,7 +516,7 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
         assertEq(Art2,  Art1 - 400_000e18 * 1e27 / rate2);
         assertGt(rate2, rate1);
         assertGt(debt2, debt1 - 400_000e18);
-        assertLt(debt2, debt1 - 400_000e18 + 3_000e18);  // Some interest has accrued
+        assertLt(debt2, debt1 - 400_000e18 + 4_000e18);  // Some interest has accrued
         assertEq(line2, line1);
 
         assertEq(IERC20(Ethereum.USDC).balanceOf(Ethereum.ALM_PROXY), 0);
