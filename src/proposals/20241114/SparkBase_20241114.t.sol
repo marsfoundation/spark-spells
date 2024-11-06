@@ -37,7 +37,7 @@ contract SparkBase_20241114Test is SparkBaseTestBase {
         assertEq(almProxy.hasRole(0x0, Base.SPARK_EXECUTOR), true,   "incorrect-admin-almProxy");
         assertEq(rateLimits.hasRole(0x0, Base.SPARK_EXECUTOR), true, "incorrect-admin-rateLimits");
         assertEq(controller.hasRole(0x0, Base.SPARK_EXECUTOR), true, "incorrect-admin-controller");
-        
+
         assertEq(almProxy.hasRole(0x0, DEPLOYER), false,   "incorrect-admin-almProxy");
         assertEq(rateLimits.hasRole(0x0, DEPLOYER), false, "incorrect-admin-rateLimits");
         assertEq(controller.hasRole(0x0, DEPLOYER), false, "incorrect-admin-controller");
@@ -105,7 +105,11 @@ contract SparkBase_20241114Test is SparkBaseTestBase {
             type(uint256).max,
             0
         );
-        _assertRateLimit(controller.LIMIT_USDC_TO_CCTP(), type(uint256).max, 0);
+        _assertRateLimit(
+            controller.LIMIT_USDC_TO_CCTP(),
+            type(uint256).max,
+            0
+        );
         _assertRateLimit(
             RateLimitHelpers.makeDomainKey(controller.LIMIT_USDC_TO_DOMAIN(), CCTPForwarder.DOMAIN_ID_CIRCLE_ETHEREUM),
             4_000_000e6,
