@@ -425,17 +425,22 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
 
         mainnet.selectFork();
 
+        address baseWhale = 0xF977814e90dA44bFA03b6295A0616a897441aceC;
+
         uint256 susdsShares = IERC4626(Ethereum.SUSDS).convertToShares(SUSDS_DEPOSIT_AMOUNT);
+        uint256 usdcAmount  = 800_000e6;
+
+        IERC20 usdcBase = IERC20(Base.USDC);
+        IERC20 usdc     = IERC20(Ethereum.USDC);
+
+        IVatLike vat = IVatLike(Ethereum.VAT);
 
         base.selectFork();
-
-        uint256 usdcAmount = 800_000e6;
-        uint256 usdcSeed   = 1e6;
 
         // Perform setup
         // NOTE: Using transfers and deals instead of controller actions + bridging because of OOG error
 
-        vm.prank(0xF977814e90dA44bFA03b6295A0616a897441aceC);  // Some USDC whale on Base
+        vm.prank(baseWhale);
         IERC20(Base.USDC).transfer(Base.ALM_PROXY, usdcAmount);
 
         deal(Base.USDS,  Base.ALM_PROXY, USDS_BRIDGE_AMOUNT);
@@ -449,19 +454,15 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
         ForeignController(Base.ALM_CONTROLLER).depositPSM(Base.USDC,  usdcAmount);          // NOTE: Done automatically with Planner
         vm.stopPrank();
 
-        IERC20 usdcBase = IERC20(Base.USDC);
-        IERC20 usdc     = IERC20(Ethereum.USDC);
-
         // External user performs a swap, putting the USDC balance over the max, triggering a Planner action to withdraw
 
-        vm.prank(0xF977814e90dA44bFA03b6295A0616a897441aceC);  // USDC whale on Base
+        vm.prank(baseWhale);
         usdcBase.transfer(address(this), 399_999e6);
 
         usdcBase.approve(Base.PSM3, 399_999e6);
         IPSMLike(Base.PSM3).swapExactIn(Base.USDC, Base.USDS, 399_999e6, 0, address(this), 0);
 
-        assertEq(usdcBase.balanceOf(Base.PSM3),      1_200_000e6);
-        assertEq(usdcBase.balanceOf(Base.ALM_PROXY), 0);
+        // Planner performs first action, withdraw from PSM and bridge to mainnet
 
         mainnet.selectFork();
 
@@ -469,7 +470,8 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
 
         base.selectFork();
 
-        // Planner performs first action, withdraw from PSM and bridge to mainnet
+        assertEq(usdcBase.balanceOf(Base.PSM3),      1_200_000e6);
+        assertEq(usdcBase.balanceOf(Base.ALM_PROXY), 0);
 
         vm.startPrank(RELAYER);
         ForeignController(Base.ALM_CONTROLLER).withdrawPSM(Base.USDC, 400_000e6);
@@ -489,8 +491,6 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
 
         skip(2 days);  // Ensure that some time has passed since spell execution and actions
 
-        IVatLike vat = IVatLike(Ethereum.VAT);
-
         ( uint256 Art1, uint256 rate1,, uint256 line1, ) = vat.ilks("ALLOCATOR-SPARK-A");
 
         uint256 debt1 = Art1 * rate1 / 1e27;
@@ -500,6 +500,9 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
         assertGt(rate1, 1e27);
         assertEq(debt1, 9_000_000e18);
         assertEq(line1, 10_000_000e45);
+
+        assertEq(IERC20(Ethereum.USDC).balanceOf(Ethereum.ALM_PROXY), 400_000e6);
+        assertEq(IERC20(Ethereum.USDS).balanceOf(Ethereum.ALM_PROXY), 0);
 
         vm.startPrank(RELAYER);
         MainnetController(Ethereum.ALM_CONTROLLER).swapUSDCToUSDS(400_000e6);
