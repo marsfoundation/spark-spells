@@ -27,7 +27,7 @@ contract SparkBase_20241114 is SparkPayloadBase {
     address internal constant RELAYER = 0x8a25A24EDE9482C4Fc0738F99611BE58F1c839AB;
 
     function execute() external {
-        // --- Activate Mainnet Controller ---
+        // --- Activate Foreign Controller ---
         RateLimitData memory unlimitedRateLimit = RateLimitData({
             maxAmount : type(uint256).max,
             slope     : 0

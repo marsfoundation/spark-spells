@@ -335,9 +335,6 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
 
         OptimismBridgeTesting.relayMessagesToDestination(nativeBridge, true);
 
-        assertEq(IERC20(Base.USDS).balanceOf(Base.ALM_PROXY),  USDS_BRIDGE_AMOUNT);
-        assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), susdsShares);
-
         // Deposit USDS and sUSDS
 
         assertEq(IERC20(Base.USDS).balanceOf(Base.ALM_PROXY),  USDS_BRIDGE_AMOUNT);
