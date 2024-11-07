@@ -10,6 +10,8 @@ import { IRateLimits }       from "spark-alm-controller/src/interfaces/IRateLimi
 import { ForeignController } from "spark-alm-controller/src/ForeignController.sol";
 import { RateLimitHelpers }  from "spark-alm-controller/src/RateLimitHelpers.sol";
 
+import { IExecutor } from "spark-gov-relay/src/interfaces/IExecutor.sol";
+
 import { IPSM3 } from "spark-psm/src/interfaces/IPSM3.sol";
 
 contract SparkBase_20241114Test is SparkBaseTestBase {
@@ -119,6 +121,18 @@ contract SparkBase_20241114Test is SparkBaseTestBase {
         assertEq(controller.mintRecipients(CCTPForwarder.DOMAIN_ID_CIRCLE_ETHEREUM), bytes32(uint256(uint160(Ethereum.ALM_PROXY))));
     }
 
+    function testDelayAndGracePeriod() public {
+        IExecutor executor = IExecutor(Base.SPARK_EXECUTOR);
+
+        assertEq(executor.delay(),       100 seconds);
+        assertEq(executor.gracePeriod(), 1000 seconds);
+
+        executePayload(payload);
+
+        assertEq(executor.delay(),       0);
+        assertEq(executor.gracePeriod(), 12 hours);
+    }
+
     function _assertRateLimit(
         bytes32 key,
         uint256 maxAmount,
@@ -130,5 +144,5 @@ contract SparkBase_20241114Test is SparkBaseTestBase {
         assertEq(rateLimit.lastAmount,  maxAmount);
         assertEq(rateLimit.lastUpdated, block.timestamp);
     }
-    
+
 }

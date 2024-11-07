@@ -14,6 +14,11 @@ import {
     MintRecipient
 } from 'lib/spark-alm-controller/deploy/ControllerInit.sol';
 
+interface IExecutorLike {
+    function updateDelay(uint256) external;
+    function updateGracePeriod(uint256) external;
+}
+
 /**
  * @title  Nov 14, 2024 Spark Base Proposal
  * @notice Activate Spark Liquidity Layer
@@ -25,6 +30,8 @@ contract SparkBase_20241114 is SparkPayloadBase {
 
     address internal constant FREEZER = 0x90D8c80C028B4C09C0d8dcAab9bbB057F0513431;  // Gov. facilitator multisig
     address internal constant RELAYER = 0x8a25A24EDE9482C4Fc0738F99611BE58F1c839AB;
+
+
 
     function execute() external {
         // --- Activate Foreign Controller ---
@@ -83,5 +90,10 @@ contract SparkBase_20241114 is SparkPayloadBase {
             }),
             mintRecipients: mintRecipients
         });
+
+        // Update executor delay and grace period
+
+        IExecutorLike(Base.SPARK_EXECUTOR).updateDelay(0);
+        IExecutorLike(Base.SPARK_EXECUTOR).updateGracePeriod(12 hours);
     }
 }
