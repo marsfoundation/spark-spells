@@ -60,6 +60,9 @@ contract SparkBase_20241114Test is SparkBaseTestBase {
         assertEq(address(psm.usdc()),  Base.USDC,  "psm-incorrect-usdc");
         assertEq(address(psm.usds()),  Base.USDS,  "psm-incorrect-usds");
         assertEq(address(psm.susds()), Base.SUSDS, "psm-incorrect-susds");
+
+        assertEq(psm.rateProvider(), Base.SSR_AUTH_ORACLE, "psm-incorrect-rateProvider");
+        assertEq(psm.pocket(),       address(psm),         "psm-incorrect-pocket");
     }
 
     function testALMControllerConfiguration() public {
