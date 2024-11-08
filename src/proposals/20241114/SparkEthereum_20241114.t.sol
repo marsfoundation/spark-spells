@@ -74,15 +74,14 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
     }
 
     function setUp() public {
-        mainnet = getChain('mainnet').createFork(21122303);  // Nov 5, 2024
-        base    = getChain('base').createFork(22015320);     // Nov 5, 2024
+        mainnet = getChain('mainnet').createFork(21141065);  // Nov 8, 2024
+        base    = getChain('base').createFork(22128572);     // Nov 8, 2024
 
         mainnet.selectFork();
-        payload = deployPayload();
+        payload = 0x8a3aaeAC45Cf3D76Cf82b0e4C63cCfa8c72BDCa7;
 
-        // TODO replace this with the actual address when deployed
         base.selectFork();
-        basePayload = deployPayloadBase();
+        basePayload = 0x19D08879851FB54C2dCc4bb32b5a1EA5E9Ad6838;
 
         nativeBridge = OptimismBridgeTesting.createNativeBridge(mainnet, base);
         cctpBridge   = CCTPBridgeTesting.createCircleBridge(mainnet, base);
@@ -150,7 +149,7 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
 
         assertEq(wethConfigBefore.interestRateStrategy, OLD_WETH_INTEREST_RATE_STRATEGY);
 
-        uint256 expectedOldSlope1 = 0.028991774151952311e27;
+        uint256 expectedOldSlope1 = 0.031082542063210872e27;
         InterestStrategyValues memory values = InterestStrategyValues({
             addressesProvider:             address(poolAddressesProvider),
             optimalUsageRatio:             0.9e27,
@@ -175,7 +174,7 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
         ReserveConfig memory wethConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'WETH');
 
         uint256 expectedSlope1 = expectedOldSlope1 - 0.005e27;
-        assertEq(expectedSlope1, 0.023991774151952311e27);
+        assertEq(expectedSlope1, 0.026082542063210872e27);
         assertEq(
             IVariableKinkIRM(NEW_WETH_INTEREST_RATE_STRATEGY).getVariableRateSlope1Spread(),
             -0.005e27
@@ -272,10 +271,13 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
         assertEq(rate, 1e27);
         assertEq(line, 10_000_000e45);
 
+        uint256 startingUsdsEscrowBalanace = 15e18;
+        uint256 startingSusdsEscrowBalance = 14.956839513655018055e18;
+
         assertEq(IERC20(Ethereum.USDS).balanceOf(Ethereum.SPARK_PROXY),  0);
-        assertEq(IERC20(Ethereum.USDS).balanceOf(Ethereum.BASE_ESCROW),  0);
+        assertEq(IERC20(Ethereum.USDS).balanceOf(Ethereum.BASE_ESCROW),  startingUsdsEscrowBalanace);
         assertEq(IERC20(Ethereum.SUSDS).balanceOf(Ethereum.SPARK_PROXY), 0);
-        assertEq(IERC20(Ethereum.SUSDS).balanceOf(Ethereum.BASE_ESCROW), 0);
+        assertEq(IERC20(Ethereum.SUSDS).balanceOf(Ethereum.BASE_ESCROW), startingSusdsEscrowBalance);
 
         executePayload(payload);
 
@@ -293,15 +295,14 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
         uint256 expectedShares = IERC4626(Ethereum.SUSDS).convertToShares(8_000_000e18);
 
         assertEq(IERC20(Ethereum.USDS).balanceOf(Ethereum.SPARK_PROXY),  0);
-        assertEq(IERC20(Ethereum.USDS).balanceOf(Ethereum.BASE_ESCROW),  1_000_000e18);
+        assertEq(IERC20(Ethereum.USDS).balanceOf(Ethereum.BASE_ESCROW),  1_000_000e18 + startingUsdsEscrowBalanace);
         assertEq(IERC20(Ethereum.SUSDS).balanceOf(Ethereum.SPARK_PROXY), 0);
-        assertEq(IERC20(Ethereum.SUSDS).balanceOf(Ethereum.BASE_ESCROW), expectedShares);
+        assertEq(IERC20(Ethereum.SUSDS).balanceOf(Ethereum.BASE_ESCROW), expectedShares + startingSusdsEscrowBalance);
     }
 
     function _setupCrossChainTest() internal {
         mainnet.selectFork();
         executePayload(payload);
-        // TODO use the actual cross-chain message to execute when deployed
         base.selectFork();
         executePayloadBase(basePayload);
     }
@@ -323,7 +324,7 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
         vm.warp(mainnetTimestamp + 1 days);
 
         uint256 susdsPsmShares  = IPSMLike(Base.PSM3).convertToShares(Base.SUSDS, susdsShares);
-        uint256 baseSUsdsAssets = IPSMLike(Base.PSM3).convertToAssetValue(susdsPsmShares);
+        uint256 baseSUsdsAssets = IPSMLike(Base.PSM3).convertToAssetValue(susdsPsmShares) - 1;  // Rounding error
 
         // Ensure cross-chain accounting is correct at the same timestamp
         assertEq(mainnetSUsdsAssets, baseSUsdsAssets);
@@ -339,8 +340,8 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
 
         assertEq(IERC20(Base.USDS).balanceOf(Base.ALM_PROXY),  USDS_BRIDGE_AMOUNT);
         assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), susdsShares);
-        assertEq(IERC20(Base.USDS).balanceOf(Base.PSM3),       0);
-        assertEq(IERC20(Base.SUSDS).balanceOf(Base.PSM3),      0);
+        assertEq(IERC20(Base.USDS).balanceOf(Base.PSM3),       10e18);
+        assertEq(IERC20(Base.SUSDS).balanceOf(Base.PSM3),      10e18);
 
         assertEq(IPSMLike(Base.PSM3).shares(Base.ALM_PROXY),  0);
 
@@ -351,15 +352,16 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
 
         assertEq(IERC20(Base.USDS).balanceOf(Base.ALM_PROXY),  0);
         assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), 0);
-        assertEq(IERC20(Base.USDS).balanceOf(Base.PSM3),       USDS_BRIDGE_AMOUNT);
-        assertEq(IERC20(Base.SUSDS).balanceOf(Base.PSM3),      susdsShares);
+        assertEq(IERC20(Base.USDS).balanceOf(Base.PSM3),       10e18 + USDS_BRIDGE_AMOUNT);
+        assertEq(IERC20(Base.SUSDS).balanceOf(Base.PSM3),      10e18 + susdsShares);
 
         // Ensure that value controlled by the ALM proxy in the PSM is equal to total value deposited
         uint256 proxyPsmShares = IPSMLike(Base.PSM3).shares(Base.ALM_PROXY);
-        assertEq(proxyPsmShares, susdsPsmShares + 1_000_000e18);
+        // ~$290 in interest accumulation before deposit
+        assertEq(proxyPsmShares, susdsPsmShares + 1_000_000e18 - 290.883249319032973423e18);
         assertEq(
             IPSMLike(Base.PSM3).convertToAssetValue(proxyPsmShares),
-            mainnetSUsdsAssets + 1_000_000e18
+            mainnetSUsdsAssets + 1_000_000e18 + 2 // Rounding error
         );
     }
 
@@ -541,6 +543,28 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
         assertEq(rateLimit.slope,       slope);
         assertEq(rateLimit.lastAmount,  maxAmount);
         assertEq(rateLimit.lastUpdated, block.timestamp);
+    }
+
+    function testBaseSpellExecution() public {
+        IALMProxy almProxy = IALMProxy(Base.ALM_PROXY);
+
+        executePayload(payload);
+
+        base.selectFork();
+
+        assertEq(IExecutor(Base.SPARK_EXECUTOR).actionsSetCount(), 0);
+
+        OptimismBridgeTesting.relayMessagesToDestination(nativeBridge, true);
+
+        assertEq(IExecutor(Base.SPARK_EXECUTOR).actionsSetCount(), 1);
+
+        // Just test some random state happens in the spell
+        assertEq(almProxy.hasRole(almProxy.CONTROLLER(), Base.ALM_CONTROLLER), false);
+
+        skip(100 seconds);
+        IExecutor(Base.SPARK_EXECUTOR).execute(0);
+
+        assertEq(almProxy.hasRole(almProxy.CONTROLLER(), Base.ALM_CONTROLLER), true);
     }
 
 }

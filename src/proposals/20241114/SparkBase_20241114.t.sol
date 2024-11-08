@@ -24,8 +24,8 @@ contract SparkBase_20241114Test is SparkBaseTestBase {
     }
 
     function setUp() public {
-        vm.createSelectFork(getChain('base').rpcUrl, 22015320);  // Nov 5, 2024
-        payload = deployPayload();
+        vm.createSelectFork(getChain('base').rpcUrl, 22107180);  // Nov 7, 2024
+        payload = 0x19D08879851FB54C2dCc4bb32b5a1EA5E9Ad6838;
     }
 
     function testALMControllerDeployment() public {

@@ -64,7 +64,7 @@ contract SparkEthereum_20241114 is SparkPayloadEthereum {
     uint256 internal constant SUSDS_DEPOSIT_AMOUNT = 8_000_000e18;
     uint256 internal constant USDS_BRIDGE_AMOUNT   = 1_000_000e18;
 
-    address internal constant BASE_PAYLOAD = address(0);  // TODO add real payload
+    address internal constant BASE_PAYLOAD = 0x19D08879851FB54C2dCc4bb32b5a1EA5E9Ad6838;
 
     function collateralsUpdates() public pure override returns (IEngine.CollateralUpdate[] memory) {
         // Reduce LT from 70% to 65%
