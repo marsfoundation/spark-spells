@@ -23,6 +23,8 @@ import { MarketParamsLib }                               from 'lib/metamorpho/li
 
 import { IExecutor } from 'lib/spark-gov-relay/src/interfaces/IExecutor.sol';
 
+import { IRateLimits } from "spark-alm-controller/src/interfaces/IRateLimits.sol";
+
 // REPO ARCHITECTURE TODOs
 // TODO: Refactor Mock logic for executor to be more realistic, consider fork + prank.
 
@@ -496,6 +498,18 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
         _assertMorphoCap(_config, _currentCap, false, 0);
     }
 
+    function _assertRateLimit(
+        bytes32 key,
+        uint256 maxAmount,
+        uint256 slope
+    ) internal {
+        IRateLimits.RateLimitData memory rateLimit = IRateLimits(Ethereum.ALM_RATE_LIMITS).getRateLimitData(key);
+        assertEq(rateLimit.maxAmount,   maxAmount);
+        assertEq(rateLimit.slope,       slope);
+        assertEq(rateLimit.lastAmount,  maxAmount);
+        assertEq(rateLimit.lastUpdated, block.timestamp);
+    }
+
 }
 
 abstract contract SparkGnosisTestBase is SparkTestBase {
@@ -544,6 +558,18 @@ abstract contract SparkBaseTestBase is Test {
             payloadAddress,
             abi.encodeWithSignature('execute()')
         );
+    }
+
+    function _assertRateLimit(
+        bytes32 key,
+        uint256 maxAmount,
+        uint256 slope
+    ) internal {
+        IRateLimits.RateLimitData memory rateLimit = IRateLimits(Base.ALM_RATE_LIMITS).getRateLimitData(key);
+        assertEq(rateLimit.maxAmount,   maxAmount);
+        assertEq(rateLimit.slope,       slope);
+        assertEq(rateLimit.lastAmount,  maxAmount);
+        assertEq(rateLimit.lastUpdated, block.timestamp);
     }
 
 }

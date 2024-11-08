@@ -6,7 +6,6 @@ import 'src/SparkTestBase.sol';
 import { CCTPForwarder } from "xchain-helpers/forwarders/CCTPForwarder.sol";
 
 import { IALMProxy }         from "spark-alm-controller/src/interfaces/IALMProxy.sol";
-import { IRateLimits }       from "spark-alm-controller/src/interfaces/IRateLimits.sol";
 import { ForeignController } from "spark-alm-controller/src/ForeignController.sol";
 import { RateLimitHelpers }  from "spark-alm-controller/src/RateLimitHelpers.sol";
 
@@ -117,18 +116,6 @@ contract SparkBase_20241114Test is SparkBaseTestBase {
         );
 
         assertEq(controller.mintRecipients(CCTPForwarder.DOMAIN_ID_CIRCLE_ETHEREUM), bytes32(uint256(uint160(Ethereum.ALM_PROXY))));
-    }
-
-    function _assertRateLimit(
-        bytes32 key,
-        uint256 maxAmount,
-        uint256 slope
-    ) internal {
-        IRateLimits.RateLimitData memory rateLimit = IRateLimits(Base.ALM_RATE_LIMITS).getRateLimitData(key);
-        assertEq(rateLimit.maxAmount,   maxAmount);
-        assertEq(rateLimit.slope,       slope);
-        assertEq(rateLimit.lastAmount,  maxAmount);
-        assertEq(rateLimit.lastUpdated, block.timestamp);
     }
     
 }

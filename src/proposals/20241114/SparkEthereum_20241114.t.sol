@@ -12,7 +12,6 @@ import { CCTPBridgeTesting }     from "xchain-helpers/testing/bridges/CCTPBridge
 import { OptimismBridgeTesting } from "xchain-helpers/testing/bridges/OptimismBridgeTesting.sol";
 
 import { IALMProxy }         from "spark-alm-controller/src/interfaces/IALMProxy.sol";
-import { IRateLimits }       from "spark-alm-controller/src/interfaces/IRateLimits.sol";
 import { MainnetController } from "spark-alm-controller/src/MainnetController.sol";
 import { ForeignController } from "spark-alm-controller/src/ForeignController.sol";
 import { RateLimitHelpers }  from "spark-alm-controller/src/RateLimitHelpers.sol";
@@ -60,6 +59,8 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
     address internal constant RELAYER = 0x8a25A24EDE9482C4Fc0738F99611BE58F1c839AB;  // Same address on all chains
 
     address internal constant DEPLOYER = 0x6F3066538A648b9CFad0679DF0a7e40882A23AA4;
+
+    bytes32 internal constant ALLOCATOR_ILK = "ALLOCATOR-SPARK-A";
 
     Domain mainnet;
     Domain base;
@@ -265,7 +266,7 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
     function testALMControllerStartingTokenState() public {
         IVatLike vat = IVatLike(Ethereum.VAT);
 
-        ( uint256 Art, uint256 rate,, uint256 line, ) = vat.ilks("ALLOCATOR-SPARK-A");
+        ( uint256 Art, uint256 rate,, uint256 line, ) = vat.ilks(ALLOCATOR_ILK);
 
         assertEq(Art,  0);
         assertEq(rate, 1e27);
@@ -281,7 +282,7 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
 
         executePayload(payload);
 
-        ( Art, rate,, line, ) = vat.ilks("ALLOCATOR-SPARK-A");
+        ( Art, rate,, line, ) = vat.ilks(ALLOCATOR_ILK);
 
         uint256 debt = Art * rate / 1e27;
 
@@ -372,8 +373,6 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
         uint256 susdsShares = IERC4626(Ethereum.SUSDS).convertToShares(SUSDS_DEPOSIT_AMOUNT);
 
         // Do initial deposit of USDS and sUSDS into PSM3
-        base.selectFork();
-
         OptimismBridgeTesting.relayMessagesToDestination(nativeBridge, true);
 
         vm.startPrank(RELAYER);
@@ -485,7 +484,7 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
 
         skip(2 days);  // Ensure that some time has passed since spell execution and actions
 
-        ( uint256 Art1, uint256 rate1,, uint256 line1, ) = vat.ilks("ALLOCATOR-SPARK-A");
+        ( uint256 Art1, uint256 rate1,, uint256 line1, ) = vat.ilks(ALLOCATOR_ILK);
 
         uint256 debt1 = Art1 * rate1 / 1e27;
 
@@ -503,7 +502,7 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
         MainnetController(Ethereum.ALM_CONTROLLER).burnUSDS(400_000e18);
         vm.stopPrank();
 
-        ( uint256 Art2, uint256 rate2,, uint256 line2, ) = vat.ilks("ALLOCATOR-SPARK-A");
+        ( uint256 Art2, uint256 rate2,, uint256 line2, ) = vat.ilks(ALLOCATOR_ILK);
 
         uint256 debt2 = Art2 * rate2 / 1e27;
 
@@ -531,18 +530,6 @@ contract SparkEthereum_20241114Test is SparkEthereumTestBase {
             payloadAddress,
             abi.encodeWithSignature('execute()')
         );
-    }
-
-    function _assertRateLimit(
-        bytes32 key,
-        uint256 maxAmount,
-        uint256 slope
-    ) internal {
-        IRateLimits.RateLimitData memory rateLimit = IRateLimits(Ethereum.ALM_RATE_LIMITS).getRateLimitData(key);
-        assertEq(rateLimit.maxAmount,   maxAmount);
-        assertEq(rateLimit.slope,       slope);
-        assertEq(rateLimit.lastAmount,  maxAmount);
-        assertEq(rateLimit.lastUpdated, block.timestamp);
     }
 
     function testBaseSpellExecution() public {
