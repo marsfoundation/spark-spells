@@ -14,12 +14,16 @@ import { IncentivizedERC20 }                     from 'sparklend-v1-core/contrac
 import { ReserveConfiguration }                  from 'sparklend-v1-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
 import { WadRayMath }                            from "sparklend-v1-core/contracts/protocol/libraries/math/WadRayMath.sol";
 
+import { Base } from 'spark-address-registry/Base.sol';
+
 import { ISparkLendFreezerMom } from 'sparklend-freezer/interfaces/ISparkLendFreezerMom.sol';
 
 import { IMetaMorpho, MarketParams, PendingUint192, Id } from 'lib/metamorpho/src/interfaces/IMetaMorpho.sol';
 import { MarketParamsLib }                               from 'lib/metamorpho/lib/morpho-blue/src/libraries/MarketParamsLib.sol';
 
-import { IExecutorBase } from 'lib/spark-gov-relay/src/interfaces/IExecutorBase.sol';
+import { IExecutor } from 'lib/spark-gov-relay/src/interfaces/IExecutor.sol';
+
+import { IRateLimits } from "spark-alm-controller/src/interfaces/IRateLimits.sol";
 
 // REPO ARCHITECTURE TODOs
 // TODO: Refactor Mock logic for executor to be more realistic, consider fork + prank.
@@ -65,7 +69,8 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
     }
 
     function deployPayload() internal returns (address) {
-        return deployCode(string(abi.encodePacked('Spark', domain, '_', id, '.sol')));
+        string memory fullName = string(abi.encodePacked('Spark', domain, '_', id));
+        return deployCode(string(abi.encodePacked(fullName, '.sol:', fullName)));
     }
 
     function testSpellExecutionDiff() public {
@@ -493,6 +498,18 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
         _assertMorphoCap(_config, _currentCap, false, 0);
     }
 
+    function _assertRateLimit(
+        bytes32 key,
+        uint256 maxAmount,
+        uint256 slope
+    ) internal {
+        IRateLimits.RateLimitData memory rateLimit = IRateLimits(Ethereum.ALM_RATE_LIMITS).getRateLimitData(key);
+        assertEq(rateLimit.maxAmount,   maxAmount);
+        assertEq(rateLimit.slope,       slope);
+        assertEq(rateLimit.lastAmount,  maxAmount);
+        assertEq(rateLimit.lastUpdated, block.timestamp);
+    }
+
 }
 
 abstract contract SparkGnosisTestBase is SparkTestBase {
@@ -507,10 +524,52 @@ abstract contract SparkGnosisTestBase is SparkTestBase {
     function executePayload(address payloadAddress) internal override {
         require(Address.isContract(payloadAddress), "PAYLOAD IS NOT A CONTRACT");
         vm.prank(executor);
-        IExecutorBase(executor).executeDelegateCall(
+        IExecutor(executor).executeDelegateCall(
             payloadAddress,
             abi.encodeWithSignature('execute()')
         );
+    }
+
+}
+
+// TODO refactor to better deal with a chain where SparkLend doesn't exist
+abstract contract SparkBaseTestBase is Test {
+
+    address internal executor;
+    address internal payload;
+
+    string internal domain;
+    string internal id;
+
+    constructor() {
+        executor = Base.SPARK_EXECUTOR;
+        domain   = 'Base';
+    }
+
+    function deployPayload() internal returns (address) {
+        string memory fullName = string(abi.encodePacked('Spark', domain, '_', id));
+        return deployCode(string(abi.encodePacked(fullName, '.sol:', fullName)));
+    }
+
+    function executePayload(address payloadAddress) internal {
+        require(Address.isContract(payloadAddress), "PAYLOAD IS NOT A CONTRACT");
+        vm.prank(executor);
+        IExecutor(executor).executeDelegateCall(
+            payloadAddress,
+            abi.encodeWithSignature('execute()')
+        );
+    }
+
+    function _assertRateLimit(
+        bytes32 key,
+        uint256 maxAmount,
+        uint256 slope
+    ) internal {
+        IRateLimits.RateLimitData memory rateLimit = IRateLimits(Base.ALM_RATE_LIMITS).getRateLimitData(key);
+        assertEq(rateLimit.maxAmount,   maxAmount);
+        assertEq(rateLimit.slope,       slope);
+        assertEq(rateLimit.lastAmount,  maxAmount);
+        assertEq(rateLimit.lastUpdated, block.timestamp);
     }
 
 }
