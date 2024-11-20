@@ -34,7 +34,7 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
 
     function testcbBTCChanges() public {
         ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', pool);
-        ReserveConfig memory cbBTCConfig         = _findReserveConfigBySymbol(allConfigsBefore, 'cbBTC');
+        ReserveConfig memory cbBTCConfig        = _findReserveConfigBySymbol(allConfigsBefore, 'cbBTC');
 
         assertEq(cbBTCConfig.liquidationThreshold, 70_00);
         assertEq(cbBTCConfig.ltv, 65_00);
@@ -42,8 +42,8 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
         executePayload(payload);
 
         ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
-        cbBTCConfig.liquidationThreshold        = 75_00;
-        cbBTCConfig.ltv                         = 74_00;
+        cbBTCConfig.liquidationThreshold       = 75_00;
+        cbBTCConfig.ltv                        = 74_00;
 
         _validateReserveConfig(cbBTCConfig, allConfigsAfter);
     }
@@ -58,9 +58,7 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
         });
 
         _assertMorphoCap(sUSDeVault, 200_000_000e18);
-
         executePayload(payload);
-
         _assertMorphoCap(sUSDeVault, 200_000_000e18, 400_000_000e18);
 
         skip(1 days);
