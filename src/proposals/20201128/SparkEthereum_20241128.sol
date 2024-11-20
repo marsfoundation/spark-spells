@@ -16,8 +16,9 @@ import { Ethereum, SparkPayloadEthereum, IEngine, EngineFlags } from 'src/SparkP
 contract SparkEthereum_20241128 is SparkPayloadEthereum {
 
     function collateralsUpdates() public pure override returns (IEngine.CollateralUpdate[] memory) {
+        IEngine.CollateralUpdate[] memory updates = new IEngine.CollateralUpdate[](2);
+
         // Reduce LT from 65% to 60%
-        IEngine.CollateralUpdate[] memory updates = new IEngine.CollateralUpdate[](1);
         updates[0] = IEngine.CollateralUpdate({
             asset:          Ethereum.WBTC,
             ltv:            EngineFlags.KEEP_CURRENT,
@@ -27,6 +28,19 @@ contract SparkEthereum_20241128 is SparkPayloadEthereum {
             liqProtocolFee: EngineFlags.KEEP_CURRENT,
             eModeCategory:  EngineFlags.KEEP_CURRENT
         });
+
+        // Increase LT from 70% to 75%
+        // Increase LTV from 65% to 74%
+        updates[1] = IEngine.CollateralUpdate({
+            asset:          Ethereum.CBBTC,
+            ltv:            74_00,
+            liqThreshold:   75_00,
+            liqBonus:       EngineFlags.KEEP_CURRENT,
+            debtCeiling:    EngineFlags.KEEP_CURRENT,
+            liqProtocolFee: EngineFlags.KEEP_CURRENT,
+            eModeCategory:  EngineFlags.KEEP_CURRENT
+        });
+
         return updates;
     }
 }
