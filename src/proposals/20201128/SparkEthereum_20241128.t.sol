@@ -7,6 +7,7 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
 
     address internal constant PT_27MAR2025_PRICE_FEED = 0x38d130cEe60CDa080A3b3aC94C79c34B6Fc919A7;
     address internal constant PT_SUSDE_27MAR2025      = 0xE00bd3Df25fb187d6ABBB620b3dfd19839947b81;
+    address internal constant PT_USDE_27MAR2025       = 0x8A47b431A7D947c6a3ED6E42d501803615a97EAa;
 
     constructor() {
         id = '20241128';
@@ -64,5 +65,23 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
         skip(1 days);
         IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).acceptCap(sUSDeVault);
         _assertMorphoCap(sUSDeVault, 400_000_000e18);
+    }
+
+    function testNewMorphoVault() public {
+        MarketParams memory USDeVault =  MarketParams({
+            loanToken:       Ethereum.DAI,
+            collateralToken: PT_USDE_27MAR2025,
+            oracle:          PT_27MAR2025_PRICE_FEED,
+            irm:             Ethereum.MORPHO_DEFAULT_IRM,
+            lltv:            0.915e18
+        });
+
+        _assertMorphoCap(USDeVault, 0);
+        executePayload(payload);
+        _assertMorphoCap(USDeVault, 0, 100_000_000e18);
+
+        skip(1 days);
+        IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).acceptCap(USDeVault);
+        _assertMorphoCap(USDeVault, 100_000_000e18);
     }
 }

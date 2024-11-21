@@ -6,6 +6,10 @@ import { IERC20 } from "forge-std/interfaces/IERC20.sol";
 import { Ethereum, SparkPayloadEthereum, IEngine, EngineFlags } from 'src/SparkPayloadEthereum.sol';
 import { IMetaMorpho, MarketParams } from 'lib/metamorpho/src/interfaces/IMetaMorpho.sol';
 
+interface MorphoLike {
+    function createMarket(MarketParams memory marketParams) external;
+}
+
 /**
  * @title  Nov 28, 2024 Spark Ethereum Proposal
  * @notice Sparklend: update WBTC and cbBTC parameters
@@ -18,6 +22,8 @@ contract SparkEthereum_20241128 is SparkPayloadEthereum {
 
     address internal constant PT_27MAR2025_PRICE_FEED = 0x38d130cEe60CDa080A3b3aC94C79c34B6Fc919A7;
     address internal constant PT_SUSDE_27MAR2025      = 0xE00bd3Df25fb187d6ABBB620b3dfd19839947b81;
+    address internal constant PT_USDE_27MAR2025       = 0x8A47b431A7D947c6a3ED6E42d501803615a97EAa;
+    address internal constant MORPHO                  = 0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb;
 
     function collateralsUpdates() public pure override returns (IEngine.CollateralUpdate[] memory) {
         IEngine.CollateralUpdate[] memory updates = new IEngine.CollateralUpdate[](2);
@@ -60,6 +66,21 @@ contract SparkEthereum_20241128 is SparkPayloadEthereum {
                 lltv:            0.915e18
             }),
             400_000_000e18
+        );
+
+        MarketParams memory USDeMarket = MarketParams({
+            loanToken:       Ethereum.DAI,
+            collateralToken: PT_USDE_27MAR2025,
+            oracle:          PT_27MAR2025_PRICE_FEED,
+            irm:             Ethereum.MORPHO_DEFAULT_IRM,
+            lltv:            0.915e18
+        });
+        // create new PT-USDE-27Mar2025 market
+        MorphoLike(MORPHO).createMarket(USDeMarket);
+        // set cap for new market
+        IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).submitCap(
+            USDeMarket,
+            100_000_000e18
         );
     }
 }
