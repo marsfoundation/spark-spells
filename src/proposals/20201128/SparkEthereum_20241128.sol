@@ -14,7 +14,6 @@ interface MorphoLike {
  * @title  Nov 28, 2024 Spark Ethereum Proposal
  * @notice Sparklend: update WBTC and cbBTC parameters
  *         Morpho: onboard PT-USDe-27Mar2025 and increase PT-sUSDe-27Mar2025 cap
- *         DDM: increase AAVE lido's line
  * @author Wonderland
  * Forum:  https://forum.sky.money/t/28-nov-2024-proposed-changes-to-spark-for-upcoming-spell/25543/2
  */
