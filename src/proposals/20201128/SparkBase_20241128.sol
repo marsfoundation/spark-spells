@@ -7,6 +7,8 @@ import { Base }             from 'spark-address-registry/Base.sol';
 import { RateLimitHelpers } from 'spark-alm-controller/src/RateLimitHelpers.sol';
 import { IRateLimits }      from 'spark-alm-controller/src/interfaces/IRateLimits.sol';
 
+import { IExecutor } from 'spark-gov-relay/src/interfaces/IExecutor.sol';
+
 /**
  * @title  Nov 28, 2024 Spark Ethereum Proposal
  * @notice Increase sUSDS liquidity to Base PSM
@@ -24,5 +26,8 @@ contract SparkBase_20241128 is SparkPayloadBase {
             maxAmount : 90_000_000e18,
             slope     : 2_000_000e18 / uint256(1 days)
         });
+
+        IExecutor(Base.SPARK_EXECUTOR).updateDelay(0);
+        IExecutor(Base.SPARK_EXECUTOR).updateGracePeriod(7 days);
     }
 }
