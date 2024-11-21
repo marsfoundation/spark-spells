@@ -38,7 +38,7 @@ contract SparkBase_20241128Test is SparkBaseTestBase {
 
         _assertRateLimit(
             rateLimitKey,
-            90_000_000e18,
+            98_000_000e18,
             2_000_000e18 / uint256(1 days)
         );
     }

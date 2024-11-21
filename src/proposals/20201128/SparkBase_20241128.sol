@@ -23,7 +23,7 @@ contract SparkBase_20241128 is SparkPayloadBase {
         bytes32 rateLimitKey = RateLimitHelpers.makeAssetKey(LIMIT_PSM_DEPOSIT, Base.SUSDS);
         IRateLimits(Base.ALM_RATE_LIMITS).setRateLimitData({
             key: rateLimitKey,
-            maxAmount : 90_000_000e18,
+            maxAmount : 98_000_000e18,
             slope     : 2_000_000e18 / uint256(1 days)
         });
 
