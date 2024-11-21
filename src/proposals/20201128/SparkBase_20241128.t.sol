@@ -22,7 +22,6 @@ contract SparkBase_20241128Test is SparkBaseTestBase {
         payload = deployPayload();
     }
 
-
     function testSUSDSRateLimit() public {
         ForeignController controller = ForeignController(Base.ALM_CONTROLLER);
         bytes32 rateLimitKey         = RateLimitHelpers.makeAssetKey(

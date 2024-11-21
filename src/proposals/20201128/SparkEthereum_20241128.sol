@@ -54,7 +54,6 @@ contract SparkEthereum_20241128 is SparkPayloadEthereum {
         return updates;
     }
 
-
     function _postExecute() internal override {
         // update existing cap for PT-sUSDe-27Mar2025 200m -> 400m
         IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).submitCap(

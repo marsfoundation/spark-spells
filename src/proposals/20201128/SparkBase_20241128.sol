@@ -17,7 +17,7 @@ import { IExecutor } from 'spark-gov-relay/src/interfaces/IExecutor.sol';
  * Forum:  https://forum.sky.money/t/28-nov-2024-proposed-changes-to-spark-for-upcoming-spell-amendments/25575
  */
 contract SparkBase_20241128 is SparkPayloadBase {
-    bytes32 public constant LIMIT_PSM_DEPOSIT    = keccak256("LIMIT_PSM_DEPOSIT");
+    bytes32 public constant LIMIT_PSM_DEPOSIT = keccak256("LIMIT_PSM_DEPOSIT");
 
     function execute() external {
         bytes32 rateLimitKey = RateLimitHelpers.makeAssetKey(LIMIT_PSM_DEPOSIT, Base.SUSDS);
