@@ -37,7 +37,7 @@ contract SparkBase_20241128Test is SparkBaseTestBase {
 
         _assertRateLimit(
             rateLimitKey,
-            98_000_000e18,
+            90_000_000e18,
             2_000_000e18 / uint256(1 days)
         );
     }
@@ -45,7 +45,7 @@ contract SparkBase_20241128Test is SparkBaseTestBase {
     function testSUSDSRateLimitSideEffects() public {
         ForeignController controller    = ForeignController(Base.ALM_CONTROLLER);
         address relayer                 = 0x8a25A24EDE9482C4Fc0738F99611BE58F1c839AB;
-        uint256 newRateLimit            = 98_000_000e18;
+        uint256 newRateLimit            = 90_000_000e18;
         uint256 amountAboveOldRateLimit = 10_000_000e18;
         uint256 amountAboveNewRateLimit = 100_000_000e18;
         bytes32 rateLimitKey            = RateLimitHelpers.makeAssetKey(
