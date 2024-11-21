@@ -31,7 +31,7 @@ contract SparkBase_20241128Test is SparkBaseTestBase {
         );
 
         IRateLimits.RateLimitData memory rateLimit = IRateLimits(Base.ALM_RATE_LIMITS).getRateLimitData(rateLimitKey);
-        assertEq(rateLimit.maxAmount, 84_211e18);
+        assertEq(rateLimit.maxAmount, 8_000_000e18);
         assertEq(rateLimit.slope,     2_000_000e18 / uint256(1 days));
 
         executePayload(payload);
