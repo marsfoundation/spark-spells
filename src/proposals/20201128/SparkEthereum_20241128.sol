@@ -12,6 +12,8 @@ import { IMetaMorpho, MarketParams } from 'lib/metamorpho/src/interfaces/IMetaMo
 import { AllocatorBuffer } from 'dss-allocator/src/AllocatorBuffer.sol';
 import { AllocatorVault }  from 'dss-allocator/src/AllocatorVault.sol';
 
+import { OptimismForwarder } from 'xchain-helpers/forwarders/OptimismForwarder.sol';
+
 interface MorphoLike {
     function createMarket(MarketParams memory marketParams) external;
 }
@@ -47,6 +49,9 @@ contract SparkEthereum_20241128 is SparkPayloadEthereum {
     address internal constant PT_USDE_27MAR2025       = 0x8A47b431A7D947c6a3ED6E42d501803615a97EAa;
     address internal constant MORPHO                  = 0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb;
     uint256 internal constant USDS_MINT_AMOUNT        = 90_000_000e18;
+    // TODO: replace by actual address when it is deployed on Base. This is
+    // just wherever the tests happen to CREATE1 the contract at
+    address internal constant BASE_PAYLOAD            = 0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f;
 
     function collateralsUpdates() public pure override returns (IEngine.CollateralUpdate[] memory) {
         IEngine.CollateralUpdate[] memory updates = new IEngine.CollateralUpdate[](2);
@@ -117,5 +122,13 @@ contract SparkEthereum_20241128 is SparkPayloadEthereum {
         // bridge them to Base
         IERC20(Ethereum.SUSDS).approve(Ethereum.BASE_TOKEN_BRIDGE, susdsShares);
         ITokenBridge(Ethereum.BASE_TOKEN_BRIDGE).bridgeERC20To(Ethereum.SUSDS, Base.SUSDS, Base.ALM_PROXY, susdsShares, 1_000_000, "");
+
+        // Trigger Base payload 
+        OptimismForwarder.sendMessageL1toL2({
+            l1CrossDomain: OptimismForwarder.L1_CROSS_DOMAIN_BASE,
+            target:        Base.SPARK_RECEIVER,
+            message:       encodePayloadQueue(BASE_PAYLOAD),
+            gasLimit:      1_000_000
+        });
     }
 }

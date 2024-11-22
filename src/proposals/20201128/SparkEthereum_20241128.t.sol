@@ -17,8 +17,8 @@ import { ForeignController } from 'spark-alm-controller/src/ForeignController.so
 import { IExecutor }         from 'spark-gov-relay/src/interfaces/IExecutor.sol';
 
 interface DssAutoLineLike {
-  function setIlk(bytes32 ilk, uint256 line, uint256 gap, uint256 ttl) external;
-  function exec(bytes32 ilk) external;
+    function setIlk(bytes32 ilk, uint256 line, uint256 gap, uint256 ttl) external;
+    function exec(bytes32 ilk) external;
 }
 
 contract SparkEthereum_20241128Test is SparkEthereumTestBase {
@@ -45,23 +45,22 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
     function setUp() public {
         mainnet = getChain('mainnet').createFork(21231255);  // Nov 20, 2024
         base    = getChain('base').createFork(22711830);     // Nov 20, 2024
-
         mainnet.selectFork();
         baseBridge = OptimismBridgeTesting.createNativeBridge(mainnet, base);
 
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
-        // TODO: replace with deployed payload
-        payload = deployPayload();
-        // TODO: remove after Sky spell executes on mainnet
-        // mock Sky approving 100M liquidity to spark
-        vm.prank(Ethereum.PAUSE_PROXY);
-        DssAutoLineLike(AUTO_LINE).setIlk(ALLOCATOR_ILK, 100_000_000e45, 100_000_000e45, 1 hours);
-        DssAutoLineLike(AUTO_LINE).exec(ALLOCATOR_ILK);
 
         base.selectFork();
         // TODO: replace with deployed payload
         payloadBase = deployPayloadBase();
         mainnet.selectFork();
+        // TODO: replace with deployed payload
+        payload = deployPayload();
+
+        // mock Sky approving 100M liquidity to spark, which will be executed as part of this spell
+        vm.prank(Ethereum.PAUSE_PROXY);
+        DssAutoLineLike(AUTO_LINE).setIlk(ALLOCATOR_ILK, 100_000_000e45, 100_000_000e45, 1 hours);
+        DssAutoLineLike(AUTO_LINE).exec(ALLOCATOR_ILK);
     }
 
     function testWBTCChanges() public {
@@ -192,6 +191,32 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
         IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY),
         baseALMBalanceBefore + SUSDSShares - depositAmount
       );
+    }
+
+    function testBasePayloadExecution() external {
+        base.selectFork();
+        IExecutor executor = IExecutor(Base.SPARK_EXECUTOR);
+
+        mainnet.selectFork();
+        executePayload(payload);
+
+        // params are unchanged before message passing
+        base.selectFork();
+        assertEq(executor.delay(),       100);
+        assertEq(executor.gracePeriod(), 1000);
+
+        assertEq(IExecutor(Base.SPARK_EXECUTOR).actionsSetCount(), 1);
+        OptimismBridgeTesting.relayMessagesToDestination(baseBridge, true);
+        assertEq(IExecutor(Base.SPARK_EXECUTOR).actionsSetCount(), 2);
+
+        // and before explicit execution
+        assertEq(executor.delay(),       100);
+        assertEq(executor.gracePeriod(), 1000);
+
+        skip(100 seconds);
+        IExecutor(Base.SPARK_EXECUTOR).execute(1);
+        assertEq(executor.delay(),       0);
+        assertEq(executor.gracePeriod(), 7 days);
     }
 
     function deployPayloadBase() internal returns (address) {
