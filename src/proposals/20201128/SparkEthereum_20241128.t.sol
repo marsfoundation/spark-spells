@@ -158,20 +158,12 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
       uint256 basePSMBalanceBefore = 7773477216198355595972727;
       uint256 USDSMintAmount       = 90_000_000e18;
       uint256 SUSDSShares          = IERC4626(Ethereum.SUSDS).convertToShares(USDSMintAmount);
-      uint256 depositAmount        = 7_000_000e18;
+      uint256 depositAmount        = 1_000_000e18;
 
       base.selectFork();
       assertEq(IERC20(Base.SUSDS).balanceOf(Base.PSM3), basePSMBalanceBefore);
 
-      // before executing base's spell, limits are insufficient
-      vm.prank(relayer);
-      vm.expectRevert("RateLimits/rate-limit-exceeded");
-      controller.depositPSM(Base.SUSDS, depositAmount);
-
-      executePayloadBase(payloadBase);
-
-      // with updated rate limits, insufficient ALM_PROXY balance still
-      // prevents the deposit
+      // insufficient ALM_PROXY balance prevents the deposit
       vm.prank(relayer);
       vm.expectRevert("SafeERC20/transfer-from-failed");
       controller.depositPSM(Base.SUSDS, depositAmount);

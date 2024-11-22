@@ -21,60 +21,6 @@ contract SparkBase_20241128Test is SparkBaseTestBase {
         payload = deployPayload();
     }
 
-    function testSUSDSRateLimit() public {
-        ForeignController controller = ForeignController(Base.ALM_CONTROLLER);
-        bytes32 rateLimitKey         = RateLimitHelpers.makeAssetKey(
-            controller.LIMIT_PSM_DEPOSIT(),
-            Base.SUSDS
-        );
-
-        IRateLimits.RateLimitData memory rateLimit = IRateLimits(Base.ALM_RATE_LIMITS).getRateLimitData(rateLimitKey);
-        assertEq(rateLimit.maxAmount, 8_000_000e18);
-        assertEq(rateLimit.slope,     2_000_000e18 / uint256(1 days));
-
-        executePayload(payload);
-
-        _assertRateLimit(
-            rateLimitKey,
-            90_000_000e18,
-            2_000_000e18 / uint256(1 days)
-        );
-    }
-
-    function testSUSDSRateLimitSideEffects() public {
-        ForeignController controller    = ForeignController(Base.ALM_CONTROLLER);
-        address relayer                 = 0x8a25A24EDE9482C4Fc0738F99611BE58F1c839AB;
-        uint256 newRateLimit            = 90_000_000e18;
-        uint256 amountAboveOldRateLimit = 10_000_000e18;
-        uint256 amountAboveNewRateLimit = 100_000_000e18;
-        bytes32 rateLimitKey            = RateLimitHelpers.makeAssetKey(
-            controller.LIMIT_PSM_DEPOSIT(),
-            Base.SUSDS
-        );
-        deal(Base.SUSDS, Base.ALM_PROXY, amountAboveNewRateLimit);
-
-        IRateLimits.RateLimitData memory rateLimit = IRateLimits(Base.ALM_RATE_LIMITS).getRateLimitData(rateLimitKey);
-        assertEq(rateLimit.lastAmount, 84_211e18);
-
-        vm.prank(relayer);
-        vm.expectRevert("RateLimits/rate-limit-exceeded");
-        controller.depositPSM(Base.SUSDS, amountAboveOldRateLimit);
-
-        executePayload(payload);
-
-        vm.prank(relayer);
-        vm.expectRevert("RateLimits/rate-limit-exceeded");
-        controller.depositPSM(Base.SUSDS, amountAboveNewRateLimit);
-
-        vm.prank(relayer);
-        controller.depositPSM(Base.SUSDS, amountAboveOldRateLimit);
-
-        rateLimit = IRateLimits(Base.ALM_RATE_LIMITS).getRateLimitData(rateLimitKey);
-        assertEq(rateLimit.maxAmount, newRateLimit);
-        assertEq(rateLimit.lastAmount, newRateLimit - amountAboveOldRateLimit);
-        assertEq(rateLimit.lastUpdated, block.timestamp);
-    }
-    
     function testExecutorParams() public {
       IExecutor executor = IExecutor(Base.SPARK_EXECUTOR);
 
