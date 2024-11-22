@@ -30,9 +30,15 @@ interface ITokenBridge {
 /**
  * @title  Nov 28, 2024 Spark Ethereum Proposal
  * @notice Sparklend: update WBTC and cbBTC parameters
+           Spark ALM: Provision 90M worth of SUSDS to the Base ALM Proxy
  *         Morpho: onboard PT-USDe-27Mar2025 and increase PT-sUSDe-27Mar2025 cap
  * @author Wonderland
  * Forum:  https://forum.sky.money/t/28-nov-2024-proposed-changes-to-spark-for-upcoming-spell/25543/2
+ *         https://forum.sky.money/t/28-nov-2024-proposed-changes-to-spark-for-upcoming-spell-amendments/25575
+ * Vote:   https://vote.makerdao.com/polling/QmSxJJ6Z (WBTC changes)
+ *         https://vote.makerdao.com/polling/QmaxFZfF (cbBTC changes)
+ *         https://vote.makerdao.com/polling/QmWUkstV (Morpho listing)
+ *         TODO: polling url (provision liquidity to Base ALM proxy)
  */
 contract SparkEthereum_20241128 is SparkPayloadEthereum {
 
