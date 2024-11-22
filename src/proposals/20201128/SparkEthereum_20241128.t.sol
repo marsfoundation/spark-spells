@@ -33,6 +33,8 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
     address internal constant AUTO_LINE     = 0xC7Bdd1F2B16447dcf3dE045C4a039A60EC2f0ba3;
     bytes32 internal constant ALLOCATOR_ILK = "ALLOCATOR-SPARK-A";
 
+    uint256 internal constant USDS_MINT_AMOUNT = 90_000_000e18;
+
     Domain mainnet;
     Domain base;
     Bridge baseBridge;
@@ -132,8 +134,7 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
 
     function testBridging() external {
       uint256 baseBalanceBefore = 123496652107156694;
-      uint256 USDSMintAmount    = 90_000_000e18;
-      uint256 SUSDSShares       = IERC4626(Ethereum.SUSDS).convertToShares(USDSMintAmount);
+      uint256 SUSDSShares       = IERC4626(Ethereum.SUSDS).convertToShares(USDS_MINT_AMOUNT);
 
       base.selectFork();
       assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), baseBalanceBefore);
@@ -143,7 +144,6 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
 
       base.selectFork();
       assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), baseBalanceBefore);
-      mainnet.selectFork();
 
       OptimismBridgeTesting.relayMessagesToDestination(baseBridge, true);
 
@@ -156,8 +156,7 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
 
       uint256 baseALMBalanceBefore = 123496652107156694;
       uint256 basePSMBalanceBefore = 7773477216198355595972727;
-      uint256 USDSMintAmount       = 90_000_000e18;
-      uint256 SUSDSShares          = IERC4626(Ethereum.SUSDS).convertToShares(USDSMintAmount);
+      uint256 SUSDSShares          = IERC4626(Ethereum.SUSDS).convertToShares(USDS_MINT_AMOUNT);
       uint256 depositAmount        = 1_000_000e18;
 
       base.selectFork();
