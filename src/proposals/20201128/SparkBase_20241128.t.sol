@@ -10,7 +10,6 @@ import { IRateLimits }       from 'spark-alm-controller/src/interfaces/IRateLimi
 
 import { IExecutor } from 'spark-gov-relay/src/interfaces/IExecutor.sol';
 
-
 contract SparkBase_20241128Test is SparkBaseTestBase {
 
     constructor() {

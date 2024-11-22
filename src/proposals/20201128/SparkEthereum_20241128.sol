@@ -1,14 +1,30 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.25;
 
-import { IERC20 } from 'forge-std/interfaces/IERC20.sol';
+import { IERC20 }   from 'forge-std/interfaces/IERC20.sol';
+import { IERC4626 } from 'forge-std/interfaces/IERC4626.sol';
 
 import { Ethereum, SparkPayloadEthereum, IEngine, EngineFlags } from 'src/SparkPayloadEthereum.sol';
+import { Base }                                                 from 'spark-address-registry/Base.sol';
 
 import { IMetaMorpho, MarketParams } from 'lib/metamorpho/src/interfaces/IMetaMorpho.sol';
 
+import { AllocatorBuffer } from 'dss-allocator/src/AllocatorBuffer.sol';
+import { AllocatorVault }  from 'dss-allocator/src/AllocatorVault.sol';
+
 interface MorphoLike {
     function createMarket(MarketParams memory marketParams) external;
+}
+
+interface ITokenBridge {
+    function bridgeERC20To(
+        address _localToken,
+        address _remoteToken,
+        address _to,
+        uint256 _amount,
+        uint32 _minGasLimit,
+        bytes calldata _extraData
+    ) external;
 }
 
 /**
@@ -24,6 +40,7 @@ contract SparkEthereum_20241128 is SparkPayloadEthereum {
     address internal constant PT_SUSDE_27MAR2025      = 0xE00bd3Df25fb187d6ABBB620b3dfd19839947b81;
     address internal constant PT_USDE_27MAR2025       = 0x8A47b431A7D947c6a3ED6E42d501803615a97EAa;
     address internal constant MORPHO                  = 0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb;
+    uint256 internal constant USDS_MINT_AMOUNT        = 90_000_000e18;
 
     function collateralsUpdates() public pure override returns (IEngine.CollateralUpdate[] memory) {
         IEngine.CollateralUpdate[] memory updates = new IEngine.CollateralUpdate[](2);
@@ -81,5 +98,18 @@ contract SparkEthereum_20241128 is SparkPayloadEthereum {
             USDeMarket,
             100_000_000e18
         );
+
+        // mint 90M USDS
+        AllocatorVault(Ethereum.ALLOCATOR_VAULT).draw(USDS_MINT_AMOUNT);
+        AllocatorBuffer(Ethereum.ALLOCATOR_BUFFER).approve(Ethereum.USDS, address(this), USDS_MINT_AMOUNT);
+        IERC20(Ethereum.USDS).transferFrom(Ethereum.ALLOCATOR_BUFFER, address(this), USDS_MINT_AMOUNT);
+
+        // convert them all into SUSDS
+        IERC20(Ethereum.USDS).approve(Ethereum.SUSDS, USDS_MINT_AMOUNT);
+        uint256 susdsShares = IERC4626(Ethereum.SUSDS).deposit(USDS_MINT_AMOUNT, address(this));
+
+        // bridge them to Base
+        IERC20(Ethereum.SUSDS).approve(Ethereum.BASE_TOKEN_BRIDGE, susdsShares);
+        ITokenBridge(Ethereum.BASE_TOKEN_BRIDGE).bridgeERC20To(Ethereum.SUSDS, Base.SUSDS, Base.ALM_PROXY, susdsShares, 1_000_000, "");
     }
 }
