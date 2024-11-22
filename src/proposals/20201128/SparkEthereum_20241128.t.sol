@@ -49,9 +49,13 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
         mainnet = getChain('mainnet').createFork(21231255);  // Nov 20, 2024
         base    = getChain('base').createFork(22711830);     // Nov 20, 2024
         mainnet.selectFork();
+        loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
         baseBridge = OptimismBridgeTesting.createNativeBridge(mainnet, base);
 
-        loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
+        // mock Sky approving 100M liquidity to spark, which will be executed as part of this spell
+        vm.prank(Ethereum.PAUSE_PROXY);
+        DssAutoLineLike(AUTO_LINE).setIlk(ALLOCATOR_ILK, 100_000_000e45, 100_000_000e45, 24 hours);
+        DssAutoLineLike(AUTO_LINE).exec(ALLOCATOR_ILK);
 
         base.selectFork();
         // TODO: replace with deployed payload
@@ -59,11 +63,6 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
         mainnet.selectFork();
         // TODO: replace with deployed payload
         payload = deployPayload();
-
-        // mock Sky approving 100M liquidity to spark, which will be executed as part of this spell
-        vm.prank(Ethereum.PAUSE_PROXY);
-        DssAutoLineLike(AUTO_LINE).setIlk(ALLOCATOR_ILK, 100_000_000e45, 100_000_000e45, 24 hours);
-        DssAutoLineLike(AUTO_LINE).exec(ALLOCATOR_ILK);
     }
 
     function testWBTCChanges() public {
