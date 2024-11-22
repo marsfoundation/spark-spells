@@ -25,9 +25,10 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
     using DomainHelpers         for StdChains.Chain;
     using DomainHelpers         for Domain;
 
-    address internal constant PT_27MAR2025_PRICE_FEED = 0x38d130cEe60CDa080A3b3aC94C79c34B6Fc919A7;
-    address internal constant PT_SUSDE_27MAR2025      = 0xE00bd3Df25fb187d6ABBB620b3dfd19839947b81;
-    address internal constant PT_USDE_27MAR2025       = 0x8A47b431A7D947c6a3ED6E42d501803615a97EAa;
+    address internal constant PT_SUSDE_27MAR2025_PRICE_FEED = 0x38d130cEe60CDa080A3b3aC94C79c34B6Fc919A7;
+    address internal constant PT_USDE_27MAR2025_PRICE_FEED  = 0xA8ccE51046d760291f77eC1EB98147A75730Dcd5;
+    address internal constant PT_SUSDE_27MAR2025            = 0xE00bd3Df25fb187d6ABBB620b3dfd19839947b81;
+    address internal constant PT_USDE_27MAR2025             = 0x8A47b431A7D947c6a3ED6E42d501803615a97EAa;
 
     address internal constant AUTO_LINE     = 0xC7Bdd1F2B16447dcf3dE045C4a039A60EC2f0ba3;
     bytes32 internal constant ALLOCATOR_ILK = "ALLOCATOR-SPARK-A";
@@ -59,7 +60,7 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
 
         // mock Sky approving 100M liquidity to spark, which will be executed as part of this spell
         vm.prank(Ethereum.PAUSE_PROXY);
-        DssAutoLineLike(AUTO_LINE).setIlk(ALLOCATOR_ILK, 100_000_000e45, 100_000_000e45, 1 hours);
+        DssAutoLineLike(AUTO_LINE).setIlk(ALLOCATOR_ILK, 100_000_000e45, 100_000_000e45, 24 hours);
         DssAutoLineLike(AUTO_LINE).exec(ALLOCATOR_ILK);
     }
 
@@ -97,7 +98,7 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
         MarketParams memory sUSDeVault =  MarketParams({
             loanToken:       Ethereum.DAI,
             collateralToken: PT_SUSDE_27MAR2025,
-            oracle:          PT_27MAR2025_PRICE_FEED,
+            oracle:          PT_SUSDE_27MAR2025_PRICE_FEED,
             irm:             Ethereum.MORPHO_DEFAULT_IRM,
             lltv:            0.915e18
         });
@@ -115,7 +116,7 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
         MarketParams memory USDeVault =  MarketParams({
             loanToken:       Ethereum.DAI,
             collateralToken: PT_USDE_27MAR2025,
-            oracle:          PT_27MAR2025_PRICE_FEED,
+            oracle:          PT_USDE_27MAR2025_PRICE_FEED,
             irm:             Ethereum.MORPHO_DEFAULT_IRM,
             lltv:            0.915e18
         });
