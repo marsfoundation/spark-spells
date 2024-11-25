@@ -220,6 +220,11 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
         assertEq(executor.gracePeriod(), 7 days);
     }
 
+    function deployPayloadBase() internal returns (address) {
+        string memory fullName = string(abi.encodePacked('SparkBase_', id));
+        return deployCode(string(abi.encodePacked(fullName, '.sol:', fullName)));
+    }
+
     function executePayloadBase(address payloadAddress) internal {
         require(Address.isContract(payloadAddress), "PAYLOAD IS NOT A CONTRACT");
         vm.prank(Base.SPARK_EXECUTOR);
