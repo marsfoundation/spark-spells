@@ -105,7 +105,9 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
         });
 
         _assertMorphoCap(sUSDeVault, 200_000_000e18);
+        assertEq(IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).timelock(), 1 days);
         executePayload(payload);
+        assertEq(IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).timelock(), 1 days);
         _assertMorphoCap(sUSDeVault, 200_000_000e18, 400_000_000e18);
 
         skip(1 days);
@@ -123,7 +125,9 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
         });
 
         _assertMorphoCap(USDeVault, 0);
+        assertEq(IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).timelock(), 1 days);
         executePayload(payload);
+        assertEq(IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).timelock(), 1 days);
         _assertMorphoCap(USDeVault, 0, 100_000_000e18);
 
         skip(1 days);

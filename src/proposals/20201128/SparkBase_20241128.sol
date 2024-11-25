@@ -4,9 +4,6 @@ pragma solidity ^0.8.25;
 import { SparkPayloadBase } from 'src/SparkPayloadBase.sol';
 import { Base }             from 'spark-address-registry/Base.sol';
 
-import { RateLimitHelpers } from 'spark-alm-controller/src/RateLimitHelpers.sol';
-import { IRateLimits }      from 'spark-alm-controller/src/interfaces/IRateLimits.sol';
-
 import { IExecutor } from 'spark-gov-relay/src/interfaces/IExecutor.sol';
 
 /**

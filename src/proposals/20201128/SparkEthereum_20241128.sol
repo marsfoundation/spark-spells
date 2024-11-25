@@ -92,16 +92,15 @@ contract SparkEthereum_20241128 is SparkPayloadEthereum {
             400_000_000e18
         );
 
-        MarketParams memory USDeMarket = MarketParams({
-            loanToken:       Ethereum.DAI,
-            collateralToken: PT_USDE_27MAR2025,
-            oracle:          PT_USDE_27MAR2025_PRICE_FEED,
-            irm:             Ethereum.MORPHO_DEFAULT_IRM,
-            lltv:            0.915e18
-        });
         // set cap for new market
         IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).submitCap(
-            USDeMarket,
+            MarketParams({
+                loanToken:       Ethereum.DAI,
+                collateralToken: PT_USDE_27MAR2025,
+                oracle:          PT_USDE_27MAR2025_PRICE_FEED,
+                irm:             Ethereum.MORPHO_DEFAULT_IRM,
+                lltv:            0.915e18
+            }),
             100_000_000e18
         );
 
