@@ -36,7 +36,7 @@ interface ITokenBridge {
  * Vote:   https://vote.makerdao.com/polling/QmSxJJ6Z (WBTC changes)
  *         https://vote.makerdao.com/polling/QmaxFZfF (cbBTC changes)
  *         https://vote.makerdao.com/polling/QmWUkstV (Morpho listing)
- *         TODO: polling url (provision liquidity to Base ALM proxy)
+ *         https://vote.makerdao.com/polling/QmcNd4mH (Provision liquidity to Base ALM Proxy)
  */
 contract SparkEthereum_20241128 is SparkPayloadEthereum {
 

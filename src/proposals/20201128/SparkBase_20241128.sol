@@ -11,7 +11,7 @@ import { IExecutor } from 'spark-gov-relay/src/interfaces/IExecutor.sol';
  * @notice Update misconfigured Base executor parameters
  * @author Wonderland
  * Forum:  https://forum.sky.money/t/28-nov-2024-proposed-changes-to-spark-for-upcoming-spell-amendments/25575
- * Vote:   TODO: polling url (update Base Executor params)
+ * Vote:   https://vote.makerdao.com/polling/QmQ2Umfm (update Base Executor params)
  */
 contract SparkBase_20241128 is SparkPayloadBase {
     function execute() external {
