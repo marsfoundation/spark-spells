@@ -46,8 +46,8 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
     }
 
     function setUp() public {
-        mainnet = getChain('mainnet').createFork(21266194);  // Nov 25, 2024
-        base    = getChain('base').createFork(22879762);     // Nov 25, 2024
+        mainnet = getChain('mainnet').createFork(21266920);  // Nov 25, 2024
+        base    = getChain('base').createFork(22884550);     // Nov 25, 2024
         mainnet.selectFork();
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
         baseBridge = OptimismBridgeTesting.createNativeBridge(mainnet, base);
@@ -60,8 +60,7 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
         base.selectFork();
         payloadBase = 0x7C4b5f3Aeb694db68682D6CE5521702170e61E45;
         mainnet.selectFork();
-        // TODO: replace with deployed payload
-        payload = deployPayload();
+        payload = 0x6c87D984689CeD0bB367A58722aC74013F82267d;
     }
 
     function testWBTCChanges() public {
@@ -157,7 +156,7 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
       address relayer              = 0x8a25A24EDE9482C4Fc0738F99611BE58F1c839AB;
 
       uint256 baseALMBalanceBefore = 123496652107156694;
-      uint256 basePSMBalanceBefore = 7561354775731991391227534;
+      uint256 basePSMBalanceBefore = 7561335102296991391227534;
       uint256 SUSDSShares          = IERC4626(Ethereum.SUSDS).convertToShares(USDS_MINT_AMOUNT);
       uint256 depositAmount        = 1_000_000e18;
 
