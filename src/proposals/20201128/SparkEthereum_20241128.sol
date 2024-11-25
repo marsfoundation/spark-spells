@@ -46,9 +46,7 @@ contract SparkEthereum_20241128 is SparkPayloadEthereum {
     address internal constant PT_USDE_27MAR2025             = 0x8A47b431A7D947c6a3ED6E42d501803615a97EAa;
 
     uint256 internal constant USDS_MINT_AMOUNT        = 90_000_000e18;
-    // TODO: replace by actual address when it is deployed on Base. This is
-    // just wherever the tests happen to CREATE1 the contract at
-    address internal constant BASE_PAYLOAD            = 0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f;
+    address internal constant BASE_PAYLOAD            = 0x7C4b5f3Aeb694db68682D6CE5521702170e61E45;
 
     function collateralsUpdates() public pure override returns (IEngine.CollateralUpdate[] memory) {
         IEngine.CollateralUpdate[] memory updates = new IEngine.CollateralUpdate[](2);

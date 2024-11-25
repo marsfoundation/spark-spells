@@ -46,8 +46,8 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
     }
 
     function setUp() public {
-        mainnet = getChain('mainnet').createFork(21231255);  // Nov 20, 2024
-        base    = getChain('base').createFork(22711830);     // Nov 20, 2024
+        mainnet = getChain('mainnet').createFork(21266194);  // Nov 25, 2024
+        base    = getChain('base').createFork(22879762);     // Nov 25, 2024
         mainnet.selectFork();
         loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
         baseBridge = OptimismBridgeTesting.createNativeBridge(mainnet, base);
@@ -58,8 +58,7 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
         DssAutoLineLike(AUTO_LINE).exec(ALLOCATOR_ILK);
 
         base.selectFork();
-        // TODO: replace with deployed payload
-        payloadBase = deployPayloadBase();
+        payloadBase = 0x7C4b5f3Aeb694db68682D6CE5521702170e61E45;
         mainnet.selectFork();
         // TODO: replace with deployed payload
         payload = deployPayload();
@@ -158,7 +157,7 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
       address relayer              = 0x8a25A24EDE9482C4Fc0738F99611BE58F1c839AB;
 
       uint256 baseALMBalanceBefore = 123496652107156694;
-      uint256 basePSMBalanceBefore = 7773477216198355595972727;
+      uint256 basePSMBalanceBefore = 7561354775731991391227534;
       uint256 SUSDSShares          = IERC4626(Ethereum.SUSDS).convertToShares(USDS_MINT_AMOUNT);
       uint256 depositAmount        = 1_000_000e18;
 
@@ -220,11 +219,6 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
         IExecutor(Base.SPARK_EXECUTOR).execute(1);
         assertEq(executor.delay(),       0);
         assertEq(executor.gracePeriod(), 7 days);
-    }
-
-    function deployPayloadBase() internal returns (address) {
-        string memory fullName = string(abi.encodePacked('SparkBase_', id));
-        return deployCode(string(abi.encodePacked(fullName, '.sol:', fullName)));
     }
 
     function executePayloadBase(address payloadAddress) internal {
