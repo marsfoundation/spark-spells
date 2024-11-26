@@ -135,64 +135,64 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
     }
 
     function testBridging() external {
-      uint256 baseBalanceBefore = 123496652107156694;
-      uint256 SUSDSShares       = IERC4626(Ethereum.SUSDS).convertToShares(USDS_MINT_AMOUNT);
+        uint256 baseBalanceBefore = 123496652107156694;
+        uint256 SUSDSShares       = IERC4626(Ethereum.SUSDS).convertToShares(USDS_MINT_AMOUNT);
 
-      base.selectFork();
-      assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), baseBalanceBefore);
+        base.selectFork();
+        assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), baseBalanceBefore);
 
-      mainnet.selectFork();
-      executePayload(payload);
+        mainnet.selectFork();
+        executePayload(payload);
 
-      base.selectFork();
-      assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), baseBalanceBefore);
+        base.selectFork();
+        assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), baseBalanceBefore);
 
-      OptimismBridgeTesting.relayMessagesToDestination(baseBridge, true);
+        OptimismBridgeTesting.relayMessagesToDestination(baseBridge, true);
 
-      assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), baseBalanceBefore + SUSDSShares);
+        assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), baseBalanceBefore + SUSDSShares);
     }
 
     function testE2ELiquidityProvisioningToBase() external {
-      ForeignController controller = ForeignController(Base.ALM_CONTROLLER);
-      address relayer              = 0x8a25A24EDE9482C4Fc0738F99611BE58F1c839AB;
+        ForeignController controller = ForeignController(Base.ALM_CONTROLLER);
+        address relayer              = 0x8a25A24EDE9482C4Fc0738F99611BE58F1c839AB;
 
-      uint256 baseALMBalanceBefore = 123496652107156694;
-      uint256 basePSMBalanceBefore = 7561335102296991391227534;
-      uint256 SUSDSShares          = IERC4626(Ethereum.SUSDS).convertToShares(USDS_MINT_AMOUNT);
-      uint256 depositAmount        = 1_000_000e18;
+        uint256 baseALMBalanceBefore = 123496652107156694;
+        uint256 basePSMBalanceBefore = 7561335102296991391227534;
+        uint256 SUSDSShares          = IERC4626(Ethereum.SUSDS).convertToShares(USDS_MINT_AMOUNT);
+        uint256 depositAmount        = 1_000_000e18;
 
-      base.selectFork();
-      assertEq(IERC20(Base.SUSDS).balanceOf(Base.PSM3), basePSMBalanceBefore);
+        base.selectFork();
+        assertEq(IERC20(Base.SUSDS).balanceOf(Base.PSM3), basePSMBalanceBefore);
 
-      // insufficient ALM_PROXY balance prevents the deposit
-      vm.prank(relayer);
-      vm.expectRevert("SafeERC20/transfer-from-failed");
-      controller.depositPSM(Base.SUSDS, depositAmount);
+        // insufficient ALM_PROXY balance prevents the deposit
+        vm.prank(relayer);
+        vm.expectRevert("SafeERC20/transfer-from-failed");
+        controller.depositPSM(Base.SUSDS, depositAmount);
 
-      mainnet.selectFork();
-      executePayload(payload);
+        mainnet.selectFork();
+        executePayload(payload);
 
-      // insufficient funds error persists as long as funds are not fully bridged
-      base.selectFork();
-      vm.prank(relayer);
-      vm.expectRevert("SafeERC20/transfer-from-failed");
-      controller.depositPSM(Base.SUSDS, depositAmount);
+        // insufficient funds error persists as long as funds are not fully bridged
+        base.selectFork();
+        vm.prank(relayer);
+        vm.expectRevert("SafeERC20/transfer-from-failed");
+        controller.depositPSM(Base.SUSDS, depositAmount);
 
-      mainnet.selectFork();
-      OptimismBridgeTesting.relayMessagesToDestination(baseBridge, true);
-      assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), baseALMBalanceBefore + SUSDSShares);
+        mainnet.selectFork();
+        OptimismBridgeTesting.relayMessagesToDestination(baseBridge, true);
+        assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), baseALMBalanceBefore + SUSDSShares);
 
-      // after funds are bridged, liquidity can be provisioned to the PSM
-      vm.prank(relayer);
-      controller.depositPSM(Base.SUSDS, depositAmount);
-      assertEq(
-        IERC20(Base.SUSDS).balanceOf(Base.PSM3),
-        basePSMBalanceBefore + depositAmount
-      );
-      assertEq(
-        IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY),
-        baseALMBalanceBefore + SUSDSShares - depositAmount
-      );
+        // after funds are bridged, liquidity can be provisioned to the PSM
+        vm.prank(relayer);
+        controller.depositPSM(Base.SUSDS, depositAmount);
+        assertEq(
+          IERC20(Base.SUSDS).balanceOf(Base.PSM3),
+          basePSMBalanceBefore + depositAmount
+        );
+        assertEq(
+          IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY),
+          baseALMBalanceBefore + SUSDSShares - depositAmount
+        );
     }
 
     function testBasePayloadExecution() external {
