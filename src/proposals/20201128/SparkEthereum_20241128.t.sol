@@ -43,7 +43,6 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
 
     constructor() {
         id         = '20241128';
-        disableE2E = true;
     }
 
     function setUp() public {
