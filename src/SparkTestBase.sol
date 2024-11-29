@@ -40,87 +40,16 @@ interface IExecutable {
     function execute() external;
 }
 
-abstract contract SparkTestBase is ProtocolV3TestBase {
-
-    using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
-
+abstract contract SparkTestBase is Test {
     address internal executor;
     address internal payload;
 
     string internal domain;
     string internal id;
 
-    bool internal disableExportDiff;
-    bool internal disableE2E;
-
-    IACLManager                    internal aclManager;
-    IPool                          internal pool;
-    IPoolAddressesProvider         internal poolAddressesProvider;
-    IPoolAddressesProviderRegistry internal poolAddressesProviderRegistry;
-    IPoolConfigurator              internal poolConfigurator;
-    IAaveOracle                    internal priceOracle;
-
-    function loadPoolContext(address poolProvider) internal {
-        poolAddressesProvider = IPoolAddressesProvider(poolProvider);
-        pool                  = IPool(poolAddressesProvider.getPool());
-        poolConfigurator      = IPoolConfigurator(poolAddressesProvider.getPoolConfigurator());
-        aclManager            = IACLManager(poolAddressesProvider.getACLManager());
-        priceOracle           = IAaveOracle(poolAddressesProvider.getPriceOracle());
-    }
-
     function deployPayload() internal returns (address) {
         string memory fullName = string(abi.encodePacked('Spark', domain, '_', id));
         return deployCode(string(abi.encodePacked(fullName, '.sol:', fullName)));
-    }
-
-    function testSpellExecutionDiff() public {
-        address[] memory poolProviders = poolAddressesProviderRegistry.getAddressesProvidersList();
-        string memory prefix = string(abi.encodePacked(id, '-', domain));
-
-        for (uint256 i = 0; i < poolProviders.length; i++) {
-            loadPoolContext(poolProviders[i]);
-
-            createConfigurationSnapshot(
-                string(abi.encodePacked(prefix, '-', vm.toString(address(pool)), '-pre')),
-                pool
-            );
-        }
-
-        executePayload(payload);
-
-        for (uint256 i = 0; i < poolProviders.length; i++) {
-            loadPoolContext(poolProviders[i]);
-
-            createConfigurationSnapshot(
-                string(abi.encodePacked(prefix, '-', vm.toString(address(pool)), '-post')),
-                pool
-            );
-
-            if (!disableExportDiff) {
-                diffReports(
-                    string(abi.encodePacked(prefix, '-', vm.toString(address(pool)), '-pre')),
-                    string(abi.encodePacked(prefix, '-', vm.toString(address(pool)), '-post'))
-                );
-            }
-        }
-    }
-
-    function testE2E() public {
-        if (disableE2E) return;
-
-        address[] memory poolProviders = poolAddressesProviderRegistry.getAddressesProvidersList();
-
-        for (uint256 i = 0; i < poolProviders.length; i++) {
-            loadPoolContext(poolProviders[i]);
-            e2eTest(pool);
-        }
-
-        executePayload(payload);
-
-        for (uint256 i = 0; i < poolProviders.length; i++) {
-            loadPoolContext(poolProviders[i]);
-            e2eTest(pool);
-        }
     }
 
     function testPayloadBytecodeMatches() public {
@@ -170,6 +99,80 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
                 length := add(length, 2)  // The two bytes used to specify the length are not counted in the length
             }
             // Return zero if the bytecode is shorter than two bytes.
+        }
+    }
+
+    function executePayload(address payloadAddress) internal virtual;
+}
+
+abstract contract SparklendTestBase is ProtocolV3TestBase, SparkTestBase {
+    using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
+
+    bool internal disableExportDiff;
+    bool internal disableE2E;
+
+    IACLManager                    internal aclManager;
+    IPool                          internal pool;
+    IPoolAddressesProvider         internal poolAddressesProvider;
+    IPoolAddressesProviderRegistry internal poolAddressesProviderRegistry;
+    IPoolConfigurator              internal poolConfigurator;
+    IAaveOracle                    internal priceOracle;
+
+    function loadPoolContext(address poolProvider) internal {
+        poolAddressesProvider = IPoolAddressesProvider(poolProvider);
+        pool                  = IPool(poolAddressesProvider.getPool());
+        poolConfigurator      = IPoolConfigurator(poolAddressesProvider.getPoolConfigurator());
+        aclManager            = IACLManager(poolAddressesProvider.getACLManager());
+        priceOracle           = IAaveOracle(poolAddressesProvider.getPriceOracle());
+    }
+
+    function testSpellExecutionDiff() public {
+        address[] memory poolProviders = poolAddressesProviderRegistry.getAddressesProvidersList();
+        string memory prefix = string(abi.encodePacked(id, '-', domain));
+
+        for (uint256 i = 0; i < poolProviders.length; i++) {
+            loadPoolContext(poolProviders[i]);
+
+            createConfigurationSnapshot(
+                string(abi.encodePacked(prefix, '-', vm.toString(address(pool)), '-pre')),
+                pool
+            );
+        }
+
+        executePayload(payload);
+
+        for (uint256 i = 0; i < poolProviders.length; i++) {
+            loadPoolContext(poolProviders[i]);
+
+            createConfigurationSnapshot(
+                string(abi.encodePacked(prefix, '-', vm.toString(address(pool)), '-post')),
+                pool
+            );
+
+            if (!disableExportDiff) {
+                diffReports(
+                    string(abi.encodePacked(prefix, '-', vm.toString(address(pool)), '-pre')),
+                    string(abi.encodePacked(prefix, '-', vm.toString(address(pool)), '-post'))
+                );
+            }
+        }
+    }
+
+    function testE2E() public {
+        if (disableE2E) return;
+
+        address[] memory poolProviders = poolAddressesProviderRegistry.getAddressesProvidersList();
+
+        for (uint256 i = 0; i < poolProviders.length; i++) {
+            loadPoolContext(poolProviders[i]);
+            e2eTest(pool);
+        }
+
+        executePayload(payload);
+
+        for (uint256 i = 0; i < poolProviders.length; i++) {
+            loadPoolContext(poolProviders[i]);
+            e2eTest(pool);
         }
     }
 
@@ -228,13 +231,9 @@ abstract contract SparkTestBase is ProtocolV3TestBase {
         vm.prank(admin);
         return InitializableAdminUpgradeabilityProxy(payable(proxy)).implementation();
     }
-
-    function executePayload(address payloadAddress) internal virtual;
-
 }
 
-abstract contract SparkEthereumTestBase is SparkTestBase {
-
+abstract contract SparkEthereumTestBase is SparklendTestBase {
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
     using WadRayMath for uint256;
 
@@ -509,10 +508,9 @@ abstract contract SparkEthereumTestBase is SparkTestBase {
         assertEq(rateLimit.lastAmount,  maxAmount);
         assertEq(rateLimit.lastUpdated, block.timestamp);
     }
-
 }
 
-abstract contract SparkGnosisTestBase is SparkTestBase {
+abstract contract SparkGnosisTestBase is SparklendTestBase {
 
     constructor() {
         executor = Gnosis.AMB_EXECUTOR;
@@ -532,26 +530,14 @@ abstract contract SparkGnosisTestBase is SparkTestBase {
 
 }
 
-// TODO refactor to better deal with a chain where SparkLend doesn't exist
-abstract contract SparkBaseTestBase is Test {
-
-    address internal executor;
-    address internal payload;
-
-    string internal domain;
-    string internal id;
+abstract contract SparkBaseTestBase is SparkTestBase {
 
     constructor() {
         executor = Base.SPARK_EXECUTOR;
         domain   = 'Base';
     }
 
-    function deployPayload() internal returns (address) {
-        string memory fullName = string(abi.encodePacked('Spark', domain, '_', id));
-        return deployCode(string(abi.encodePacked(fullName, '.sol:', fullName)));
-    }
-
-    function executePayload(address payloadAddress) internal {
+    function executePayload(address payloadAddress) internal override {
         require(Address.isContract(payloadAddress), "PAYLOAD IS NOT A CONTRACT");
         vm.prank(executor);
         IExecutor(executor).executeDelegateCall(
