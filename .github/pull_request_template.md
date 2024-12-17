@@ -15,12 +15,6 @@
     - [ ] param 2
 - [ ] some other change
 
-### Gnosis
-- [ ] some change
-    - [ ] param 1
-    - [ ] param 2
-- [ ] some other change
-
 ### Base
 - [ ] some change
     - [ ] param 1
