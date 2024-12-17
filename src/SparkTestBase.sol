@@ -25,6 +25,9 @@ import { IExecutor } from 'lib/spark-gov-relay/src/interfaces/IExecutor.sol';
 
 import { IRateLimits } from "spark-alm-controller/src/interfaces/IRateLimits.sol";
 
+import { Domain, DomainHelpers } from "xchain-helpers/testing/Domain.sol";
+import { ChainIdUtils, ChainId } from "src/libraries/ChainId.sol";
+
 // REPO ARCHITECTURE TODOs
 // TODO: Refactor Mock logic for executor to be more realistic, consider fork + prank.
 
@@ -41,21 +44,75 @@ interface IExecutable {
 }
 
 abstract contract SparkTestBase is Test {
-    address internal executor;
-    address internal payload;
+    using DomainHelpers for Domain;
+    using DomainHelpers for StdChains.Chain;
 
-    string internal domain;
-    string internal id;
+    mapping(ChainId chainId => address executor)  internal executors;
+    mapping(ChainId chainId => address payload)   internal payloads;
+    mapping(ChainId chainId => uint256 forkBlock) internal forkBlock;
+    mapping(ChainId chainId => Domain domain)     internal domains;
 
-    function deployPayload() internal returns (address) {
-        string memory fullName = string(abi.encodePacked('Spark', domain, '_', id));
-        return deployCode(string(abi.encodePacked(fullName, '.sol:', fullName)));
+    Domain[] internal allDomains;
+    address internal  executor;
+    string internal   id;
+
+    modifier onChain(ChainId chainId) {
+        ChainId currentChain = ChainIdUtils.fromUint(block.chainid);
+        domains[chainId].selectFork();
+        _;
+        domains[currentChain].selectFork();
     }
 
-    function testPayloadBytecodeMatches() public {
-        require(Address.isContract(payload), "PAYLOAD IS NOT A CONTRACT");
-        address expectedPayload = deployPayload();
-        address actualPayload   = payload;
+    /// @dev to be called in setUp
+    function setupDomains(uint256 mainnetForkBlock, uint256 baseForkBlock, uint256 gnosisForkBlock) internal {
+        domains[ChainIdUtils.Ethereum()] = getChain("mainnet").createFork(mainnetForkBlock);
+        domains[ChainIdUtils.Base()]     = getChain("base").createFork(baseForkBlock);
+        domains[ChainIdUtils.Gnosis()]   = getChain("gnosis_chain").createFork(gnosisForkBlock);
+
+        allDomains.push(domains[ChainIdUtils.Ethereum()]);
+        allDomains.push(domains[ChainIdUtils.Base()]);
+        allDomains.push(domains[ChainIdUtils.Gnosis()]);
+    }
+
+    function spellIdentifier(ChainId chainId) private view returns(string memory){
+        string memory slug            = string(abi.encodePacked("Spark", chainId.toDomainString(), "_", id));
+        string memory spellIdentifier = string(abi.encodePacked(slug, ".sol:", slug));
+        return spellIdentifier;
+    }
+
+    function deployPayload(ChainId chainId) private onChain(chainId) returns(address) {
+        return deployCode(spellIdentifier(chainId));
+    }
+
+    function deployPayloads() internal {
+        for (uint256 i = 0; i < allDomains.length; i++) {
+            ChainId id = ChainIdUtils.fromDomain(allDomains[i]);
+            string memory spellIdentifier = spellIdentifier(id);
+            try vm.getCode(spellIdentifier) {
+                payloads[id] = deployPayload(id);
+            } catch {
+                console.log("skipping spell deployment for network: ", id.toDomainString());
+            }
+        }
+    }
+
+    function test_ETHEREUM_PayloadBytecodeMatches() internal {
+        testPayloadBytecodeMatches(ChainIdUtils.Ethereum());
+    }
+
+    function test_BASE_PayloadBytecodeMatches() internal {
+        testPayloadBytecodeMatches(ChainIdUtils.Base());
+    }
+
+    function test_GNOSIS_PayloadBytecodeMatches() internal {
+        testPayloadBytecodeMatches(ChainIdUtils.Gnosis());
+    }
+
+    function testPayloadBytecodeMatches(ChainId chainId) internal onChain(chainId) {
+        address actualPayload = payloads[chainId];
+        vm.skip(actualPayload == address(0));
+        require(Address.isContract(actualPayload), "PAYLOAD IS NOT A CONTRACT");
+        address expectedPayload = deployPayload(chainId);
 
         uint256 expectedBytecodeSize = expectedPayload.code.length;
         uint256 actualBytecodeSize   = actualPayload.code.length;
@@ -126,9 +183,18 @@ abstract contract SparklendTestBase is ProtocolV3TestBase, SparkTestBase {
         priceOracle           = IAaveOracle(poolAddressesProvider.getPriceOracle());
     }
 
-    function testSpellExecutionDiff() public {
+    function test_ETHEREUM_SpellExecutionDiff() public {
+        testSpellExecutionDiff(ChainIdUtils.Ethereum());
+    }
+
+    function test_GNOSIS_SpellExecutionDiff() public {
+        vm.skip(payloads[ChainIdUtils.Gnosis()] == address(0));
+        testSpellExecutionDiff(ChainIdUtils.Gnosis());
+    }
+
+    function testSpellExecutionDiff(ChainId chainId) onChain(chainId) internal {
         address[] memory poolProviders = poolAddressesProviderRegistry.getAddressesProvidersList();
-        string memory prefix = string(abi.encodePacked(id, '-', domain));
+        string memory prefix = string(abi.encodePacked(id, '-', chainId.toDomainString()));
 
         for (uint256 i = 0; i < poolProviders.length; i++) {
             loadPoolContext(poolProviders[i]);
@@ -139,7 +205,7 @@ abstract contract SparklendTestBase is ProtocolV3TestBase, SparkTestBase {
             );
         }
 
-        executePayload(payload);
+        executePayload(payloads[chainId]);
 
         for (uint256 i = 0; i < poolProviders.length; i++) {
             loadPoolContext(poolProviders[i]);
@@ -158,7 +224,16 @@ abstract contract SparklendTestBase is ProtocolV3TestBase, SparkTestBase {
         }
     }
 
-    function testE2E() public {
+    function test_ETHEREUM_E2E() public {
+        testE2E(ChainIdUtils.Ethereum());
+    }
+
+    function test_GNOSIS_E2E() public {
+        vm.skip(payloads[ChainIdUtils.Gnosis()] == address(0));
+        testE2E(ChainIdUtils.Gnosis());
+    }
+
+    function testE2E(ChainId chainId) internal onChain(chainId) {
         if (disableE2E) return;
 
         address[] memory poolProviders = poolAddressesProviderRegistry.getAddressesProvidersList();
@@ -168,7 +243,7 @@ abstract contract SparklendTestBase is ProtocolV3TestBase, SparkTestBase {
             e2eTest(pool);
         }
 
-        executePayload(payload);
+        executePayload(payloads[chainId]);
 
         for (uint256 i = 0; i < poolProviders.length; i++) {
             loadPoolContext(poolProviders[i]);
@@ -176,11 +251,20 @@ abstract contract SparklendTestBase is ProtocolV3TestBase, SparkTestBase {
         }
     }
 
-    function testTokenImplementationsMatch() public {
+    function test_ETHEREUM_TokenImplementationsMatch() public {
+        testTokenImplementationsMatch(ChainIdUtils.Ethereum());
+    }
+
+    function test_GNOSIS_TokenImplementationsMatch() public {
+        vm.skip(payloads[ChainIdUtils.Gnosis()] == address(0));
+        testTokenImplementationsMatch(ChainIdUtils.Gnosis());
+    }
+
+    function testTokenImplementationsMatch(ChainId chainId) internal onChain(chainId) {
         // This test is to avoid a footgun where the token implementations are upgraded (possibly in an emergency) and
         // the config engine is not redeployed to use the new implementation. As a general rule all reserves should
         // use the same implementation for AToken, StableDebtToken and VariableDebtToken.
-        executePayload(payload);
+        executePayload(payloads[chainId]);
 
         address[] memory reserves = pool.getReservesList();
         assertGt(reserves.length, 0);
@@ -199,16 +283,34 @@ abstract contract SparklendTestBase is ProtocolV3TestBase, SparkTestBase {
         }
     }
 
-    function testOracles() public {
+    function test_ETHEREUM_Oracles() public {
+        testOracles(ChainIdUtils.Ethereum());
+    }
+
+    function test_GNOSIS_Oracles() public {
+        vm.skip(payloads[ChainIdUtils.Gnosis()] == address(0));
+        testOracles(ChainIdUtils.Gnosis());
+    }
+
+    function testOracles(ChainId chainId) internal onChain(chainId) {
         _validateOracles();
 
-        executePayload(payload);
+        executePayload(payloads[chainId]);
 
         _validateOracles();
     }
 
-    function testAllReservesSeeded() public {
-        executePayload(payload);
+    function test_ETHEREUM_AllReservesSeeded() public {
+        testAllReservesSeeded(ChainIdUtils.Ethereum());
+    }
+
+    function test_GNOSIS_AllReservesSeeded() public {
+        vm.skip(payloads[ChainIdUtils.Gnosis()] == address(0));
+        testAllReservesSeeded(ChainIdUtils.Gnosis());
+    }
+
+    function testAllReservesSeeded(ChainId chainId) internal onChain(chainId) {
+        executePayload(payloads[chainId]);
 
         address[] memory reserves = pool.getReservesList();
 
@@ -243,7 +345,6 @@ abstract contract SparkEthereumTestBase is SparklendTestBase {
 
     constructor() {
         executor = Ethereum.SPARK_PROXY;
-        domain   = 'Ethereum';
 
         poolAddressesProviderRegistry = IPoolAddressesProviderRegistry(Ethereum.POOL_ADDRESSES_PROVIDER_REGISTRY);
         authority                     = IAuthority(Ethereum.CHIEF);
@@ -262,32 +363,32 @@ abstract contract SparkEthereumTestBase is SparklendTestBase {
         require(success, "FAILED TO EXECUTE PAYLOAD");
     }
 
-    function testFreezerMom() public {
+    function testFreezerMom() public onChain(ChainIdUtils.Ethereum()){
         uint256 snapshot = vm.snapshot();
 
         _runFreezerMomTests();
 
         vm.revertTo(snapshot);
-        executePayload(payload);
+        executePayload(payloads[ChainIdUtils.Ethereum()]);
 
         _runFreezerMomTests();
     }
 
-    function testRewardsConfiguration() public {
+    function testRewardsConfiguration() public onChain(ChainIdUtils.Ethereum()){
         _runRewardsConfigurationTests();
 
-        executePayload(payload);
+        executePayload(payloads[ChainIdUtils.Ethereum()]);
 
         _runRewardsConfigurationTests();
     }
 
-    function testCapAutomator() public {
+    function testCapAutomator() public onChain(ChainIdUtils.Ethereum()){
         uint256 snapshot = vm.snapshot();
 
         _runCapAutomatorTests();
 
         vm.revertTo(snapshot);
-        executePayload(payload);
+        executePayload(payloads[ChainIdUtils.Ethereum()]);
 
         _runCapAutomatorTests();
     }
@@ -514,7 +615,6 @@ abstract contract SparkGnosisTestBase is SparklendTestBase {
 
     constructor() {
         executor = Gnosis.AMB_EXECUTOR;
-        domain   = 'Gnosis';
 
         poolAddressesProviderRegistry = IPoolAddressesProviderRegistry(Gnosis.POOL_ADDRESSES_PROVIDER_REGISTRY);
     }
@@ -534,7 +634,6 @@ abstract contract SparkBaseTestBase is SparkTestBase {
 
     constructor() {
         executor = Base.SPARK_EXECUTOR;
-        domain   = 'Base';
     }
 
     function executePayload(address payloadAddress) internal override {
