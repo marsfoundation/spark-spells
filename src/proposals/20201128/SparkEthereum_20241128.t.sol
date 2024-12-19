@@ -65,7 +65,7 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
 
         assertEq(wbtcConfig.liquidationThreshold, 65_00);
 
-        executePayload(payloads[ChainIdUtils.Ethereum()]);
+        executePayload(ChainIdUtils.Ethereum());
 
         ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
         wbtcConfig.liquidationThreshold        = 60_00;
@@ -80,7 +80,7 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
         assertEq(cbBTCConfig.liquidationThreshold, 70_00);
         assertEq(cbBTCConfig.ltv, 65_00);
 
-        executePayload(payloads[ChainIdUtils.Ethereum()]);
+        executePayload(ChainIdUtils.Ethereum());
 
         ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
         cbBTCConfig.liquidationThreshold       = 75_00;
@@ -101,7 +101,7 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
         _assertMorphoCap(sUSDeVault, 200_000_000e18);
         assertEq(IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).timelock(), 1 days);
 
-        executePayload(payloads[ChainIdUtils.Ethereum()]);
+        executePayload(ChainIdUtils.Ethereum());
 
         assertEq(IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).timelock(), 1 days);
         _assertMorphoCap(sUSDeVault, 200_000_000e18, 400_000_000e18);
@@ -123,7 +123,7 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
         _assertMorphoCap(USDeVault, 0);
         assertEq(IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).timelock(), 1 days);
 
-        executePayload(payloads[ChainIdUtils.Ethereum()]);
+        executePayload(ChainIdUtils.Ethereum());
 
         assertEq(IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).timelock(), 1 days);
         _assertMorphoCap(USDeVault, 0, 100_000_000e18);
@@ -141,7 +141,7 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
         assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), baseBalanceBefore);
 
         domains[ChainIdUtils.Ethereum()].selectFork();
-        executePayload(payloads[ChainIdUtils.Ethereum()]);
+        executePayload(ChainIdUtils.Ethereum());
 
         domains[ChainIdUtils.Base()].selectFork();
         assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), baseBalanceBefore);
@@ -169,7 +169,7 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
         controller.depositPSM(Base.SUSDS, depositAmount);
 
         domains[ChainIdUtils.Ethereum()].selectFork();
-        executePayload(payloads[ChainIdUtils.Ethereum()]);
+        executePayload(ChainIdUtils.Ethereum());
 
         // insufficient funds error persists as long as funds are not fully bridged
         domains[ChainIdUtils.Base()].selectFork();
@@ -199,7 +199,7 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
         IExecutor executor = IExecutor(Base.SPARK_EXECUTOR);
 
         domains[ChainIdUtils.Ethereum()].selectFork();
-        executePayload(payloads[ChainIdUtils.Ethereum()]);
+        executePayload(ChainIdUtils.Ethereum());
 
         // params are unchanged before message passing
         domains[ChainIdUtils.Base()].selectFork();

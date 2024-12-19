@@ -47,13 +47,11 @@ abstract contract SparkTestBase is Test {
     using DomainHelpers for Domain;
     using DomainHelpers for StdChains.Chain;
 
-    mapping(ChainId chainId => address executor)  internal executors;
-    mapping(ChainId chainId => address payload)   internal payloads;
-    mapping(ChainId chainId => uint256 forkBlock) internal forkBlock;
-    mapping(ChainId chainId => Domain domain)     internal domains;
+    mapping(ChainId chainId => IExecutor executor) internal executors;
+    mapping(ChainId chainId => address payload)    internal payloads;
+    mapping(ChainId chainId => Domain domain)      internal domains;
 
     Domain[] internal allDomains;
-    address internal  executor;
     string internal   id;
 
     modifier onChain(ChainId chainId) {
@@ -68,6 +66,10 @@ abstract contract SparkTestBase is Test {
         domains[ChainIdUtils.Ethereum()] = getChain("mainnet").createFork(mainnetForkBlock);
         domains[ChainIdUtils.Base()]     = getChain("base").createFork(baseForkBlock);
         domains[ChainIdUtils.Gnosis()]   = getChain("gnosis_chain").createFork(gnosisForkBlock);
+
+        executors[ChainIdUtils.Ethereum()] = IExecutor(Ethereum.SPARK_PROXY);
+        executors[ChainIdUtils.Base()]     = IExecutor(Base.SPARK_EXECUTOR);
+        executors[ChainIdUtils.Gnosis()]   = IExecutor(Gnosis.AMB_EXECUTOR);
 
         allDomains.push(domains[ChainIdUtils.Ethereum()]);
         allDomains.push(domains[ChainIdUtils.Base()]);
@@ -159,7 +161,30 @@ abstract contract SparkTestBase is Test {
         }
     }
 
-    function executePayload(address payloadAddress) internal virtual;
+    function executePayload(ChainId chain) internal {
+        address payloadAddress = payloads[chain];
+        IExecutor executor = executors[chain];
+        require(Address.isContract(payloadAddress), "PAYLOAD IS NOT A CONTRACT");
+        bool success;
+        if(chain == ChainIdUtils.Ethereum()) {
+            vm.prank(Ethereum.PAUSE_PROXY);
+            (success,) = address(executor).call(abi.encodeWithSignature(
+                'exec(address,bytes)',
+                payloadAddress,
+                abi.encodeWithSignature('execute()')
+            ));
+            require(success, "FAILED TO EXECUTE PAYLOAD");
+        } else {
+            // TODO: research whether it makes sense to prank the same address
+            // that is being called or if we could do something else that is
+            // closer to production (perhaps also getting rid of this if)
+            vm.prank(address(executor));
+            executor.executeDelegateCall(
+                payloadAddress,
+                abi.encodeWithSignature('execute()')
+            );
+        }
+    }
 }
 
 abstract contract SparklendTestBase is ProtocolV3TestBase, SparkTestBase {
@@ -205,7 +230,7 @@ abstract contract SparklendTestBase is ProtocolV3TestBase, SparkTestBase {
             );
         }
 
-        executePayload(payloads[chainId]);
+        executePayload(chainId);
 
         for (uint256 i = 0; i < poolProviders.length; i++) {
             loadPoolContext(poolProviders[i]);
@@ -243,7 +268,7 @@ abstract contract SparklendTestBase is ProtocolV3TestBase, SparkTestBase {
             e2eTest(pool);
         }
 
-        executePayload(payloads[chainId]);
+        executePayload(chainId);
 
         for (uint256 i = 0; i < poolProviders.length; i++) {
             loadPoolContext(poolProviders[i]);
@@ -264,7 +289,7 @@ abstract contract SparklendTestBase is ProtocolV3TestBase, SparkTestBase {
         // This test is to avoid a footgun where the token implementations are upgraded (possibly in an emergency) and
         // the config engine is not redeployed to use the new implementation. As a general rule all reserves should
         // use the same implementation for AToken, StableDebtToken and VariableDebtToken.
-        executePayload(payloads[chainId]);
+        executePayload(chainId);
 
         address[] memory reserves = pool.getReservesList();
         assertGt(reserves.length, 0);
@@ -295,7 +320,7 @@ abstract contract SparklendTestBase is ProtocolV3TestBase, SparkTestBase {
     function testOracles(ChainId chainId) internal onChain(chainId) {
         _validateOracles();
 
-        executePayload(payloads[chainId]);
+        executePayload(chainId);
 
         _validateOracles();
     }
@@ -310,7 +335,7 @@ abstract contract SparklendTestBase is ProtocolV3TestBase, SparkTestBase {
     }
 
     function testAllReservesSeeded(ChainId chainId) internal onChain(chainId) {
-        executePayload(payloads[chainId]);
+        executePayload(chainId);
 
         address[] memory reserves = pool.getReservesList();
 
@@ -344,23 +369,10 @@ abstract contract SparkEthereumTestBase is SparklendTestBase {
     ICapAutomator        internal capAutomator;
 
     constructor() {
-        executor = Ethereum.SPARK_PROXY;
-
         poolAddressesProviderRegistry = IPoolAddressesProviderRegistry(Ethereum.POOL_ADDRESSES_PROVIDER_REGISTRY);
         authority                     = IAuthority(Ethereum.CHIEF);
         freezerMom                    = ISparkLendFreezerMom(Ethereum.FREEZER_MOM);
         capAutomator                  = ICapAutomator(Ethereum.CAP_AUTOMATOR);
-    }
-
-    function executePayload(address payloadAddress) internal override {
-        require(Address.isContract(payloadAddress), "PAYLOAD IS NOT A CONTRACT");
-        vm.prank(Ethereum.PAUSE_PROXY);
-        (bool success,) = executor.call(abi.encodeWithSignature(
-            'exec(address,bytes)',
-            payloadAddress,
-            abi.encodeWithSignature('execute()')
-        ));
-        require(success, "FAILED TO EXECUTE PAYLOAD");
     }
 
     function testFreezerMom() public onChain(ChainIdUtils.Ethereum()){
@@ -369,7 +381,7 @@ abstract contract SparkEthereumTestBase is SparklendTestBase {
         _runFreezerMomTests();
 
         vm.revertTo(snapshot);
-        executePayload(payloads[ChainIdUtils.Ethereum()]);
+        executePayload(ChainIdUtils.Ethereum());
 
         _runFreezerMomTests();
     }
@@ -377,7 +389,7 @@ abstract contract SparkEthereumTestBase is SparklendTestBase {
     function testRewardsConfiguration() public onChain(ChainIdUtils.Ethereum()){
         _runRewardsConfigurationTests();
 
-        executePayload(payloads[ChainIdUtils.Ethereum()]);
+        executePayload(ChainIdUtils.Ethereum());
 
         _runRewardsConfigurationTests();
     }
@@ -388,7 +400,7 @@ abstract contract SparkEthereumTestBase is SparklendTestBase {
         _runCapAutomatorTests();
 
         vm.revertTo(snapshot);
-        executePayload(payloads[ChainIdUtils.Ethereum()]);
+        executePayload(ChainIdUtils.Ethereum());
 
         _runCapAutomatorTests();
     }
@@ -614,36 +626,12 @@ abstract contract SparkEthereumTestBase is SparklendTestBase {
 abstract contract SparkGnosisTestBase is SparklendTestBase {
 
     constructor() {
-        executor = Gnosis.AMB_EXECUTOR;
-
         poolAddressesProviderRegistry = IPoolAddressesProviderRegistry(Gnosis.POOL_ADDRESSES_PROVIDER_REGISTRY);
-    }
-
-    function executePayload(address payloadAddress) internal override {
-        require(Address.isContract(payloadAddress), "PAYLOAD IS NOT A CONTRACT");
-        vm.prank(executor);
-        IExecutor(executor).executeDelegateCall(
-            payloadAddress,
-            abi.encodeWithSignature('execute()')
-        );
     }
 
 }
 
 abstract contract SparkBaseTestBase is SparkTestBase {
-
-    constructor() {
-        executor = Base.SPARK_EXECUTOR;
-    }
-
-    function executePayload(address payloadAddress) internal override {
-        require(Address.isContract(payloadAddress), "PAYLOAD IS NOT A CONTRACT");
-        vm.prank(executor);
-        IExecutor(executor).executeDelegateCall(
-            payloadAddress,
-            abi.encodeWithSignature('execute()')
-        );
-    }
 
     function _assertRateLimit(
         bytes32 key,
