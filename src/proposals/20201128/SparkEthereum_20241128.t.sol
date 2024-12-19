@@ -5,7 +5,7 @@ import { IERC4626 } from 'forge-std/interfaces/IERC4626.sol';
 import { IERC20 }   from 'forge-std/interfaces/IERC20.sol';
 import { Address }  from 'src/libraries/Address.sol';
 
-import { SparkEthereumTestBase, ReserveConfig, MarketParams, Ethereum, IMetaMorpho } from 'src/SparkTestBase.sol';
+import { SparkTestBase, ReserveConfig, MarketParams, Ethereum, IMetaMorpho }         from 'src/SparkTestBase.sol';
 import { Base }                                                                      from 'spark-address-registry/Base.sol';
 
 import { Bridge }                from "xchain-helpers/testing/Bridge.sol";
@@ -23,7 +23,7 @@ interface DssAutoLineLike {
     function exec(bytes32 ilk) external;
 }
 
-contract SparkEthereum_20241128Test is SparkEthereumTestBase {
+contract SparkEthereum_20241128Test is SparkTestBase {
     using DomainHelpers         for StdChains.Chain;
     using DomainHelpers         for Domain;
 
@@ -50,7 +50,7 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
         domains[ChainIdUtils.Ethereum()].selectFork();
         deployPayloads();
 
-        loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
+        loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
         baseBridge = OptimismBridgeTesting.createNativeBridge(domains[ChainIdUtils.Ethereum()], domains[ChainIdUtils.Base()]);
 
         // mock Sky approving 100M liquidity to spark, which will be executed as part of this spell
