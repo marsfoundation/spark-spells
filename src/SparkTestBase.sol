@@ -131,10 +131,9 @@ abstract contract SpellRunner is Test {
         address payloadAddress = payloads[chain];
         IExecutor executor = executors[chain];
         require(Address.isContract(payloadAddress), "PAYLOAD IS NOT A CONTRACT");
-        bool success;
         if(chain == ChainIdUtils.Ethereum()) {
             vm.prank(Ethereum.PAUSE_PROXY);
-            (success,) = address(executor).call(abi.encodeWithSignature(
+            (bool success,) = address(executor).call(abi.encodeWithSignature(
                 'exec(address,bytes)',
                 payloadAddress,
                 abi.encodeWithSignature('execute()')
@@ -153,8 +152,8 @@ abstract contract SpellRunner is Test {
     }
 }
 
-// assertions that make sense to run on every chain where a spark spell
-// can be executed
+/// @dev assertions that make sense to run on every chain where a spark spell
+/// can be executed
 abstract contract CommonSpellAssertions is SpellRunner {
     function test_ETHEREUM_PayloadBytecodeMatches() internal {
         testPayloadBytecodeMatches(ChainIdUtils.Ethereum());
@@ -220,7 +219,7 @@ abstract contract CommonSpellAssertions is SpellRunner {
     }
 }
 
-/// assertions specific to sparklend, which are not run on chains where
+/// @dev assertions specific to sparklend, which are not run on chains where
 /// it is not deployed
 abstract contract SparklendTests is ProtocolV3TestBase, SpellRunner {
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
@@ -401,10 +400,10 @@ abstract contract SparklendTests is ProtocolV3TestBase, SpellRunner {
     }
 }
 
-// assertions specific to mainnet
-// TODO: separate tests related to sparklend from the rest (eg: morpho)
-//       also separate mainnet-specific sparklend tests from those we should
-//       run on Gnosis as well
+/// @dev assertions specific to mainnet
+/// TODO: separate tests related to sparklend from the rest (eg: morpho)
+///       also separate mainnet-specific sparklend tests from those we should
+///       run on Gnosis as well
 abstract contract SparkEthereumTests is SparklendTests {
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
     using WadRayMath for uint256;
@@ -676,4 +675,6 @@ abstract contract AdvancedLiquidityManagementTests is SpellRunner {
     }
 }
 
+/// @dev convenience contract meant to be the single point of entry for all
+/// spell-specifictest contracts
 abstract contract SparkTestBase is AdvancedLiquidityManagementTests, SparkEthereumTests, CommonSpellAssertions {}
