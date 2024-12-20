@@ -27,6 +27,8 @@ import { IRateLimits } from "spark-alm-controller/src/interfaces/IRateLimits.sol
 
 import { Domain, DomainHelpers } from "xchain-helpers/testing/Domain.sol";
 import { ChainIdUtils, ChainId } from "src/libraries/ChainId.sol";
+import { OptimismBridgeTesting } from "xchain-helpers/testing/bridges/OptimismBridgeTesting.sol";
+import { Bridge }                from "xchain-helpers/testing/Bridge.sol";
 
 // REPO ARCHITECTURE TODOs
 // TODO: Refactor Mock logic for executor to be more realistic, consider fork + prank.
@@ -51,6 +53,8 @@ abstract contract SpellRunner is Test {
     mapping(ChainId chainId => address payload)    internal payloads;
     mapping(ChainId chainId => Domain domain)      internal domains;
 
+    Bridge internal baseBridge;
+
     Domain[] internal allDomains;
     string internal   id;
 
@@ -70,6 +74,8 @@ abstract contract SpellRunner is Test {
         executors[ChainIdUtils.Ethereum()] = IExecutor(Ethereum.SPARK_PROXY);
         executors[ChainIdUtils.Base()]     = IExecutor(Base.SPARK_EXECUTOR);
         executors[ChainIdUtils.Gnosis()]   = IExecutor(Gnosis.AMB_EXECUTOR);
+
+        baseBridge = OptimismBridgeTesting.createNativeBridge(domains[ChainIdUtils.Ethereum()], domains[ChainIdUtils.Base()]);
 
         allDomains.push(domains[ChainIdUtils.Ethereum()]);
         allDomains.push(domains[ChainIdUtils.Base()]);
@@ -96,6 +102,29 @@ abstract contract SpellRunner is Test {
                 console.log("skipping spell deployment for network: ", id.toDomainString());
             }
         }
+    }
+
+    /// @dev takes care to revert the selected fork to what was chosen before
+    function executeAllPayloadsAndBridges() internal {
+        // only execute mainnet payload
+        executePayload(ChainIdUtils.Ethereum());
+        // then use bridges to execute other chains' payloads
+        relayMessageOverBridges();
+    }
+
+    /// @dev bridge contracts themselves are stored on mainnet
+    function relayMessageOverBridges() private onChain(ChainIdUtils.Ethereum()) {
+        // Base
+        OptimismBridgeTesting.relayMessagesToDestination(baseBridge, false);
+        OptimismBridgeTesting.relayMessagesToSource(baseBridge, false);
+        // Gnosis: TODO
+    }
+
+    function executeL2PayloadsFromBridges() private onChain(ChainIdUtils.Ethereum()) {
+        // Base
+        domains[ChainIdUtils.Base()].selectFork();
+        IExecutor(Base.SPARK_EXECUTOR).execute(IExecutor(Base.SPARK_EXECUTOR).actionsSetCount() - 1);
+        // Gnosis: TODO
     }
 
     function executePayload(ChainId chain) internal onChain(chain){

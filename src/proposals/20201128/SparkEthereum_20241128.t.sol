@@ -10,7 +10,6 @@ import { Base }                                                                 
 
 import { Bridge }                from "xchain-helpers/testing/Bridge.sol";
 import { Domain, DomainHelpers } from "xchain-helpers/testing/Domain.sol";
-import { OptimismBridgeTesting } from "xchain-helpers/testing/bridges/OptimismBridgeTesting.sol";
 import { StdChains }             from "forge-std/StdChains.sol";
 
 import { ForeignController } from 'spark-alm-controller/src/ForeignController.sol';
@@ -37,10 +36,6 @@ contract SparkEthereum_20241128Test is SparkTestBase {
 
     uint256 internal constant USDS_MINT_AMOUNT = 90_000_000e18;
 
-    Bridge baseBridge;
-
-    address internal payloadBase;
-
     constructor() {
         id = '20241128';
     }
@@ -51,7 +46,6 @@ contract SparkEthereum_20241128Test is SparkTestBase {
         deployPayloads();
 
         loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
-        baseBridge = OptimismBridgeTesting.createNativeBridge(domains[ChainIdUtils.Ethereum()], domains[ChainIdUtils.Base()]);
 
         // mock Sky approving 100M liquidity to spark, which will be executed as part of this spell
         vm.prank(Ethereum.PAUSE_PROXY);
@@ -65,7 +59,7 @@ contract SparkEthereum_20241128Test is SparkTestBase {
 
         assertEq(wbtcConfig.liquidationThreshold, 65_00);
 
-        executePayload(ChainIdUtils.Ethereum());
+        executeAllPayloadsAndBridges();
 
         ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
         wbtcConfig.liquidationThreshold        = 60_00;
@@ -80,7 +74,7 @@ contract SparkEthereum_20241128Test is SparkTestBase {
         assertEq(cbBTCConfig.liquidationThreshold, 70_00);
         assertEq(cbBTCConfig.ltv, 65_00);
 
-        executePayload(ChainIdUtils.Ethereum());
+        executeAllPayloadsAndBridges();
 
         ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
         cbBTCConfig.liquidationThreshold       = 75_00;
@@ -101,7 +95,7 @@ contract SparkEthereum_20241128Test is SparkTestBase {
         _assertMorphoCap(sUSDeVault, 200_000_000e18);
         assertEq(IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).timelock(), 1 days);
 
-        executePayload(ChainIdUtils.Ethereum());
+        executeAllPayloadsAndBridges();
 
         assertEq(IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).timelock(), 1 days);
         _assertMorphoCap(sUSDeVault, 200_000_000e18, 400_000_000e18);
@@ -123,7 +117,7 @@ contract SparkEthereum_20241128Test is SparkTestBase {
         _assertMorphoCap(USDeVault, 0);
         assertEq(IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).timelock(), 1 days);
 
-        executePayload(ChainIdUtils.Ethereum());
+        executeAllPayloadsAndBridges();
 
         assertEq(IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).timelock(), 1 days);
         _assertMorphoCap(USDeVault, 0, 100_000_000e18);
@@ -140,13 +134,7 @@ contract SparkEthereum_20241128Test is SparkTestBase {
         domains[ChainIdUtils.Base()].selectFork();
         assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), baseBalanceBefore);
 
-        domains[ChainIdUtils.Ethereum()].selectFork();
-        executePayload(ChainIdUtils.Ethereum());
-
-        domains[ChainIdUtils.Base()].selectFork();
-        assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), baseBalanceBefore);
-
-        OptimismBridgeTesting.relayMessagesToDestination(baseBridge, true);
+        executeAllPayloadsAndBridges();
 
         assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), baseBalanceBefore + SUSDSShares);
     }
@@ -169,18 +157,11 @@ contract SparkEthereum_20241128Test is SparkTestBase {
         controller.depositPSM(Base.SUSDS, depositAmount);
 
         domains[ChainIdUtils.Ethereum()].selectFork();
-        executePayload(ChainIdUtils.Ethereum());
 
-        // insufficient funds error persists as long as funds are not fully bridged
+        executeAllPayloadsAndBridges();
+        
         domains[ChainIdUtils.Base()].selectFork();
-        vm.prank(relayer);
-        vm.expectRevert("SafeERC20/transfer-from-failed");
-        controller.depositPSM(Base.SUSDS, depositAmount);
-
-        domains[ChainIdUtils.Ethereum()].selectFork();
-        OptimismBridgeTesting.relayMessagesToDestination(baseBridge, true);
         assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), baseALMBalanceBefore + SUSDSShares);
-
         // after funds are bridged, liquidity can be provisioned to the PSM
         vm.prank(relayer);
         controller.depositPSM(Base.SUSDS, depositAmount);
@@ -197,35 +178,16 @@ contract SparkEthereum_20241128Test is SparkTestBase {
     function testBasePayloadExecution() external {
         domains[ChainIdUtils.Base()].selectFork();
         IExecutor executor = IExecutor(Base.SPARK_EXECUTOR);
-
-        domains[ChainIdUtils.Ethereum()].selectFork();
-        executePayload(ChainIdUtils.Ethereum());
-
-        // params are unchanged before message passing
-        domains[ChainIdUtils.Base()].selectFork();
-        assertEq(executor.delay(),       100);
-        assertEq(executor.gracePeriod(), 1000);
-
         assertEq(IExecutor(Base.SPARK_EXECUTOR).actionsSetCount(), 1);
-        OptimismBridgeTesting.relayMessagesToDestination(baseBridge, true);
-        assertEq(IExecutor(Base.SPARK_EXECUTOR).actionsSetCount(), 2);
-
-        // and before explicit execution
         assertEq(executor.delay(),       100);
         assertEq(executor.gracePeriod(), 1000);
 
+        executeAllPayloadsAndBridges();
+
+        assertEq(IExecutor(Base.SPARK_EXECUTOR).actionsSetCount(), 2);
         skip(100 seconds);
         IExecutor(Base.SPARK_EXECUTOR).execute(1);
         assertEq(executor.delay(),       0);
         assertEq(executor.gracePeriod(), 7 days);
-    }
-
-    function executePayloadBase(address payloadAddress) internal {
-        require(Address.isContract(payloadAddress), "PAYLOAD IS NOT A CONTRACT");
-        vm.prank(Base.SPARK_EXECUTOR);
-        IExecutor(Base.SPARK_EXECUTOR).executeDelegateCall(
-            payloadAddress,
-            abi.encodeWithSignature('execute()')
-        );
     }
 }
