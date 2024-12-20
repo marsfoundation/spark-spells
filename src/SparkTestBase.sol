@@ -98,7 +98,7 @@ abstract contract SpellRunner is Test {
         }
     }
 
-    function executePayload(ChainId chain) internal {
+    function executePayload(ChainId chain) internal onChain(chain){
         address payloadAddress = payloads[chain];
         IExecutor executor = executors[chain];
         require(Address.isContract(payloadAddress), "PAYLOAD IS NOT A CONTRACT");
