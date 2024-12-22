@@ -42,7 +42,7 @@ contract SparkEthereum_20241128Test is SparkTestBase {
 
     function setUp() public {
         setupDomains({mainnetForkBlock: 21266920, baseForkBlock: 22884550, gnosisForkBlock: 37573504});
-        domains[ChainIdUtils.Ethereum()].selectFork();
+        chainSpellMetadata[ChainIdUtils.Ethereum()].domain.selectFork();
         deployPayloads();
 
         loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
@@ -131,7 +131,7 @@ contract SparkEthereum_20241128Test is SparkTestBase {
         uint256 baseBalanceBefore = 123496652107156694;
         uint256 SUSDSShares       = IERC4626(Ethereum.SUSDS).convertToShares(USDS_MINT_AMOUNT);
 
-        domains[ChainIdUtils.Base()].selectFork();
+        chainSpellMetadata[ChainIdUtils.Base()].domain.selectFork();
         assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), baseBalanceBefore);
 
         executeAllPayloadsAndBridges();
@@ -148,7 +148,7 @@ contract SparkEthereum_20241128Test is SparkTestBase {
         uint256 SUSDSShares          = IERC4626(Ethereum.SUSDS).convertToShares(USDS_MINT_AMOUNT);
         uint256 depositAmount        = 1_000_000e18;
 
-        domains[ChainIdUtils.Base()].selectFork();
+        chainSpellMetadata[ChainIdUtils.Base()].domain.selectFork();
         assertEq(IERC20(Base.SUSDS).balanceOf(Base.PSM3), basePSMBalanceBefore);
 
         // insufficient ALM_PROXY balance prevents the deposit
@@ -156,11 +156,11 @@ contract SparkEthereum_20241128Test is SparkTestBase {
         vm.expectRevert("SafeERC20/transfer-from-failed");
         controller.depositPSM(Base.SUSDS, depositAmount);
 
-        domains[ChainIdUtils.Ethereum()].selectFork();
+        chainSpellMetadata[ChainIdUtils.Ethereum()].domain.selectFork();
 
         executeAllPayloadsAndBridges();
         
-        domains[ChainIdUtils.Base()].selectFork();
+        chainSpellMetadata[ChainIdUtils.Base()].domain.selectFork();
         assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), baseALMBalanceBefore + SUSDSShares);
         // after funds are bridged, liquidity can be provisioned to the PSM
         vm.prank(relayer);
@@ -176,7 +176,7 @@ contract SparkEthereum_20241128Test is SparkTestBase {
     }
 
     function testBasePayloadExecution() external {
-        domains[ChainIdUtils.Base()].selectFork();
+        chainSpellMetadata[ChainIdUtils.Base()].domain.selectFork();
         IExecutor executor = IExecutor(Base.SPARK_EXECUTOR);
         assertEq(IExecutor(Base.SPARK_EXECUTOR).actionsSetCount(), 1);
         assertEq(executor.delay(),       100);

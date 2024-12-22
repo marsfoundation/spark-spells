@@ -49,37 +49,42 @@ abstract contract SpellRunner is Test {
     using DomainHelpers for Domain;
     using DomainHelpers for StdChains.Chain;
 
-    mapping(ChainId chainId => IExecutor executor) internal executors;
-    mapping(ChainId chainId => address payload)    internal payloads;
-    mapping(ChainId chainId => Domain domain)      internal domains;
+    struct ChainSpellMetadata{
+      address   payload;
+      IExecutor executor;
+      Domain    domain;
+      /// @notice on mainnet: zero
+      /// on L2s: mainnet address of the bridge that'll include txs in the L2
+      Bridge    bridge;
+    }
 
-    Bridge internal baseBridge;
+    mapping(ChainId chainId => ChainSpellMetadata chainSpellMetadata) internal chainSpellMetadata;
 
-    Domain[] internal allDomains;
-    string internal   id;
+    ChainId[] internal allChains;
+    string internal    id;
 
     modifier onChain(ChainId chainId) {
         ChainId currentChain = ChainIdUtils.fromUint(block.chainid);
-        domains[chainId].selectFork();
+        chainSpellMetadata[chainId].domain.selectFork();
         _;
-        domains[currentChain].selectFork();
+        chainSpellMetadata[currentChain].domain.selectFork();
     }
 
     /// @dev to be called in setUp
     function setupDomains(uint256 mainnetForkBlock, uint256 baseForkBlock, uint256 gnosisForkBlock) internal {
-        domains[ChainIdUtils.Ethereum()] = getChain("mainnet").createFork(mainnetForkBlock);
-        domains[ChainIdUtils.Base()]     = getChain("base").createFork(baseForkBlock);
-        domains[ChainIdUtils.Gnosis()]   = getChain("gnosis_chain").createFork(gnosisForkBlock);
+        chainSpellMetadata[ChainIdUtils.Ethereum()].domain = getChain("mainnet").createFork(mainnetForkBlock);
+        chainSpellMetadata[ChainIdUtils.Base()].domain     = getChain("base").createFork(baseForkBlock);
+        chainSpellMetadata[ChainIdUtils.Gnosis()].domain   = getChain("gnosis_chain").createFork(gnosisForkBlock);
 
-        executors[ChainIdUtils.Ethereum()] = IExecutor(Ethereum.SPARK_PROXY);
-        executors[ChainIdUtils.Base()]     = IExecutor(Base.SPARK_EXECUTOR);
-        executors[ChainIdUtils.Gnosis()]   = IExecutor(Gnosis.AMB_EXECUTOR);
+        chainSpellMetadata[ChainIdUtils.Ethereum()].executor = IExecutor(Ethereum.SPARK_PROXY);
+        chainSpellMetadata[ChainIdUtils.Base()].executor     = IExecutor(Base.SPARK_EXECUTOR);
+        chainSpellMetadata[ChainIdUtils.Gnosis()].executor   = IExecutor(Gnosis.AMB_EXECUTOR);
 
-        baseBridge = OptimismBridgeTesting.createNativeBridge(domains[ChainIdUtils.Ethereum()], domains[ChainIdUtils.Base()]);
+        chainSpellMetadata[ChainIdUtils.Base()].bridge = OptimismBridgeTesting.createNativeBridge(chainSpellMetadata[ChainIdUtils.Ethereum()].domain, chainSpellMetadata[ChainIdUtils.Base()].domain);
 
-        allDomains.push(domains[ChainIdUtils.Ethereum()]);
-        allDomains.push(domains[ChainIdUtils.Base()]);
-        allDomains.push(domains[ChainIdUtils.Gnosis()]);
+        allChains.push(ChainIdUtils.Ethereum());
+        allChains.push(ChainIdUtils.Base());
+        allChains.push(ChainIdUtils.Gnosis());
     }
 
     function spellIdentifier(ChainId chainId) private view returns(string memory){
@@ -93,11 +98,11 @@ abstract contract SpellRunner is Test {
     }
 
     function deployPayloads() internal {
-        for (uint256 i = 0; i < allDomains.length; i++) {
-            ChainId id = ChainIdUtils.fromDomain(allDomains[i]);
+        for (uint256 i = 0; i < allChains.length; i++) {
+            ChainId id = ChainIdUtils.fromDomain(chainSpellMetadata[allChains[i]].domain);
             string memory spellIdentifier = spellIdentifier(id);
             try vm.getCode(spellIdentifier) {
-                payloads[id] = deployPayload(id);
+                chainSpellMetadata[id].payload = deployPayload(id);
             } catch {
                 console.log("skipping spell deployment for network: ", id.toDomainString());
             }
@@ -115,21 +120,21 @@ abstract contract SpellRunner is Test {
     /// @dev bridge contracts themselves are stored on mainnet
     function relayMessageOverBridges() private onChain(ChainIdUtils.Ethereum()) {
         // Base
-        OptimismBridgeTesting.relayMessagesToDestination(baseBridge, false);
-        OptimismBridgeTesting.relayMessagesToSource(baseBridge, false);
+        OptimismBridgeTesting.relayMessagesToDestination(chainSpellMetadata[ChainIdUtils.Base()].bridge, false);
+        OptimismBridgeTesting.relayMessagesToSource(chainSpellMetadata[ChainIdUtils.Base()].bridge, false);
         // Gnosis: TODO
     }
 
     function executeL2PayloadsFromBridges() private onChain(ChainIdUtils.Ethereum()) {
         // Base
-        domains[ChainIdUtils.Base()].selectFork();
+        chainSpellMetadata[ChainIdUtils.Base()].domain.selectFork();
         IExecutor(Base.SPARK_EXECUTOR).execute(IExecutor(Base.SPARK_EXECUTOR).actionsSetCount() - 1);
         // Gnosis: TODO
     }
 
     function executePayload(ChainId chain) internal onChain(chain){
-        address payloadAddress = payloads[chain];
-        IExecutor executor = executors[chain];
+        address payloadAddress = chainSpellMetadata[chain].payload;
+        IExecutor executor = chainSpellMetadata[chain].executor;
         require(Address.isContract(payloadAddress), "PAYLOAD IS NOT A CONTRACT");
         if(chain == ChainIdUtils.Ethereum()) {
             vm.prank(Ethereum.PAUSE_PROXY);
@@ -168,7 +173,7 @@ abstract contract CommonSpellAssertions is SpellRunner {
     }
 
     function testPayloadBytecodeMatches(ChainId chainId) internal onChain(chainId) {
-        address actualPayload = payloads[chainId];
+        address actualPayload = chainSpellMetadata[chainId].payload;
         vm.skip(actualPayload == address(0));
         require(Address.isContract(actualPayload), "PAYLOAD IS NOT A CONTRACT");
         address expectedPayload = deployPayload(chainId);
@@ -246,7 +251,7 @@ abstract contract SparklendTests is ProtocolV3TestBase, SpellRunner {
     }
 
     function test_GNOSIS_SpellExecutionDiff() public {
-        vm.skip(payloads[ChainIdUtils.Gnosis()] == address(0));
+        vm.skip(chainSpellMetadata[ChainIdUtils.Gnosis()].payload == address(0));
         testSpellExecutionDiff(ChainIdUtils.Gnosis());
     }
 
@@ -287,7 +292,7 @@ abstract contract SparklendTests is ProtocolV3TestBase, SpellRunner {
     }
 
     function test_GNOSIS_E2E() public {
-        vm.skip(payloads[ChainIdUtils.Gnosis()] == address(0));
+        vm.skip(chainSpellMetadata[ChainIdUtils.Gnosis()].payload == address(0));
         testE2E(ChainIdUtils.Gnosis());
     }
 
@@ -314,7 +319,7 @@ abstract contract SparklendTests is ProtocolV3TestBase, SpellRunner {
     }
 
     function test_GNOSIS_TokenImplementationsMatch() public {
-        vm.skip(payloads[ChainIdUtils.Gnosis()] == address(0));
+        vm.skip(chainSpellMetadata[ChainIdUtils.Gnosis()].payload == address(0));
         testTokenImplementationsMatch(ChainIdUtils.Gnosis());
     }
 
@@ -346,7 +351,7 @@ abstract contract SparklendTests is ProtocolV3TestBase, SpellRunner {
     }
 
     function test_GNOSIS_Oracles() public {
-        vm.skip(payloads[ChainIdUtils.Gnosis()] == address(0));
+        vm.skip(chainSpellMetadata[ChainIdUtils.Gnosis()].payload == address(0));
         testOracles(ChainIdUtils.Gnosis());
     }
 
@@ -363,7 +368,7 @@ abstract contract SparklendTests is ProtocolV3TestBase, SpellRunner {
     }
 
     function test_GNOSIS_AllReservesSeeded() public {
-        vm.skip(payloads[ChainIdUtils.Gnosis()] == address(0));
+        vm.skip(chainSpellMetadata[ChainIdUtils.Gnosis()].payload == address(0));
         testAllReservesSeeded(ChainIdUtils.Gnosis());
     }
 
