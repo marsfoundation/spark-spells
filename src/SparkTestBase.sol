@@ -395,7 +395,7 @@ abstract contract SparklendTests is ProtocolV3TestBase, SpellRunner {
     function _getPoolAddressesProviderRegistry() internal view returns(IPoolAddressesProviderRegistry registry ){
         ChainId currentChain = ChainIdUtils.fromUint(block.chainid);
         if(currentChain == ChainIdUtils.Ethereum()) registry = IPoolAddressesProviderRegistry(Ethereum.POOL_ADDRESSES_PROVIDER_REGISTRY);
-        else if(currentChain == ChainIdUtils.Base()) registry = IPoolAddressesProviderRegistry(Gnosis.POOL_ADDRESSES_PROVIDER_REGISTRY);
+        else if(currentChain == ChainIdUtils.Gnosis()) registry = IPoolAddressesProviderRegistry(Gnosis.POOL_ADDRESSES_PROVIDER_REGISTRY);
         else require(false, "Sparklend/executing on unknown chain");
     }
 }
