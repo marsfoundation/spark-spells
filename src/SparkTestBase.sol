@@ -56,6 +56,8 @@ abstract contract SpellRunner is Test {
       /// @notice on mainnet: zero
       /// on L2s: mainnet address of the bridge that'll include txs in the L2
       Bridge    bridge;
+      // @notice coupled to SparklendTests, zero on chains where sparklend is not present
+      IPoolAddressesProviderRegistry sparklendPooAddressProviderRegistry;
     }
 
     mapping(ChainId chainId => ChainSpellMetadata chainSpellMetadata) internal chainSpellMetadata;
@@ -63,7 +65,7 @@ abstract contract SpellRunner is Test {
     ChainId[] internal allChains;
     string internal    id;
 
-    modifier onChain(ChainId chainId) {
+    modifier onChain(ChainId chainId) virtual {
         ChainId currentChain = ChainIdUtils.fromUint(block.chainid);
         chainSpellMetadata[chainId].domain.selectFork();
         _;
@@ -81,6 +83,9 @@ abstract contract SpellRunner is Test {
         chainSpellMetadata[ChainIdUtils.Gnosis()].executor   = IExecutor(Gnosis.AMB_EXECUTOR);
 
         chainSpellMetadata[ChainIdUtils.Base()].bridge = OptimismBridgeTesting.createNativeBridge(chainSpellMetadata[ChainIdUtils.Ethereum()].domain, chainSpellMetadata[ChainIdUtils.Base()].domain);
+
+        chainSpellMetadata[ChainIdUtils.Ethereum()].sparklendPooAddressProviderRegistry = IPoolAddressesProviderRegistry(Ethereum.POOL_ADDRESSES_PROVIDER_REGISTRY);
+        chainSpellMetadata[ChainIdUtils.Gnosis()].sparklendPooAddressProviderRegistry   = IPoolAddressesProviderRegistry(Gnosis.POOL_ADDRESSES_PROVIDER_REGISTRY);
 
         allChains.push(ChainIdUtils.Ethereum());
         allChains.push(ChainIdUtils.Base());
@@ -228,18 +233,37 @@ abstract contract CommonSpellAssertions is SpellRunner {
 /// it is not deployed
 abstract contract SparklendTests is ProtocolV3TestBase, SpellRunner {
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
+    using DomainHelpers for StdChains.Chain;
+    using DomainHelpers for Domain;
 
     bool internal disableExportDiff;
     bool internal disableE2E;
 
+    /// @notice local to market currently under test
     IACLManager                    internal aclManager;
+    /// @notice local to market currently under test
     IPool                          internal pool;
-    IPoolAddressesProvider         internal poolAddressesProvider;
+    /// @notice local to market currently under test
     IPoolConfigurator              internal poolConfigurator;
+    /// @notice local to market currently under test
     IAaveOracle                    internal priceOracle;
 
+    modifier onChain(ChainId chainId) override virtual {
+        ChainId currentChain = ChainIdUtils.fromUint(block.chainid);
+        chainSpellMetadata[chainId].domain.selectFork();
+        // this mimics the logic of legacy spells where they had a
+        // `loadPoolContext` call in the setup of every test contract involving
+        // sparklend, while not overriding explicit pool context setup if on
+        // nested modifier invocations
+        if(address(pool) == address(0)){
+            loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
+        }
+        _;
+        chainSpellMetadata[currentChain].domain.selectFork();
+    }
+
     function loadPoolContext(address poolProvider) internal {
-        poolAddressesProvider = IPoolAddressesProvider(poolProvider);
+        IPoolAddressesProvider poolAddressesProvider = IPoolAddressesProvider(poolProvider);
         pool                  = IPool(poolAddressesProvider.getPool());
         poolConfigurator      = IPoolConfigurator(poolAddressesProvider.getPoolConfigurator());
         aclManager            = IACLManager(poolAddressesProvider.getACLManager());
@@ -399,9 +423,8 @@ abstract contract SparklendTests is ProtocolV3TestBase, SpellRunner {
 
     function _getPoolAddressesProviderRegistry() internal view returns(IPoolAddressesProviderRegistry registry ){
         ChainId currentChain = ChainIdUtils.fromUint(block.chainid);
-        if(currentChain == ChainIdUtils.Ethereum()) registry = IPoolAddressesProviderRegistry(Ethereum.POOL_ADDRESSES_PROVIDER_REGISTRY);
-        else if(currentChain == ChainIdUtils.Gnosis()) registry = IPoolAddressesProviderRegistry(Gnosis.POOL_ADDRESSES_PROVIDER_REGISTRY);
-        else require(false, "Sparklend/executing on unknown chain");
+        registry = chainSpellMetadata[currentChain].sparklendPooAddressProviderRegistry;
+        require(address(registry) != address(0), "Sparklend/executing on unknown chain");
     }
 }
 
@@ -682,4 +705,19 @@ abstract contract AdvancedLiquidityManagementTests is SpellRunner {
 
 /// @dev convenience contract meant to be the single point of entry for all
 /// spell-specifictest contracts
-abstract contract SparkTestBase is AdvancedLiquidityManagementTests, SparkEthereumTests, CommonSpellAssertions {}
+abstract contract SparkTestBase is AdvancedLiquidityManagementTests, SparkEthereumTests, CommonSpellAssertions {
+    using DomainHelpers for StdChains.Chain;
+    using DomainHelpers for Domain;
+
+    // cant really instruct the compiler to simply use the SparklendTests
+    // implementation, so I copied it.
+    modifier onChain(ChainId chainId) override(SparklendTests, SpellRunner) {
+        ChainId currentChain = ChainIdUtils.fromUint(block.chainid);
+        chainSpellMetadata[chainId].domain.selectFork();
+        if(address(pool) == address(0)){
+            loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
+        }
+        _;
+        chainSpellMetadata[currentChain].domain.selectFork();
+    }
+}

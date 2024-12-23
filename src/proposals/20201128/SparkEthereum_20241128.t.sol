@@ -42,10 +42,7 @@ contract SparkEthereum_20241128Test is SparkTestBase {
 
     function setUp() public {
         setupDomains({mainnetForkBlock: 21266920, baseForkBlock: 22884550, gnosisForkBlock: 37573504});
-        chainSpellMetadata[ChainIdUtils.Ethereum()].domain.selectFork();
         deployPayloads();
-
-        loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
 
         // mock Sky approving 100M liquidity to spark, which will be executed as part of this spell
         vm.prank(Ethereum.PAUSE_PROXY);
