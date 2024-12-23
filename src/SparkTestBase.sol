@@ -117,7 +117,7 @@ abstract contract SpellRunner is Test {
     /// @dev takes care to revert the selected fork to what was chosen before
     function executeAllPayloadsAndBridges() internal {
         // only execute mainnet payload
-        executePayload(ChainIdUtils.Ethereum());
+        executeMainnetPayload();
         // then use bridges to execute other chains' payloads
         relayMessageOverBridges();
     }
@@ -137,28 +137,18 @@ abstract contract SpellRunner is Test {
         // Gnosis: TODO
     }
 
-    function executePayload(ChainId chain) internal onChain(chain){
-        address payloadAddress = chainSpellMetadata[chain].payload;
-        IExecutor executor = chainSpellMetadata[chain].executor;
+    function executeMainnetPayload() internal onChain(ChainIdUtils.Ethereum()){
+        address payloadAddress = chainSpellMetadata[ChainIdUtils.Ethereum()].payload;
+        IExecutor executor     = chainSpellMetadata[ChainIdUtils.Ethereum()].executor;
         require(Address.isContract(payloadAddress), "PAYLOAD IS NOT A CONTRACT");
-        if(chain == ChainIdUtils.Ethereum()) {
-            vm.prank(Ethereum.PAUSE_PROXY);
-            (bool success,) = address(executor).call(abi.encodeWithSignature(
-                'exec(address,bytes)',
-                payloadAddress,
-                abi.encodeWithSignature('execute()')
-            ));
-            require(success, "FAILED TO EXECUTE PAYLOAD");
-        } else {
-            // TODO: research whether it makes sense to prank the same address
-            // that is being called or if we could do something else that is
-            // closer to production (perhaps also getting rid of this if)
-            vm.prank(address(executor));
-            executor.executeDelegateCall(
-                payloadAddress,
-                abi.encodeWithSignature('execute()')
-            );
-        }
+
+        vm.prank(Ethereum.PAUSE_PROXY);
+        (bool success,) = address(executor).call(abi.encodeWithSignature(
+            'exec(address,bytes)',
+            payloadAddress,
+            abi.encodeWithSignature('execute()')
+        ));
+        require(success, "FAILED TO EXECUTE PAYLOAD");
     }
 }
 
@@ -292,7 +282,7 @@ abstract contract SparklendTests is ProtocolV3TestBase, SpellRunner {
             );
         }
 
-        executePayload(chainId);
+        executeAllPayloadsAndBridges();
 
         for (uint256 i = 0; i < poolProviders.length; i++) {
             loadPoolContext(poolProviders[i]);
@@ -330,7 +320,7 @@ abstract contract SparklendTests is ProtocolV3TestBase, SpellRunner {
             e2eTest(pool);
         }
 
-        executePayload(chainId);
+        executeAllPayloadsAndBridges();
 
         for (uint256 i = 0; i < poolProviders.length; i++) {
             loadPoolContext(poolProviders[i]);
@@ -351,7 +341,7 @@ abstract contract SparklendTests is ProtocolV3TestBase, SpellRunner {
         // This test is to avoid a footgun where the token implementations are upgraded (possibly in an emergency) and
         // the config engine is not redeployed to use the new implementation. As a general rule all reserves should
         // use the same implementation for AToken, StableDebtToken and VariableDebtToken.
-        executePayload(chainId);
+        executeAllPayloadsAndBridges();
 
         address[] memory reserves = pool.getReservesList();
         assertGt(reserves.length, 0);
@@ -382,7 +372,7 @@ abstract contract SparklendTests is ProtocolV3TestBase, SpellRunner {
     function testOracles(ChainId chainId) internal onChain(chainId) {
         _validateOracles();
 
-        executePayload(chainId);
+        executeAllPayloadsAndBridges();
 
         _validateOracles();
     }
@@ -397,7 +387,7 @@ abstract contract SparklendTests is ProtocolV3TestBase, SpellRunner {
     }
 
     function testAllReservesSeeded(ChainId chainId) internal onChain(chainId) {
-        executePayload(chainId);
+        executeAllPayloadsAndBridges();
 
         address[] memory reserves = pool.getReservesList();
 
@@ -452,7 +442,7 @@ abstract contract SparkEthereumTests is SparklendTests {
         _runFreezerMomTests();
 
         vm.revertTo(snapshot);
-        executePayload(ChainIdUtils.Ethereum());
+        executeAllPayloadsAndBridges();
 
         _runFreezerMomTests();
     }
@@ -460,7 +450,7 @@ abstract contract SparkEthereumTests is SparklendTests {
     function test_ETHEREUM_RewardsConfiguration() public onChain(ChainIdUtils.Ethereum()){
         _runRewardsConfigurationTests();
 
-        executePayload(ChainIdUtils.Ethereum());
+        executeAllPayloadsAndBridges();
 
         _runRewardsConfigurationTests();
     }
@@ -471,7 +461,7 @@ abstract contract SparkEthereumTests is SparklendTests {
         _runCapAutomatorTests();
 
         vm.revertTo(snapshot);
-        executePayload(ChainIdUtils.Ethereum());
+        executeAllPayloadsAndBridges();
 
         _runCapAutomatorTests();
     }
