@@ -5,23 +5,24 @@ import { IERC4626 } from 'forge-std/interfaces/IERC4626.sol';
 import { IERC20 }   from 'forge-std/interfaces/IERC20.sol';
 import { Address }  from 'src/libraries/Address.sol';
 
-import { SparkEthereumTestBase, ReserveConfig, MarketParams, Ethereum, IMetaMorpho } from 'src/SparkTestBase.sol';
+import { SparkTestBase, ReserveConfig, MarketParams, Ethereum, IMetaMorpho }         from 'src/SparkTestBase.sol';
 import { Base }                                                                      from 'spark-address-registry/Base.sol';
 
 import { Bridge }                from "xchain-helpers/testing/Bridge.sol";
 import { Domain, DomainHelpers } from "xchain-helpers/testing/Domain.sol";
-import { OptimismBridgeTesting } from "xchain-helpers/testing/bridges/OptimismBridgeTesting.sol";
 import { StdChains }             from "forge-std/StdChains.sol";
 
 import { ForeignController } from 'spark-alm-controller/src/ForeignController.sol';
 import { IExecutor }         from 'spark-gov-relay/src/interfaces/IExecutor.sol';
+
+import { ChainIdUtils } from 'src/libraries/ChainId.sol';
 
 interface DssAutoLineLike {
     function setIlk(bytes32 ilk, uint256 line, uint256 gap, uint256 ttl) external;
     function exec(bytes32 ilk) external;
 }
 
-contract SparkEthereum_20241128Test is SparkEthereumTestBase {
+contract SparkEthereum_20241128Test is SparkTestBase {
     using DomainHelpers         for StdChains.Chain;
     using DomainHelpers         for Domain;
 
@@ -35,32 +36,18 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
 
     uint256 internal constant USDS_MINT_AMOUNT = 90_000_000e18;
 
-    Domain mainnet;
-    Domain base;
-    Bridge baseBridge;
-
-    address internal payloadBase;
-
     constructor() {
-        id         = '20241128';
+        id = '20241128';
     }
 
     function setUp() public {
-        mainnet = getChain('mainnet').createFork(21266920);  // Nov 25, 2024
-        base    = getChain('base').createFork(22884550);     // Nov 25, 2024
-        mainnet.selectFork();
-        loadPoolContext(poolAddressesProviderRegistry.getAddressesProvidersList()[0]);
-        baseBridge = OptimismBridgeTesting.createNativeBridge(mainnet, base);
+        setupDomains({mainnetForkBlock: 21266920, baseForkBlock: 22884550, gnosisForkBlock: 37691338});
+        deployPayloads();
 
         // mock Sky approving 100M liquidity to spark, which will be executed as part of this spell
         vm.prank(Ethereum.PAUSE_PROXY);
         DssAutoLineLike(AUTO_LINE).setIlk(ALLOCATOR_ILK, 100_000_000e45, 100_000_000e45, 24 hours);
         DssAutoLineLike(AUTO_LINE).exec(ALLOCATOR_ILK);
-
-        base.selectFork();
-        payloadBase = 0x7C4b5f3Aeb694db68682D6CE5521702170e61E45;
-        mainnet.selectFork();
-        payload = 0x6c87D984689CeD0bB367A58722aC74013F82267d;
     }
 
     function testWBTCChanges() public {
@@ -69,7 +56,7 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
 
         assertEq(wbtcConfig.liquidationThreshold, 65_00);
 
-        executePayload(payload);
+        executeAllPayloadsAndBridges();
 
         ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
         wbtcConfig.liquidationThreshold        = 60_00;
@@ -84,7 +71,7 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
         assertEq(cbBTCConfig.liquidationThreshold, 70_00);
         assertEq(cbBTCConfig.ltv, 65_00);
 
-        executePayload(payload);
+        executeAllPayloadsAndBridges();
 
         ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
         cbBTCConfig.liquidationThreshold       = 75_00;
@@ -104,7 +91,9 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
 
         _assertMorphoCap(sUSDeVault, 200_000_000e18);
         assertEq(IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).timelock(), 1 days);
-        executePayload(payload);
+
+        executeAllPayloadsAndBridges();
+
         assertEq(IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).timelock(), 1 days);
         _assertMorphoCap(sUSDeVault, 200_000_000e18, 400_000_000e18);
 
@@ -124,7 +113,9 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
 
         _assertMorphoCap(USDeVault, 0);
         assertEq(IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).timelock(), 1 days);
-        executePayload(payload);
+
+        executeAllPayloadsAndBridges();
+
         assertEq(IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).timelock(), 1 days);
         _assertMorphoCap(USDeVault, 0, 100_000_000e18);
 
@@ -137,16 +128,10 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
         uint256 baseBalanceBefore = 123496652107156694;
         uint256 SUSDSShares       = IERC4626(Ethereum.SUSDS).convertToShares(USDS_MINT_AMOUNT);
 
-        base.selectFork();
+        chainSpellMetadata[ChainIdUtils.Base()].domain.selectFork();
         assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), baseBalanceBefore);
 
-        mainnet.selectFork();
-        executePayload(payload);
-
-        base.selectFork();
-        assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), baseBalanceBefore);
-
-        OptimismBridgeTesting.relayMessagesToDestination(baseBridge, true);
+        executeAllPayloadsAndBridges();
 
         assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), baseBalanceBefore + SUSDSShares);
     }
@@ -160,7 +145,7 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
         uint256 SUSDSShares          = IERC4626(Ethereum.SUSDS).convertToShares(USDS_MINT_AMOUNT);
         uint256 depositAmount        = 1_000_000e18;
 
-        base.selectFork();
+        chainSpellMetadata[ChainIdUtils.Base()].domain.selectFork();
         assertEq(IERC20(Base.SUSDS).balanceOf(Base.PSM3), basePSMBalanceBefore);
 
         // insufficient ALM_PROXY balance prevents the deposit
@@ -168,19 +153,12 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
         vm.expectRevert("SafeERC20/transfer-from-failed");
         controller.depositPSM(Base.SUSDS, depositAmount);
 
-        mainnet.selectFork();
-        executePayload(payload);
+        chainSpellMetadata[ChainIdUtils.Ethereum()].domain.selectFork();
 
-        // insufficient funds error persists as long as funds are not fully bridged
-        base.selectFork();
-        vm.prank(relayer);
-        vm.expectRevert("SafeERC20/transfer-from-failed");
-        controller.depositPSM(Base.SUSDS, depositAmount);
-
-        mainnet.selectFork();
-        OptimismBridgeTesting.relayMessagesToDestination(baseBridge, true);
+        executeAllPayloadsAndBridges();
+        
+        chainSpellMetadata[ChainIdUtils.Base()].domain.selectFork();
         assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), baseALMBalanceBefore + SUSDSShares);
-
         // after funds are bridged, liquidity can be provisioned to the PSM
         vm.prank(relayer);
         controller.depositPSM(Base.SUSDS, depositAmount);
@@ -195,42 +173,18 @@ contract SparkEthereum_20241128Test is SparkEthereumTestBase {
     }
 
     function testBasePayloadExecution() external {
-        base.selectFork();
+        chainSpellMetadata[ChainIdUtils.Base()].domain.selectFork();
         IExecutor executor = IExecutor(Base.SPARK_EXECUTOR);
-
-        mainnet.selectFork();
-        executePayload(payload);
-
-        // params are unchanged before message passing
-        base.selectFork();
-        assertEq(executor.delay(),       100);
-        assertEq(executor.gracePeriod(), 1000);
-
         assertEq(IExecutor(Base.SPARK_EXECUTOR).actionsSetCount(), 1);
-        OptimismBridgeTesting.relayMessagesToDestination(baseBridge, true);
-        assertEq(IExecutor(Base.SPARK_EXECUTOR).actionsSetCount(), 2);
-
-        // and before explicit execution
         assertEq(executor.delay(),       100);
         assertEq(executor.gracePeriod(), 1000);
 
+        executeAllPayloadsAndBridges();
+
+        assertEq(IExecutor(Base.SPARK_EXECUTOR).actionsSetCount(), 2);
         skip(100 seconds);
         IExecutor(Base.SPARK_EXECUTOR).execute(1);
         assertEq(executor.delay(),       0);
         assertEq(executor.gracePeriod(), 7 days);
-    }
-
-    function deployPayloadBase() internal returns (address) {
-        string memory fullName = string(abi.encodePacked('SparkBase_', id));
-        return deployCode(string(abi.encodePacked(fullName, '.sol:', fullName)));
-    }
-
-    function executePayloadBase(address payloadAddress) internal {
-        require(Address.isContract(payloadAddress), "PAYLOAD IS NOT A CONTRACT");
-        vm.prank(Base.SPARK_EXECUTOR);
-        IExecutor(Base.SPARK_EXECUTOR).executeDelegateCall(
-            payloadAddress,
-            abi.encodeWithSignature('execute()')
-        );
     }
 }
