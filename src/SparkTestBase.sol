@@ -110,8 +110,8 @@ abstract contract SpellRunner is Test {
 
     function spellIdentifier(ChainId chainId) private view returns(string memory){
         string memory slug            = string(abi.encodePacked("Spark", chainId.toDomainString(), "_", id));
-        string memory spellIdentifier = string(abi.encodePacked(slug, ".sol:", slug));
-        return spellIdentifier;
+        string memory identifier = string(abi.encodePacked(slug, ".sol:", slug));
+        return identifier;
     }
 
     function deployPayload(ChainId chainId) internal onChain(chainId) returns(address) {
@@ -120,12 +120,12 @@ abstract contract SpellRunner is Test {
 
     function deployPayloads() internal {
         for (uint256 i = 0; i < allChains.length; i++) {
-            ChainId id = ChainIdUtils.fromDomain(chainSpellMetadata[allChains[i]].domain);
-            string memory spellIdentifier = spellIdentifier(id);
-            try vm.getCode(spellIdentifier) {
-                chainSpellMetadata[id].payload = deployPayload(id);
+            ChainId chainId = ChainIdUtils.fromDomain(chainSpellMetadata[allChains[i]].domain);
+            string memory identifier = spellIdentifier(chainId);
+            try vm.getCode(identifier) {
+                chainSpellMetadata[chainId].payload = deployPayload(chainId);
             } catch {
-                console.log("skipping spell deployment for network: ", id.toDomainString());
+                console.log("skipping spell deployment for network: ", chainId.toDomainString());
             }
         }
     }
@@ -141,9 +141,9 @@ abstract contract SpellRunner is Test {
     /// @dev bridge contracts themselves are stored on mainnet
     function relayMessageOverBridges() private onChain(ChainIdUtils.Ethereum()) {
         for (uint256 i = 0; i < allChains.length; i++) {
-            ChainId id = ChainIdUtils.fromDomain(chainSpellMetadata[allChains[i]].domain);
-            for (uint256 j = 0; j < chainSpellMetadata[id].bridges.length ; j++){
-                _executeBridge(chainSpellMetadata[id].bridges[j], chainSpellMetadata[id].bridgeTypes[j]);
+            ChainId chainId = ChainIdUtils.fromDomain(chainSpellMetadata[allChains[i]].domain);
+            for (uint256 j = 0; j < chainSpellMetadata[chainId].bridges.length ; j++){
+                _executeBridge(chainSpellMetadata[chainId].bridges[j], chainSpellMetadata[chainId].bridgeTypes[j]);
             }
         }
     }
