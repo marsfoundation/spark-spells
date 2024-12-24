@@ -62,9 +62,9 @@ abstract contract SpellRunner is Test {
       IExecutor                      executor;
       Domain                         domain;
       /// @notice on mainnet: empty
-      /// on L2s: mainnet address of the bridge that'll include txs in the L2
-      /// there can be multiple bridges for a given chain, such as canonical OP
-      /// bridge and CCTP USDC-specific bridge
+      /// on L2s: bridges that'll include txs in the L2. there can be multiple
+      /// bridges for a given chain, such as canonical OP bridge and CCTP
+      /// USDC-specific bridge
       Bridge[]                       bridges;
       BridgeType[]                   bridgeTypes;
       // @notice coupled to SparklendTests, zero on chains where sparklend is not present
