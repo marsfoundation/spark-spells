@@ -100,6 +100,13 @@ abstract contract SpellRunner is Test {
         ));
         chainSpellMetadata[ChainIdUtils.Base()].bridgeTypes.push(BridgeType.OPTIMISM);
 
+        chainSpellMetadata[ChainIdUtils.Gnosis()].bridges.push(
+            AMBBridgeTesting.createGnosisBridge(
+                chainSpellMetadata[ChainIdUtils.Ethereum()].domain,
+                chainSpellMetadata[ChainIdUtils.Gnosis()].domain
+        ));
+        chainSpellMetadata[ChainIdUtils.Gnosis()].bridgeTypes.push(BridgeType.GNOSIS);
+
         chainSpellMetadata[ChainIdUtils.Ethereum()].sparklendPooAddressProviderRegistry = IPoolAddressesProviderRegistry(Ethereum.POOL_ADDRESSES_PROVIDER_REGISTRY);
         chainSpellMetadata[ChainIdUtils.Gnosis()].sparklendPooAddressProviderRegistry   = IPoolAddressesProviderRegistry(Gnosis.POOL_ADDRESSES_PROVIDER_REGISTRY);
 
