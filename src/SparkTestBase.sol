@@ -148,16 +148,14 @@ abstract contract SpellRunner is Test {
         }
     }
 
+    /// @dev this does not relay messages/USDC from L2s to mainnet
     function _executeBridge(Bridge storage bridge, BridgeType bridgeType) private {
         if (bridgeType == BridgeType.OPTIMISM) {
             OptimismBridgeTesting.relayMessagesToDestination(bridge, false);
-            OptimismBridgeTesting.relayMessagesToSource(bridge, false);
         } else if (bridgeType == BridgeType.CCTP) {
             CCTPBridgeTesting.relayMessagesToDestination(bridge, false);
-            CCTPBridgeTesting.relayMessagesToSource(bridge, false);
         } else if (bridgeType == BridgeType.GNOSIS) {
             AMBBridgeTesting.relayMessagesToDestination(bridge, false);
-            AMBBridgeTesting.relayMessagesToSource(bridge, false);
         }
     }
 
