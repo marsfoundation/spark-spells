@@ -184,15 +184,15 @@ abstract contract SpellRunner is Test {
 /// @dev assertions that make sense to run on every chain where a spark spell
 /// can be executed
 abstract contract CommonSpellAssertions is SpellRunner {
-    function test_ETHEREUM_PayloadBytecodeMatches() internal {
+    function test_ETHEREUM_PayloadBytecodeMatches() public {
         testPayloadBytecodeMatches(ChainIdUtils.Ethereum());
     }
 
-    function test_BASE_PayloadBytecodeMatches() internal {
+    function test_BASE_PayloadBytecodeMatches() public {
         testPayloadBytecodeMatches(ChainIdUtils.Base());
     }
 
-    function test_GNOSIS_PayloadBytecodeMatches() internal {
+    function test_GNOSIS_PayloadBytecodeMatches() public {
         testPayloadBytecodeMatches(ChainIdUtils.Gnosis());
     }
 
