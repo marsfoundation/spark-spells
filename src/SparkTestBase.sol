@@ -320,7 +320,14 @@ abstract contract SparklendTests is ProtocolV3TestBase, SpellRunner {
             e2eTest(pool);
         }
 
-        executeAllPayloadsAndBridges();
+        // the full payload + bridges causes a MemoryOOG error on ethereum.
+        // This is a workaround, skipping the bridging to consume less
+        // resources
+        if(chainId == ChainIdUtils.Ethereum()){
+            executeMainnetPayload();
+        } else {
+            executeAllPayloadsAndBridges();
+        }
 
         for (uint256 i = 0; i < poolProviders.length; i++) {
             loadPoolContext(poolProviders[i]);
