@@ -28,6 +28,8 @@ import { IRateLimits } from "spark-alm-controller/src/interfaces/IRateLimits.sol
 import { Domain, DomainHelpers } from "xchain-helpers/testing/Domain.sol";
 import { ChainIdUtils, ChainId } from "src/libraries/ChainId.sol";
 import { OptimismBridgeTesting } from "xchain-helpers/testing/bridges/OptimismBridgeTesting.sol";
+import { AMBBridgeTesting }      from "xchain-helpers/testing/bridges/AMBBridgeTesting.sol";
+import { CCTPBridgeTesting }     from "xchain-helpers/testing/bridges/CCTPBridgeTesting.sol";
 import { Bridge }                from "xchain-helpers/testing/Bridge.sol";
 
 // REPO ARCHITECTURE TODOs
@@ -49,13 +51,22 @@ abstract contract SpellRunner is Test {
     using DomainHelpers for Domain;
     using DomainHelpers for StdChains.Chain;
 
+    enum BridgeType {
+        OPTIMISM,
+        CCTP,
+        GNOSIS
+    }
+
     struct ChainSpellMetadata{
-      address   payload;
-      IExecutor executor;
-      Domain    domain;
-      /// @notice on mainnet: zero
+      address                        payload;
+      IExecutor                      executor;
+      Domain                         domain;
+      /// @notice on mainnet: empty
       /// on L2s: mainnet address of the bridge that'll include txs in the L2
-      Bridge    bridge;
+      /// there can be multiple bridges for a given chain, such as canonical OP
+      /// bridge and CCTP USDC-specific bridge
+      Bridge[]                       bridges;
+      BridgeType[]                   bridgeTypes;
       // @notice coupled to SparklendTests, zero on chains where sparklend is not present
       IPoolAddressesProviderRegistry sparklendPooAddressProviderRegistry;
     }
@@ -82,7 +93,12 @@ abstract contract SpellRunner is Test {
         chainSpellMetadata[ChainIdUtils.Base()].executor     = IExecutor(Base.SPARK_EXECUTOR);
         chainSpellMetadata[ChainIdUtils.Gnosis()].executor   = IExecutor(Gnosis.AMB_EXECUTOR);
 
-        chainSpellMetadata[ChainIdUtils.Base()].bridge = OptimismBridgeTesting.createNativeBridge(chainSpellMetadata[ChainIdUtils.Ethereum()].domain, chainSpellMetadata[ChainIdUtils.Base()].domain);
+        chainSpellMetadata[ChainIdUtils.Base()].bridges.push(
+            OptimismBridgeTesting.createNativeBridge(
+                chainSpellMetadata[ChainIdUtils.Ethereum()].domain,
+                chainSpellMetadata[ChainIdUtils.Base()].domain
+        ));
+        chainSpellMetadata[ChainIdUtils.Base()].bridgeTypes.push(BridgeType.OPTIMISM);
 
         chainSpellMetadata[ChainIdUtils.Ethereum()].sparklendPooAddressProviderRegistry = IPoolAddressesProviderRegistry(Ethereum.POOL_ADDRESSES_PROVIDER_REGISTRY);
         chainSpellMetadata[ChainIdUtils.Gnosis()].sparklendPooAddressProviderRegistry   = IPoolAddressesProviderRegistry(Gnosis.POOL_ADDRESSES_PROVIDER_REGISTRY);
@@ -124,10 +140,25 @@ abstract contract SpellRunner is Test {
 
     /// @dev bridge contracts themselves are stored on mainnet
     function relayMessageOverBridges() private onChain(ChainIdUtils.Ethereum()) {
-        // Base
-        OptimismBridgeTesting.relayMessagesToDestination(chainSpellMetadata[ChainIdUtils.Base()].bridge, false);
-        OptimismBridgeTesting.relayMessagesToSource(chainSpellMetadata[ChainIdUtils.Base()].bridge, false);
-        // Gnosis: TODO
+        for (uint256 i = 0; i < allChains.length; i++) {
+            ChainId id = ChainIdUtils.fromDomain(chainSpellMetadata[allChains[i]].domain);
+            for (uint256 j = 0; j < chainSpellMetadata[id].bridges.length ; j++){
+                _executeBridge(chainSpellMetadata[id].bridges[j], chainSpellMetadata[id].bridgeTypes[j]);
+            }
+        }
+    }
+
+    function _executeBridge(Bridge storage bridge, BridgeType bridgeType) private {
+        if (bridgeType == BridgeType.OPTIMISM) {
+            OptimismBridgeTesting.relayMessagesToDestination(bridge, false);
+            OptimismBridgeTesting.relayMessagesToSource(bridge, false);
+        } else if (bridgeType == BridgeType.CCTP) {
+            CCTPBridgeTesting.relayMessagesToDestination(bridge, false);
+            CCTPBridgeTesting.relayMessagesToSource(bridge, false);
+        } else if (bridgeType == BridgeType.GNOSIS) {
+            AMBBridgeTesting.relayMessagesToDestination(bridge, false);
+            AMBBridgeTesting.relayMessagesToSource(bridge, false);
+        }
     }
 
     function executeL2PayloadsFromBridges() private onChain(ChainIdUtils.Ethereum()) {
