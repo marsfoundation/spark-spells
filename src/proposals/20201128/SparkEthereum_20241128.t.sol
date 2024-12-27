@@ -5,7 +5,7 @@ import { IERC4626 } from 'forge-std/interfaces/IERC4626.sol';
 import { IERC20 }   from 'forge-std/interfaces/IERC20.sol';
 import { Address }  from 'src/libraries/Address.sol';
 
-import { SparkTestBase, ReserveConfig, MarketParams, Ethereum, IMetaMorpho }         from 'src/SparkTestBase.sol';
+import { SparkTestBase, ReserveConfig, MarketParams, Ethereum, IMetaMorpho }         from 'src/testHarnesses/SparkTestBase.sol';
 import { Base }                                                                      from 'spark-address-registry/Base.sol';
 
 import { Bridge }                from "xchain-helpers/testing/Bridge.sol";
