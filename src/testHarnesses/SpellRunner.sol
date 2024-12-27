@@ -8,6 +8,7 @@ import { Gnosis }                         from 'spark-address-registry/Gnosis.so
 import { Ethereum }                       from 'spark-address-registry/Ethereum.sol';
 import { IExecutor }                      from 'lib/spark-gov-relay/src/interfaces/IExecutor.sol';
 import { IPoolAddressesProviderRegistry } from 'sparklend-v1-core/contracts/interfaces/IPoolAddressesProviderRegistry.sol';
+import { IRateLimits }                    from "spark-alm-controller/src/interfaces/IRateLimits.sol";
 
 
 import { Domain, DomainHelpers } from "xchain-helpers/testing/Domain.sol";
@@ -37,6 +38,9 @@ abstract contract SpellRunner is Test {
       /// USDC-specific bridge
       Bridge[]                       bridges;
       BridgeType[]                   bridgeTypes;
+      /// @notice coupled to AdvancedLiquidityManagementTests, rate limits for
+      /// Spark Advanced Liquidity Management
+      IRateLimits                    almRateLimits;
       // @notice coupled to SparklendTests, zero on chains where sparklend is not present
       IPoolAddressesProviderRegistry sparklendPooAddressProviderRegistry;
     }
@@ -50,21 +54,23 @@ abstract contract SpellRunner is Test {
 
     /// @dev to be called in setUp
     function setupDomains(uint256 mainnetForkBlock, uint256 baseForkBlock, uint256 gnosisForkBlock) internal {
+        // configure the different chains
         chainSpellMetadata[ChainIdUtils.Ethereum()].domain = getChain("mainnet").createFork(mainnetForkBlock);
         chainSpellMetadata[ChainIdUtils.Base()].domain     = getChain("base").createFork(baseForkBlock);
         chainSpellMetadata[ChainIdUtils.Gnosis()].domain   = getChain("gnosis_chain").createFork(gnosisForkBlock);
 
+        // set spell executor for every chain
         chainSpellMetadata[ChainIdUtils.Ethereum()].executor = IExecutor(Ethereum.SPARK_PROXY);
         chainSpellMetadata[ChainIdUtils.Base()].executor     = IExecutor(Base.SPARK_EXECUTOR);
         chainSpellMetadata[ChainIdUtils.Gnosis()].executor   = IExecutor(Gnosis.AMB_EXECUTOR);
 
+        // configure CCTP and OP canonical bridges between mainnet and L2s
         chainSpellMetadata[ChainIdUtils.Base()].bridges.push(
             OptimismBridgeTesting.createNativeBridge(
                 chainSpellMetadata[ChainIdUtils.Ethereum()].domain,
                 chainSpellMetadata[ChainIdUtils.Base()].domain
         ));
         chainSpellMetadata[ChainIdUtils.Base()].bridgeTypes.push(BridgeType.OPTIMISM);
-
         chainSpellMetadata[ChainIdUtils.Gnosis()].bridges.push(
             AMBBridgeTesting.createGnosisBridge(
                 chainSpellMetadata[ChainIdUtils.Ethereum()].domain,
@@ -72,8 +78,15 @@ abstract contract SpellRunner is Test {
         ));
         chainSpellMetadata[ChainIdUtils.Gnosis()].bridgeTypes.push(BridgeType.GNOSIS);
 
+        // set entrypoint contract to query addresses for all other sparklend
+        // contracts, where sparklend is present (coupled to SparklendTests)
         chainSpellMetadata[ChainIdUtils.Ethereum()].sparklendPooAddressProviderRegistry = IPoolAddressesProviderRegistry(Ethereum.POOL_ADDRESSES_PROVIDER_REGISTRY);
         chainSpellMetadata[ChainIdUtils.Gnosis()].sparklendPooAddressProviderRegistry   = IPoolAddressesProviderRegistry(Gnosis.POOL_ADDRESSES_PROVIDER_REGISTRY);
+
+        // set contract providing Spark Advanced Liquidity Management rate
+        // limits for chains where it is present
+        chainSpellMetadata[ChainIdUtils.Ethereum()].almRateLimits = IRateLimits(Ethereum.ALM_RATE_LIMITS);
+        chainSpellMetadata[ChainIdUtils.Base()].almRateLimits     = IRateLimits(Base.ALM_RATE_LIMITS);
 
         allChains.push(ChainIdUtils.Ethereum());
         allChains.push(ChainIdUtils.Base());
