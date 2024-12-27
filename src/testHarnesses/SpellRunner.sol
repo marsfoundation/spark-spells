@@ -9,7 +9,7 @@ import { Ethereum }                       from 'spark-address-registry/Ethereum.
 import { IExecutor }                      from 'lib/spark-gov-relay/src/interfaces/IExecutor.sol';
 import { IPoolAddressesProviderRegistry } from 'sparklend-v1-core/contracts/interfaces/IPoolAddressesProviderRegistry.sol';
 import { IRateLimits }                    from "spark-alm-controller/src/interfaces/IRateLimits.sol";
-
+import { IMetaMorpho }                    from 'lib/metamorpho/src/interfaces/IMetaMorpho.sol';
 
 import { Domain, DomainHelpers } from "xchain-helpers/testing/Domain.sol";
 import { ChainIdUtils, ChainId } from "src/libraries/ChainId.sol";
@@ -41,8 +41,11 @@ abstract contract SpellRunner is Test {
       /// @notice coupled to AdvancedLiquidityManagementTests, rate limits for
       /// Spark Advanced Liquidity Management
       IRateLimits                    almRateLimits;
-      // @notice coupled to SparklendTests, zero on chains where sparklend is not present
+      /// @notice coupled to SparklendTests, zero on chains where sparklend is not present
       IPoolAddressesProviderRegistry sparklendPooAddressProviderRegistry;
+      /// @notice coupled to MorphoTests, Morpho Dai Vault on every supported
+      /// chain. Zero if not present
+      IMetaMorpho morphoVaultDAI;
     }
 
     mapping(ChainId chainId => ChainSpellMetadata chainSpellMetadata) internal chainSpellMetadata;
@@ -87,6 +90,10 @@ abstract contract SpellRunner is Test {
         // limits for chains where it is present
         chainSpellMetadata[ChainIdUtils.Ethereum()].almRateLimits = IRateLimits(Ethereum.ALM_RATE_LIMITS);
         chainSpellMetadata[ChainIdUtils.Base()].almRateLimits     = IRateLimits(Base.ALM_RATE_LIMITS);
+
+        // set entrypoint for Morpho contracts
+        // TODO: add addresses for morpho on Base when we support it
+        chainSpellMetadata[ChainIdUtils.Ethereum()].morphoVaultDAI = IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1);
 
         allChains.push(ChainIdUtils.Ethereum());
         allChains.push(ChainIdUtils.Base());
