@@ -46,12 +46,7 @@ abstract contract SpellRunner is Test {
     ChainId[] internal allChains;
     string internal    id;
 
-    modifier onChain(ChainId chainId) virtual {
-        ChainId currentChain = ChainIdUtils.fromUint(block.chainid);
-        chainSpellMetadata[chainId].domain.selectFork();
-        _;
-        chainSpellMetadata[currentChain].domain.selectFork();
-    }
+    modifier onChain(ChainId chainId) virtual;
 
     /// @dev to be called in setUp
     function setupDomains(uint256 mainnetForkBlock, uint256 baseForkBlock, uint256 gnosisForkBlock) internal {

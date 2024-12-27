@@ -41,20 +41,6 @@ abstract contract SparklendTests is ProtocolV3TestBase, SpellRunner {
     /// @notice local to market currently under test
     IAaveOracle                    internal priceOracle;
 
-    modifier onChain(ChainId chainId) override virtual {
-        ChainId currentChain = ChainIdUtils.fromUint(block.chainid);
-        chainSpellMetadata[chainId].domain.selectFork();
-        // this mimics the logic of legacy spells where they had a
-        // `loadPoolContext` call in the setup of every test contract involving
-        // sparklend, while not overriding explicit pool context setup if on
-        // nested modifier invocations
-        if(address(pool) == address(0)){
-            loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
-        }
-        _;
-        chainSpellMetadata[currentChain].domain.selectFork();
-    }
-
     function loadPoolContext(address poolProvider) internal {
         IPoolAddressesProvider poolAddressesProvider = IPoolAddressesProvider(poolProvider);
         pool                  = IPool(poolAddressesProvider.getPool());
