@@ -54,6 +54,9 @@ contract SparkEthereum_20250109Test is SparkTestBase {
     address internal constant PT_SUSDE_29MAY2025_PRICE_FEED = 0xE84f7e0a890e5e57d0beEa2c8716dDf0c9846B4A;
     address internal constant PT_SUSDE_29MAY2025            = 0xb7de5dFCb74d25c2f21841fbd6230355C50d9308;
 
+    address internal constant ATOKEN_USDS = 0x32a6268f9Ba3642Dda7892aDd74f1D34469A4259;
+    address internal constant ATOKEN_USDC = 0x98C23E9d8f34FEFb1B7BD6a91B7FF122F4e16F5c;
+
     address internal constant BASE_CBBTC              = 0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf;
     address internal constant BASE_CBBTC_USDC_ORACLE  = 0x663BECd10daE6C4A3Dcd89F1d76c1174199639B9;
     address internal constant BASE_MORPHO_DEFAULT_IRM = 0x46415998764C29aB2a25CbeA6254146D50D22687;
@@ -379,34 +382,33 @@ contract SparkEthereum_20250109Test is SparkTestBase {
     function test_ETHEREUM_EthenaOnboardingIntegration() public {
         executeAllPayloadsAndBridges();
 
-        vm.startPrank(Ethereum.ALM_RELAYER);
+        MainnetController controller = MainnetController(NEW_ALM_CONTROLLER);
         
         IERC20 usdc    = IERC20(Ethereum.USDC);
         IERC20 usde    = IERC20(Ethereum.USDE);
         IERC4626 susde = IERC4626(Ethereum.SUSDE);
 
-        // Use a realistic number to check the rate limits
+        // Use a realistic numbers to check the rate limits
         uint256 usdcAmount = 5_000_000e6;
         uint256 usdeAmount = usdcAmount * 1e12;
 
-        MainnetController controller = MainnetController(NEW_ALM_CONTROLLER);
         // Use deal2 for USDC because storage is not set in a common way
-        // Need to also stop pranking because deal2 uses prank
-        vm.stopPrank();
-        deal2(Ethereum.USDC, address(Ethereum.ALM_PROXY), usdcAmount);
-        vm.startPrank(Ethereum.ALM_RELAYER);
+        deal2(Ethereum.USDC, Ethereum.ALM_PROXY, usdcAmount);
 
         assertEq(usdc.allowance(Ethereum.ALM_PROXY, Ethereum.ETHENA_MINTER), 0);
+        
+        vm.startPrank(Ethereum.ALM_RELAYER);
 
         controller.prepareUSDeMint(usdcAmount);
 
         assertEq(usdc.allowance(Ethereum.ALM_PROXY, Ethereum.ETHENA_MINTER), usdcAmount);
 
         // Fake the offchain swap
+        // Need to also stop pranking because deal2 uses prank
         vm.stopPrank();
-        deal2(Ethereum.USDC, address(Ethereum.ALM_PROXY), 0);
+        deal2(Ethereum.USDC, Ethereum.ALM_PROXY, 0);
         vm.startPrank(Ethereum.ALM_RELAYER);
-        deal(Ethereum.USDE, address(Ethereum.ALM_PROXY), usdeAmount);
+        deal(Ethereum.USDE, Ethereum.ALM_PROXY, usdeAmount);
 
         assertEq(usde.balanceOf(Ethereum.ALM_PROXY),  usdeAmount);
         assertEq(susde.balanceOf(Ethereum.ALM_PROXY), 0);
@@ -425,7 +427,12 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         assertEq(usde.balanceOf(Ethereum.ALM_PROXY),  0);
         assertEq(susde.balanceOf(Ethereum.ALM_PROXY), 0);
 
-        skip(7 days);
+        skip(7 days - 1);
+
+        vm.expectRevert(abi.encodeWithSignature("InvalidCooldown()"));
+        controller.unstakeSUSDe();
+
+        skip(1);
 
         controller.unstakeSUSDe();
 
@@ -439,6 +446,57 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         controller.prepareUSDeBurn(usdeAmount);
 
         assertEq(usde.allowance(Ethereum.ALM_PROXY, Ethereum.ETHENA_MINTER), usdeAmount);
+    }
+
+    function test_ETHEREUM_AaveOnboardingIntegration() public {
+        executeAllPayloadsAndBridges();
+
+        MainnetController controller = MainnetController(NEW_ALM_CONTROLLER);
+        
+        IERC20 usds  = IERC20(Ethereum.USDS);
+        IERC20 usdc  = IERC20(Ethereum.USDC);
+        IERC20 ausds = IERC20(ATOKEN_USDS);
+        IERC20 ausdc = IERC20(ATOKEN_USDC);
+
+        // Use a realistic numbers to check the rate limits
+        uint256 usdsAmount = 5_000_000e18;
+        uint256 usdcAmount = 5_000_000e6;
+
+        deal(Ethereum.USDS, Ethereum.ALM_PROXY, usdsAmount);
+        // Use deal2 for USDC because storage is not set in a common way
+        deal2(Ethereum.USDC, Ethereum.ALM_PROXY, usdcAmount);
+
+        // USDS
+
+        assertEq(usds.balanceOf(Ethereum.ALM_PROXY),  usdsAmount);
+        assertEq(ausds.balanceOf(Ethereum.ALM_PROXY), 0);
+
+        vm.startPrank(Ethereum.ALM_RELAYER);
+
+        controller.depositAave(ATOKEN_USDS, usdsAmount);
+
+        assertEq(usds.balanceOf(Ethereum.ALM_PROXY),  0);
+        assertEq(ausds.balanceOf(Ethereum.ALM_PROXY), usdsAmount);
+
+        controller.withdrawAave(ATOKEN_USDS, usdsAmount);
+
+        assertEq(usds.balanceOf(Ethereum.ALM_PROXY),  usdsAmount);
+        assertEq(ausds.balanceOf(Ethereum.ALM_PROXY), 0);
+
+        // USDC
+
+        assertEq(usdc.balanceOf(Ethereum.ALM_PROXY),  usdcAmount);
+        assertEq(ausdc.balanceOf(Ethereum.ALM_PROXY), 0);
+
+        controller.depositAave(ATOKEN_USDC, usdcAmount);
+
+        assertEq(usdc.balanceOf(Ethereum.ALM_PROXY),  0);
+        assertEq(ausdc.balanceOf(Ethereum.ALM_PROXY), usdcAmount);
+
+        controller.withdrawAave(ATOKEN_USDC, usdcAmount);
+
+        assertEq(usdc.balanceOf(Ethereum.ALM_PROXY),  usdcAmount);
+        assertEq(ausdc.balanceOf(Ethereum.ALM_PROXY), 0);
     }
 
     function test_BASE_MorphoSupplyCapUpdates() public onChain(ChainIdUtils.Base()) {
@@ -480,5 +538,7 @@ contract SparkEthereum_20250109Test is SparkTestBase {
 
         assertEq(IERC20(Base.USDS).balanceOf(Base.ALM_PROXY), baseBalanceBefore + USDS_MINT_AMOUNT);
     }
+
+    // TODO assert rate limits
 
 }
