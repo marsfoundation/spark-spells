@@ -1,9 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.25;
 
-import { SparkPayloadBase } from 'src/SparkPayloadBase.sol';
+import { SparkPayloadBase, Base } from "src/SparkPayloadBase.sol";
 
-import { ForeignControllerInit } from 'spark-alm-controller/deploy/ForeignControllerInit.sol';
+import { Ethereum } from "spark-address-registry/Ethereum.sol";
+
+import { CCTPForwarder } from "xchain-helpers/forwarders/CCTPForwarder.sol";
+
+import { IMetaMorpho }  from "metamorpho/interfaces/IMetaMorpho.sol";
+import { MarketParams } from "morpho-blue/src/interfaces/IMorpho.sol";
+
+import { ControllerInstance }    from "spark-alm-controller/deploy/ControllerInstance.sol";
+import { ForeignControllerInit } from "spark-alm-controller/deploy/ForeignControllerInit.sol";
 
 /**
  * @title  Jan 9, 2025 Spark Base Proposal
@@ -53,10 +61,10 @@ contract SparkBase_20250109 is SparkPayloadBase {
     }
 
     function _upgradeController() private {
-        MintRecipient[] memory mintRecipients = new MintRecipient[](1);
-        mintRecipients[0] = MintRecipient({
-            domain        : CCTPForwarder.DOMAIN_ID_CIRCLE_BASE,
-            mintRecipient : bytes32(uint256(uint160(Base.ALM_PROXY)))
+        ForeignControllerInit.MintRecipient[] memory mintRecipients = new ForeignControllerInit.MintRecipient[](1);
+        mintRecipients[0] = ForeignControllerInit.MintRecipient({
+            domain        : CCTPForwarder.DOMAIN_ID_CIRCLE_ETHEREUM,
+            mintRecipient : bytes32(uint256(uint160(Ethereum.ALM_PROXY)))
         });
 
         ForeignControllerInit.upgradeController({
@@ -66,8 +74,8 @@ contract SparkBase_20250109 is SparkPayloadBase {
                 rateLimits : Base.ALM_RATE_LIMITS
             }),
             configAddresses: ForeignControllerInit.ConfigAddressParams({
-                freezer       : FREEZER,
-                relayer       : RELAYER,
+                freezer       : Base.ALM_FREEZER,
+                relayer       : Base.ALM_RELAYER,
                 oldController : Base.ALM_CONTROLLER
             }),
             checkAddresses: ForeignControllerInit.CheckAddressParams({

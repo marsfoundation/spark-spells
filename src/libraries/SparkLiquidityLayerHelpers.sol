@@ -4,9 +4,13 @@ pragma solidity ^0.8.0;
 import { IERC20 }   from 'forge-std/interfaces/IERC20.sol';
 import { IERC4626 } from 'forge-std/interfaces/IERC4626.sol';
 
+import { IAToken } from "aave-v3-origin/src/core/contracts/interfaces/IAToken.sol";
+
 import { IMetaMorpho, Id }       from "metamorpho/interfaces/IMetaMorpho.sol";
 import { MarketParamsLib }       from "morpho-blue/src/libraries/MarketParamsLib.sol";
 import { IMorpho, MarketParams } from "morpho-blue/src/interfaces/IMorpho.sol";
+
+import { RateLimitHelpers, RateLimitData } from "spark-alm-controller/src/RateLimitHelpers.sol";
 
 /**
  * @notice Helper functions for Spark Liquidity Layer
@@ -34,7 +38,7 @@ library SparkLiquidityLayerHelpers {
     ) internal {
         IERC20 underlying = IERC20(IAToken(token).UNDERLYING_ASSET_ADDRESS());
 
-        MainnetControllerInit.setRateLimitData(
+        RateLimitHelpers.setRateLimitData(
             RateLimitHelpers.makeAssetKey(
                 LIMIT_AAVE_DEPOSIT,
                 token
@@ -47,13 +51,16 @@ library SparkLiquidityLayerHelpers {
             "atokenDepositLimit",
             underlying.decimals()
         );
-        MainnetControllerInit.setRateLimitData(
+        RateLimitHelpers.setRateLimitData(
             RateLimitHelpers.makeAssetKey(
                 LIMIT_AAVE_WITHDRAW,
                 token
             ),
             rateLimits,
-            unlimitedRateLimit,
+            RateLimitData({
+                maxAmount : type(uint256).max,
+                slope     : 0
+            }),
             "atokenWithdrawLimit",
             underlying.decimals()
         );
@@ -72,7 +79,7 @@ library SparkLiquidityLayerHelpers {
     ) internal {
         IERC20 asset = IERC20(IERC4626(vault).asset());
 
-        MainnetControllerInit.setRateLimitData(
+        RateLimitHelpers.setRateLimitData(
             RateLimitHelpers.makeAssetKey(
                 LIMIT_4626_DEPOSIT,
                 vault
@@ -85,13 +92,16 @@ library SparkLiquidityLayerHelpers {
             "vaultDepositLimit",
             asset.decimals()
         );
-        MainnetControllerInit.setRateLimitData(
+        RateLimitHelpers.setRateLimitData(
             RateLimitHelpers.makeAssetKey(
                 LIMIT_4626_WITHDRAW,
                 vault
             ),
             rateLimits,
-            unlimitedRateLimit,
+            RateLimitData({
+                maxAmount : type(uint256).max,
+                slope     : 0
+            }),
             "vaultWithdrawLimit",
             asset.decimals()
         );

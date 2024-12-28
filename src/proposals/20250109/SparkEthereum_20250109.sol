@@ -1,20 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.25;
 
-import { Ethereum, SparkPayloadEthereum, IEngine, EngineFlags } from './SparkPayloadEthereum.sol';
+import { Ethereum, SparkPayloadEthereum, IEngine, EngineFlags } from "../../SparkPayloadEthereum.sol";
 
-import { IERC20 } from 'forge-std/interfaces/IERC20.sol';
+import { IERC20 } from "forge-std/interfaces/IERC20.sol";
 
-import { Base } from 'spark-address-registry/Base.sol';
+import { Base } from "spark-address-registry/Base.sol";
 
-import { IMetaMorpho, MarketParams } from 'metamorpho/interfaces/IMetaMorpho.sol';
+import { CCTPForwarder } from "xchain-helpers/forwarders/CCTPForwarder.sol";
 
-import { AllocatorBuffer } from 'dss-allocator/src/AllocatorBuffer.sol';
-import { AllocatorVault }  from 'dss-allocator/src/AllocatorVault.sol';
+import { IMetaMorpho, MarketParams } from "metamorpho/interfaces/IMetaMorpho.sol";
 
-import { OptimismForwarder } from 'xchain-helpers/forwarders/OptimismForwarder.sol';
+import { AllocatorBuffer } from "dss-allocator/src/AllocatorBuffer.sol";
+import { AllocatorVault }  from "dss-allocator/src/AllocatorVault.sol";
 
-import { MainnetControllerInit } from 'spark-alm-controller/deploy/MainnetControllerInit.sol';
+import { OptimismForwarder } from "xchain-helpers/forwarders/OptimismForwarder.sol";
+
+import { ControllerInstance }              from "spark-alm-controller/deploy/ControllerInstance.sol";
+import { MainnetControllerInit }           from "spark-alm-controller/deploy/MainnetControllerInit.sol";
+import { MainnetController }               from "spark-alm-controller/src/MainnetController.sol";
+import { RateLimitHelpers, RateLimitData } from "spark-alm-controller/src/RateLimitHelpers.sol";
 
 interface ITokenBridge {
     function bridgeERC20To(
@@ -196,8 +201,8 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
     }
 
     function _upgradeController() private {
-        MintRecipient[] memory mintRecipients = new MintRecipient[](1);
-        mintRecipients[0] = MintRecipient({
+        MainnetControllerInit.MintRecipient[] memory mintRecipients = new MainnetControllerInit.MintRecipient[](1);
+        mintRecipients[0] = MainnetControllerInit.MintRecipient({
             domain        : CCTPForwarder.DOMAIN_ID_CIRCLE_BASE,
             mintRecipient : bytes32(uint256(uint160(Base.ALM_PROXY)))
         });
@@ -209,8 +214,8 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
                 rateLimits : Ethereum.ALM_RATE_LIMITS
             }),
             configAddresses: MainnetControllerInit.ConfigAddressParams({
-                freezer       : FREEZER,
-                relayer       : RELAYER,
+                freezer       : Ethereum.ALM_FREEZER,
+                relayer       : Ethereum.ALM_RELAYER,
                 oldController : Ethereum.ALM_CONTROLLER
             }),
             checkAddresses: MainnetControllerInit.CheckAddressParams({
