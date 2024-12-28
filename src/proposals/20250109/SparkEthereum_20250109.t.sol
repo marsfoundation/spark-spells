@@ -19,9 +19,26 @@ interface DssAutoLineLike {
     function exec(bytes32 ilk) external;
 }
 
+interface ISSRRateSource {
+    function susds() external view returns (address);
+}
+
+interface IIRM {
+    function RATE_SOURCE() external view returns (ISSRRateSource);
+}
+
+interface IRateSource {
+    function getAPR() external view returns (uint256);
+}
+
 contract SparkEthereum_20250109Test is SparkTestBase {
 
     using DomainHelpers for *;
+
+    address public constant OLD_DAI_INTEREST_RATE_STRATEGY = 0xC527A1B514796A6519f236dd906E73cab5aA2E71;
+    address public constant NEW_DAI_INTEREST_RATE_STRATEGY = 0xd957978711F705358dbE34B37D381a76E1555E28;
+    address public constant OLD_STABLECOINS_INTEREST_RATE_STRATEGY = 0x4Da18457A76C355B74F9e4A944EcC882aAc64043;
+    address public constant NEW_STABLECOINS_INTEREST_RATE_STRATEGY = 0xb7b734CF1F13652E930f8a604E8f837f85160174;
 
     address internal constant PT_SUSDE_24OCT2024_PRICE_FEED = 0xaE4750d0813B5E37A51f7629beedd72AF1f9cA35;
     address internal constant PT_SUSDE_24OCT2024            = 0xAE5099C39f023C91d3dd55244CAFB36225B0850E;
@@ -134,10 +151,11 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         deal(Ethereum.WEETH, address(this), 10e18);
         IERC20(Ethereum.WEETH).approve(Ethereum.POOL, 10e18);
         pool.supply(Ethereum.WEETH, 10e18, address(this), 0);
+        pool.setUserUseReserveAsCollateral(Ethereum.WEETH, true);
         pool.borrow(Ethereum.DAI, 1e18, 2, 0, address(this));
 
         // Cannot borrow another asset
-        vm.expectRevert(bytes(34));
+        vm.expectRevert(bytes('60'));  // ASSET_NOT_BORROWABLE_IN_ISOLATION
         pool.borrow(Ethereum.WETH, 1e18, 2, 0, address(this));
 
         ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', pool);
@@ -240,6 +258,97 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         
         _assertMorphoCap(ptsusdemar, 500_000_000e18);
         _assertMorphoCap(ptsusdemay, 200_000_000e18);
+    }
+
+    function test_ETHEREUM_StablecoinUpdates() public {
+        ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', pool);
+
+        ReserveConfig memory daiConfigBefore  = _findReserveConfigBySymbol(allConfigsBefore, 'DAI');
+        ReserveConfig memory usdcConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'USDC');
+        ReserveConfig memory usdtConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'USDT');
+
+        assertEq(daiConfigBefore.interestRateStrategy, OLD_DAI_INTEREST_RATE_STRATEGY);
+        assertEq(usdcConfigBefore.interestRateStrategy, OLD_STABLECOINS_INTEREST_RATE_STRATEGY);
+        assertEq(usdtConfigBefore.interestRateStrategy, OLD_STABLECOINS_INTEREST_RATE_STRATEGY);
+
+        IDefaultInterestRateStrategy prevIRM = IDefaultInterestRateStrategy(usdcConfigBefore.interestRateStrategy);
+        uint256 currVarSlope1 = 0.11885440509995120663752e27;
+        _validateInterestRateStrategy(
+            address(prevIRM),
+            OLD_STABLECOINS_INTEREST_RATE_STRATEGY,
+            InterestStrategyValues({
+                addressesProvider:             address(prevIRM.ADDRESSES_PROVIDER()),
+                optimalUsageRatio:             prevIRM.OPTIMAL_USAGE_RATIO(),
+                optimalStableToTotalDebtRatio: prevIRM.OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO(),
+                baseStableBorrowRate:          currVarSlope1,
+                stableRateSlope1:              prevIRM.getStableRateSlope1(),
+                stableRateSlope2:              prevIRM.getStableRateSlope2(),
+                baseVariableBorrowRate:        prevIRM.getBaseVariableBorrowRate(),
+                variableRateSlope1:            currVarSlope1,
+                variableRateSlope2:            prevIRM.getVariableRateSlope2()
+            })
+        );
+
+        executeAllPayloadsAndBridges();
+
+        ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
+
+        ReserveConfig memory daiConfigAfter  = _findReserveConfigBySymbol(allConfigsAfter, 'DAI');
+        ReserveConfig memory usdcConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'USDC');
+        ReserveConfig memory usdtConfigAfter = _findReserveConfigBySymbol(allConfigsAfter, 'USDT');
+
+        address rateSource = address(IIRM(daiConfigAfter.interestRateStrategy).RATE_SOURCE());
+        address susds = ISSRRateSource(rateSource).susds();
+        assertEq(susds, Ethereum.SUSDS);
+
+        // Confirm all rate sources are the same
+        assertEq(address(IIRM(usdcConfigAfter.interestRateStrategy).RATE_SOURCE()), rateSource);
+
+        uint256 ssrApr = IRateSource(rateSource).getAPR();
+
+        // Approx 12.5% APY
+        assertEq(_getAPY(ssrApr), 0.124999999999999999980492118e27);
+
+        uint256 expectedDaiBaseVariableBorrowRate = ssrApr + 0.0025e27;
+
+        // Approx 12.75% APY (deviation due to addition of APR)
+        assertEq(_getAPY(expectedDaiBaseVariableBorrowRate), 0.127816018545877080595039981e27);
+
+        _validateInterestRateStrategy(
+            daiConfigAfter.interestRateStrategy,
+            NEW_DAI_INTEREST_RATE_STRATEGY,
+            InterestStrategyValues({
+                addressesProvider:             address(IDefaultInterestRateStrategy(daiConfigAfter.interestRateStrategy).ADDRESSES_PROVIDER()),
+                optimalUsageRatio:             1e27,
+                optimalStableToTotalDebtRatio: 0,
+                baseStableBorrowRate:          0,
+                stableRateSlope1:              0,
+                stableRateSlope2:              0,
+                baseVariableBorrowRate:        expectedDaiBaseVariableBorrowRate,
+                variableRateSlope1:            0,
+                variableRateSlope2:            0
+            })
+        );
+
+        // Note: the slope1 changes slightly due to the difference between APY and APR addition
+        //       (11.5% APY + 1% APR != 12.5% APY + 0% APR)
+        uint256 newVarSlope1 = 0.117783035876335945414896e27;
+        _validateInterestRateStrategy(
+            usdcConfigAfter.interestRateStrategy,
+            NEW_STABLECOINS_INTEREST_RATE_STRATEGY,
+            InterestStrategyValues({
+                addressesProvider:             address(prevIRM.ADDRESSES_PROVIDER()),
+                optimalUsageRatio:             prevIRM.OPTIMAL_USAGE_RATIO(),
+                optimalStableToTotalDebtRatio: prevIRM.OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO(),
+                baseStableBorrowRate:          newVarSlope1,
+                stableRateSlope1:              prevIRM.getStableRateSlope1(),
+                stableRateSlope2:              prevIRM.getStableRateSlope2(),
+                baseVariableBorrowRate:        prevIRM.getBaseVariableBorrowRate(),
+                variableRateSlope1:            newVarSlope1,
+                variableRateSlope2:            prevIRM.getVariableRateSlope2()
+            })
+        );
+        assertEq(usdcConfigAfter.interestRateStrategy, usdtConfigAfter.interestRateStrategy);
     }
 
     function testBridging() external {
