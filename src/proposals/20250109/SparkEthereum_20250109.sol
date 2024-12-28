@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.25;
 
-import { IERC20 }   from 'forge-std/interfaces/IERC20.sol';
+import { Ethereum, SparkPayloadEthereum, IEngine, EngineFlags } from './SparkPayloadEthereum.sol';
 
-import { IAToken } from 'lib/sparklend-v1-core/contracts/interfaces/IAToken.sol';
+import { IERC20 } from 'forge-std/interfaces/IERC20.sol';
 
-import { Ethereum, SparkPayloadEthereum, IEngine, EngineFlags } from 'src/SparkPayloadEthereum.sol';
-import { Base }                                                 from 'spark-address-registry/Base.sol';
+import { Base } from 'spark-address-registry/Base.sol';
 
-import { IMetaMorpho, MarketParams } from 'lib/metamorpho/src/interfaces/IMetaMorpho.sol';
+import { IMetaMorpho, MarketParams } from 'metamorpho/interfaces/IMetaMorpho.sol';
 
 import { AllocatorBuffer } from 'dss-allocator/src/AllocatorBuffer.sol';
 import { AllocatorVault }  from 'dss-allocator/src/AllocatorVault.sol';
 
 import { OptimismForwarder } from 'xchain-helpers/forwarders/OptimismForwarder.sol';
+
+import { MainnetControllerInit } from 'spark-alm-controller/deploy/MainnetControllerInit.sol';
 
 interface ITokenBridge {
     function bridgeERC20To(
@@ -33,10 +34,12 @@ interface ITokenBridge {
            Spark Liquidity Layer: Controller Upgrade, Onboard Ethena Direct,
                                   Aave V3 and increase liquidity available to Base
  * @author Phoenix Labs
- * Forum:  TODO
+ * Forum:  https://forum.sky.money/t/27-dec-2024-proposed-changes-to-spark-for-upcoming-spell/25760
  * Vote:   TODO
  */
 contract SparkEthereum_20250109 is SparkPayloadEthereum {
+
+    address internal constant NEW_ALM_CONTROLLER = address(0);
 
     address internal constant PT_SUSDE_24OCT2024_PRICE_FEED = 0xaE4750d0813B5E37A51f7629beedd72AF1f9cA35;
     address internal constant PT_SUSDE_24OCT2024            = 0xAE5099C39f023C91d3dd55244CAFB36225B0850E;
@@ -47,8 +50,8 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
     address internal constant PT_SUSDE_29MAY2025_PRICE_FEED = 0xE84f7e0a890e5e57d0beEa2c8716dDf0c9846B4A;
     address internal constant PT_SUSDE_29MAY2025            = 0xb7de5dFCb74d25c2f21841fbd6230355C50d9308;
 
-    address constant ATOKEN_USDS = 0x32a6268f9Ba3642Dda7892aDd74f1D34469A4259;
-    address constant ATOKEN_USDC = 0x98C23E9d8f34FEFb1B7BD6a91B7FF122F4e16F5c;
+    address internal constant ATOKEN_USDS = 0x32a6268f9Ba3642Dda7892aDd74f1D34469A4259;
+    address internal constant ATOKEN_USDC = 0x98C23E9d8f34FEFb1B7BD6a91B7FF122F4e16F5c;
 
     uint256 internal constant USDS_MINT_AMOUNT = 100_000_000e18;
 
@@ -173,7 +176,7 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
 
         // --- Send USDS and sUSDS to Base ---
 
-        // Mint USDS and sUSDS
+        // Mint USDS
         AllocatorVault(Ethereum.ALLOCATOR_VAULT).draw(USDS_MINT_AMOUNT);
         AllocatorBuffer(Ethereum.ALLOCATOR_BUFFER).approve(Ethereum.USDS, address(this), USDS_MINT_AMOUNT);
         IERC20(Ethereum.USDS).transferFrom(Ethereum.ALLOCATOR_BUFFER, address(this), USDS_MINT_AMOUNT);
@@ -187,58 +190,37 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
         OptimismForwarder.sendMessageL1toL2({
             l1CrossDomain: OptimismForwarder.L1_CROSS_DOMAIN_BASE,
             target:        Base.SPARK_RECEIVER,
-            message:       encodePayloadQueue(BASE_PAYLOAD),
+            message:       _encodePayloadQueue(BASE_PAYLOAD),
             gasLimit:      1_000_000
         });
     }
 
     function _upgradeController() private {
-        RateLimitData memory rateLimitData18 = RateLimitData({
-            maxAmount : 4_000_000e18,
-            slope     : 2_000_000e18 / uint256(1 days)
-        });
-        RateLimitData memory rateLimitData6 = RateLimitData({
-            maxAmount : 4_000_000e6,
-            slope     : 2_000_000e6 / uint256(1 days)
-        });
-        RateLimitData memory unlimitedRateLimit = RateLimitData({
-            maxAmount : type(uint256).max,
-            slope     : 0
-        });
-
         MintRecipient[] memory mintRecipients = new MintRecipient[](1);
         mintRecipients[0] = MintRecipient({
             domain        : CCTPForwarder.DOMAIN_ID_CIRCLE_BASE,
             mintRecipient : bytes32(uint256(uint160(Base.ALM_PROXY)))
         });
 
-        MainnetControllerInit.subDaoInitController({
-            addresses: MainnetControllerInit.AddressParams({
-                admin         : Ethereum.SPARK_PROXY,
-                freezer       : FREEZER,
-                relayer       : RELAYER,
-                oldController : address(0),
-                psm           : Ethereum.PSM,
-                vault         : Ethereum.ALLOCATOR_VAULT,
-                buffer        : Ethereum.ALLOCATOR_BUFFER,
-                cctpMessenger : Ethereum.CCTP_TOKEN_MESSENGER,
-                dai           : Ethereum.DAI,
-                daiUsds       : Ethereum.DAI_USDS,
-                usdc          : Ethereum.USDC,
-                usds          : Ethereum.USDS,
-                susds         : Ethereum.SUSDS
-            }),
+        MainnetControllerInit.upgradeController({
             controllerInst: ControllerInstance({
                 almProxy   : Ethereum.ALM_PROXY,
-                controller : Ethereum.ALM_CONTROLLER,
+                controller : NEW_ALM_CONTROLLER,
                 rateLimits : Ethereum.ALM_RATE_LIMITS
             }),
-            data: MainnetControllerInit.InitRateLimitData({
-                usdsMintData         : rateLimitData18,
-                usdsToUsdcData       : rateLimitData6,
-                usdcToCctpData       : unlimitedRateLimit,
-                cctpToBaseDomainData : rateLimitData6,
-                susdsDepositData     : unlimitedRateLimit
+            configAddresses: MainnetControllerInit.ConfigAddressParams({
+                freezer       : FREEZER,
+                relayer       : RELAYER,
+                oldController : Ethereum.ALM_CONTROLLER
+            }),
+            checkAddresses: MainnetControllerInit.CheckAddressParams({
+                admin      : Ethereum.SPARK_PROXY,
+                proxy      : Ethereum.ALM_PROXY,
+                rateLimits : Ethereum.ALM_RATE_LIMITS,
+                vault      : Ethereum.ALLOCATOR_VAULT,
+                psm        : Ethereum.PSM,
+                daiUsds    : Ethereum.DAI_USDS,
+                cctp       : Ethereum.CCTP_TOKEN_MESSENGER
             }),
             mintRecipients: mintRecipients
         });
@@ -294,34 +276,6 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
             }),
             "susdeCooldownLimit",
             18
-        );
-    }
-
-    function _onboardAaveToken(address token, uint256 depositMax, uint256 depositSlope) private {
-        IERC20 underlying = IERC20(IAToken(token).UNDERLYING_ASSET_ADDRESS());
-
-        MainnetControllerInit.setRateLimitData(
-            RateLimitHelpers.makeAssetKey(
-                MainnetController(Ethereum.ALM_CONTROLLER).LIMIT_AAVE_DEPOSIT(),
-                token
-            ),
-            Ethereum.ALM_RATE_LIMITS,
-            RateLimitData({
-                maxAmount : depositMax,
-                slope     : depositSlope
-            }),
-            "atokenDepositLimit",
-            underlying.decimals()
-        );
-        MainnetControllerInit.setRateLimitData(
-            RateLimitHelpers.makeAssetKey(
-                MainnetController(Ethereum.ALM_CONTROLLER).LIMIT_AAVE_WITHDRAW(),
-                token
-            ),
-            Ethereum.ALM_RATE_LIMITS,
-            unlimitedRateLimit,
-            "atokenWithdrawLimit",
-            underlying.decimals()
         );
     }
 
