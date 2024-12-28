@@ -301,8 +301,6 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
             500_000_000e18
         );
 
-        // TODO USDe March increase?
-
         // Onboard PT-sUSDe-29May2025 0 -> 200m
         IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).submitCap(
             MarketParams({
@@ -355,8 +353,8 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
             MainnetController(Ethereum.ALM_CONTROLLER).LIMIT_USDE_MINT(),
             Ethereum.ALM_RATE_LIMITS,
             RateLimitData({
-                maxAmount : 10_000_000e6,
-                slope     : 2_000_000e6 / uint256(1 days)
+                maxAmount : 20_000_000e6,
+                slope     : 10_000_000e6 / uint256(1 days)
             }),
             "ethenaMintLimit",
             6
@@ -365,8 +363,8 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
             MainnetController(Ethereum.ALM_CONTROLLER).LIMIT_USDE_MINT(),
             Ethereum.ALM_RATE_LIMITS,
             RateLimitData({
-                maxAmount : 10_000_000e18,
-                slope     : 2_000_000e18 / uint256(1 days)
+                maxAmount : 20_000_000e18,
+                slope     : 10_000_000e18 / uint256(1 days)
             }),
             "ethenaBurnLimit",
             18
@@ -380,7 +378,7 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
             ),
             Ethereum.ALM_RATE_LIMITS,
             RateLimitData({
-                maxAmount : 100_000_000e18,
+                maxAmount : 200_000_000e18,
                 slope     : 50_000_000e6 / uint256(1 days)
             }),
             "susdeDepositLimit",
