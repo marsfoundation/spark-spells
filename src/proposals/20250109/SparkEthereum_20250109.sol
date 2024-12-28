@@ -48,6 +48,9 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
 
     address internal constant NEW_ALM_CONTROLLER = 0x5fdC58FE24109ecCFf98fAA690AA0736216dfC62;
 
+    address internal constant NEW_DAI_IRM         = 0xd957978711f705358dbe34b37d381a76e1555e28;
+    address internal constant NEW_STABLECOINS_IRM = 0xb7b734CF1F13652E930f8a604E8f837f85160174;
+
     address internal constant PT_SUSDE_24OCT2024_PRICE_FEED = 0xaE4750d0813B5E37A51f7629beedd72AF1f9cA35;
     address internal constant PT_SUSDE_24OCT2024            = 0xAE5099C39f023C91d3dd55244CAFB36225B0850E;
     address internal constant PT_SUSDE_26DEC2024_PRICE_FEED = 0x81E5E28F33D314e9211885d6f0F4080E755e4595;
@@ -161,7 +164,19 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
 
         // --- Custom IRM Updates ---
 
-        // TODO DAI, USDC, USDT: update IRM to anchor to SSR
+        // DAI, USDC, USDT: update IRM to anchor to SSR, increase DAI spread by 0.25%
+        LISTING_ENGINE.POOL_CONFIGURATOR().setReserveInterestRateStrategyAddress(
+            Ethereum.DAI,
+            NEW_DAI_IRM
+        );
+        LISTING_ENGINE.POOL_CONFIGURATOR().setReserveInterestRateStrategyAddress(
+            Ethereum.USDC,
+            NEW_STABLECOINS_IRM
+        );
+        LISTING_ENGINE.POOL_CONFIGURATOR().setReserveInterestRateStrategyAddress(
+            Ethereum.USDT,
+            NEW_STABLECOINS_IRM
+        );
 
         // --- Morpho Supply Cap Updates ---
 
