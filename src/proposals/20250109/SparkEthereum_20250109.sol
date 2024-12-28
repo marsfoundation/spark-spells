@@ -46,9 +46,9 @@ interface ITokenBridge {
  */
 contract SparkEthereum_20250109 is SparkPayloadEthereum {
 
-    address internal constant NEW_ALM_CONTROLLER = 0x5fdC58FE24109ecCFf98fAA690AA0736216dfC62;
+    address internal constant NEW_ALM_CONTROLLER = 0x122FdFe632628579Dd718b0e82012ccDC8886974;
 
-    address internal constant NEW_DAI_IRM         = 0xd957978711f705358dbe34b37d381a76e1555e28;
+    address internal constant NEW_DAI_IRM         = 0xd957978711F705358dbE34B37D381a76E1555E28;
     address internal constant NEW_STABLECOINS_IRM = 0xb7b734CF1F13652E930f8a604E8f837f85160174;
 
     address internal constant PT_SUSDE_24OCT2024_PRICE_FEED = 0xaE4750d0813B5E37A51f7629beedd72AF1f9cA35;
@@ -63,7 +63,7 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
     address internal constant ATOKEN_USDS = 0x32a6268f9Ba3642Dda7892aDd74f1D34469A4259;
     address internal constant ATOKEN_USDC = 0x98C23E9d8f34FEFb1B7BD6a91B7FF122F4e16F5c;
 
-    uint256 internal constant USDS_MINT_AMOUNT = 100_000_000e18;
+    uint256 internal constant USDS_MINT_AMOUNT = 99_000_000e18;
 
     address internal constant BASE_PAYLOAD = address(0);
 
@@ -99,7 +99,7 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
         IEngine.BorrowUpdate[] memory updates = new IEngine.BorrowUpdate[](1);
 
         // wstETH: Increase reserve factor from 15% to 30%
-        updates[1] = IEngine.BorrowUpdate({
+        updates[0] = IEngine.BorrowUpdate({
             asset:                 Ethereum.WSTETH,
             enabledToBorrow:       EngineFlags.KEEP_CURRENT,
             flashloanable:         EngineFlags.KEEP_CURRENT,
@@ -114,7 +114,7 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
 
     function rateStrategiesUpdates()
         public
-        pure
+        view
         override
         returns (IEngine.RateStrategyUpdate[] memory)
     {
@@ -124,7 +124,7 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
             .RATE_STRATEGIES_FACTORY()
             .getStrategyDataOfAsset(Ethereum.WSTETH);
         wstethParams.baseVariableBorrowRate = 0;
-        wstethParams.optimalUsageRatio      = _bpsToRay(80_00);
+        wstethParams.optimalUsageRatio      = _bpsToRay(70_00);
         wstethParams.variableRateSlope1     = _bpsToRay(2_00);
         wstethParams.variableRateSlope2     = _bpsToRay(300_00);
         updates[0] = IEngine.RateStrategyUpdate({
@@ -157,8 +157,8 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
         });
         ICapAutomator(Ethereum.CAP_AUTOMATOR).setBorrowCapConfig({
             asset: Ethereum.WSTETH,
-            max: 100_000,
-            gap: 1_000,
+            max: 500_000,
+            gap: 5_000,
             increaseCooldown: 12 hours
         });
 
@@ -192,6 +192,7 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
         _onboardEthena();
 
         // Aave V3
+        // TODO limits
         _onboardAaveToken(ATOKEN_USDS, 20_000_000e18, 2_000_000e18 / uint256(1 days));
         _onboardAaveToken(ATOKEN_USDC, 20_000_000e6,  2_000_000e6 / uint256(1 days));
 
@@ -349,8 +350,8 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
         // TODO limits
 
         // USDe mint/burn
-        MainnetControllerInit.setRateLimitData(
-            MainnetController(Ethereum.ALM_CONTROLLER).LIMIT_USDE_MINT(),
+        RateLimitHelpers.setRateLimitData(
+            MainnetController(NEW_ALM_CONTROLLER).LIMIT_USDE_MINT(),
             Ethereum.ALM_RATE_LIMITS,
             RateLimitData({
                 maxAmount : 20_000_000e6,
@@ -359,8 +360,8 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
             "ethenaMintLimit",
             6
         );
-        MainnetControllerInit.setRateLimitData(
-            MainnetController(Ethereum.ALM_CONTROLLER).LIMIT_USDE_MINT(),
+        RateLimitHelpers.setRateLimitData(
+            MainnetController(NEW_ALM_CONTROLLER).LIMIT_USDE_MINT(),
             Ethereum.ALM_RATE_LIMITS,
             RateLimitData({
                 maxAmount : 20_000_000e18,
@@ -371,9 +372,9 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
         );
 
         // sUSDe deposit (no need for withdrawal because of cooldown)
-        MainnetControllerInit.setRateLimitData(
+        RateLimitHelpers.setRateLimitData(
             RateLimitHelpers.makeAssetKey(
-                MainnetController(Ethereum.ALM_CONTROLLER).LIMIT_4626_DEPOSIT(),
+                MainnetController(NEW_ALM_CONTROLLER).LIMIT_4626_DEPOSIT(),
                 Ethereum.SUSDE
             ),
             Ethereum.ALM_RATE_LIMITS,
@@ -386,11 +387,11 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
         );
 
         // Cooldown
-        MainnetControllerInit.setRateLimitData(
-            MainnetController(Ethereum.ALM_CONTROLLER).LIMIT_SUSDE_COOLDOWN(),
+        RateLimitHelpers.setRateLimitData(
+            MainnetController(NEW_ALM_CONTROLLER).LIMIT_SUSDE_COOLDOWN(),
             Ethereum.ALM_RATE_LIMITS,
             RateLimitData({
-                maxAmount : 100_000_000e18,
+                maxAmount : 200_000_000e18,
                 slope     : 50_000_000e18 / uint256(1 days)
             }),
             "susdeCooldownLimit",

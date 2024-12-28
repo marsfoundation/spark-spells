@@ -109,7 +109,7 @@ library SparkLiquidityLayerHelpers {
 
     function morphoIdleMarket(
         address asset
-    ) internal pure returns (MarketParams) {
+    ) internal pure returns (MarketParams memory) {
         return MarketParams({
             loanToken:       asset,
             collateralToken: address(0),
@@ -132,7 +132,7 @@ library SparkLiquidityLayerHelpers {
         bool createIdleMarket
     ) internal {
         IERC20 asset = IERC20(IERC4626(vault).asset());
-        MarketParams memory idleMarket = morphoIdleMarket(asset);
+        MarketParams memory idleMarket = morphoIdleMarket(address(asset));
 
         if (createIdleMarket) {
             IMorpho(MORPHO).createMarket(

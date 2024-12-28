@@ -22,7 +22,7 @@ import { ForeignControllerInit } from "spark-alm-controller/deploy/ForeignContro
  */
 contract SparkBase_20250109 is SparkPayloadBase {
 
-    address internal constant NEW_ALM_CONTROLLER = 0xbE67325938Bf223a31Da7ff91777feD784F8163c;
+    address internal constant NEW_ALM_CONTROLLER = 0xE09e6fA52Bd3e8071fc6B5473f1bBeAe67018591;
 
     address internal constant ATOKEN_USDC = 0x4e65fE4DbA92790696d040ac24Aa414708F5c0AB;
 
@@ -39,6 +39,7 @@ contract SparkBase_20250109 is SparkPayloadBase {
 
         // --- Spark Liquidity Layer Onboarding ---
 
+        // TODO limits
         // Aave V3
         _onboardAaveToken(ATOKEN_USDC, 20_000_000e18, 2_000_000e18 / uint256(1 days));
 
@@ -79,8 +80,8 @@ contract SparkBase_20250109 is SparkPayloadBase {
                 oldController : Base.ALM_CONTROLLER
             }),
             checkAddresses: ForeignControllerInit.CheckAddressParams({
-                admin : Base.SPARK_PROXY,
-                psm   : Base.PSM,
+                admin : Base.SPARK_EXECUTOR,
+                psm   : Base.PSM3,
                 cctp  : Base.CCTP_TOKEN_MESSENGER,
                 usdc  : Base.USDC,
                 susds : Base.SUSDS,
