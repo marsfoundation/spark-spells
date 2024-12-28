@@ -46,7 +46,7 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         setupDomains({mainnetForkBlock: 21488404, baseForkBlock: 24224026, gnosisForkBlock: 37691338});
         deployPayloads();
 
-        // mock Sky approving 1b liquidity to spark, which will be executed as part of this spell
+        // mock Sky increase max line to 1b, which will be executed as part of this spell
         vm.prank(Ethereum.PAUSE_PROXY);
         DssAutoLineLike(AUTO_LINE).setIlk(ALLOCATOR_ILK, 1_000_000_000e45, 100_000_000e45, 24 hours);
         DssAutoLineLike(AUTO_LINE).exec(ALLOCATOR_ILK);

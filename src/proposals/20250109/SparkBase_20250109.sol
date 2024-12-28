@@ -22,7 +22,7 @@ import { ForeignControllerInit } from "spark-alm-controller/deploy/ForeignContro
  */
 contract SparkBase_20250109 is SparkPayloadBase {
 
-    address internal constant NEW_ALM_CONTROLLER = address(0);
+    address internal constant NEW_ALM_CONTROLLER = 0xbE67325938Bf223a31Da7ff91777feD784F8163c;
 
     address internal constant ATOKEN_USDC = 0x4e65fE4DbA92790696d040ac24Aa414708F5c0AB;
 

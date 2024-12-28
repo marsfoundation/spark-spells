@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.25;
 
-import { Ethereum, SparkPayloadEthereum, IEngine, EngineFlags } from "../../SparkPayloadEthereum.sol";
+import { Ethereum, SparkPayloadEthereum, IEngine, EngineFlags, Rates } from "../../SparkPayloadEthereum.sol";
 
 import { IERC20 } from "forge-std/interfaces/IERC20.sol";
 
@@ -20,6 +20,8 @@ import { ControllerInstance }              from "spark-alm-controller/deploy/Con
 import { MainnetControllerInit }           from "spark-alm-controller/deploy/MainnetControllerInit.sol";
 import { MainnetController }               from "spark-alm-controller/src/MainnetController.sol";
 import { RateLimitHelpers, RateLimitData } from "spark-alm-controller/src/RateLimitHelpers.sol";
+
+import { ICapAutomator } from "sparklend-cap-automator/interfaces/ICapAutomator.sol";
 
 interface ITokenBridge {
     function bridgeERC20To(
@@ -44,7 +46,7 @@ interface ITokenBridge {
  */
 contract SparkEthereum_20250109 is SparkPayloadEthereum {
 
-    address internal constant NEW_ALM_CONTROLLER = address(0);
+    address internal constant NEW_ALM_CONTROLLER = 0x5fdC58FE24109ecCFf98fAA690AA0736216dfC62;
 
     address internal constant PT_SUSDE_24OCT2024_PRICE_FEED = 0xaE4750d0813B5E37A51f7629beedd72AF1f9cA35;
     address internal constant PT_SUSDE_24OCT2024            = 0xAE5099C39f023C91d3dd55244CAFB36225B0850E;
@@ -76,16 +78,32 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
             eModeCategory:  EngineFlags.KEEP_CURRENT
         });
 
-        // TODO cbBTC: possible LT/LTV adjustment
-
+        // weETH: Disable isolation mode
         updates[1] = IEngine.CollateralUpdate({
             asset:          Ethereum.WEETH,
             ltv:            EngineFlags.KEEP_CURRENT,
             liqThreshold:   EngineFlags.KEEP_CURRENT,
             liqBonus:       EngineFlags.KEEP_CURRENT,
-            debtCeiling:    0,  // Disable isolation mode
+            debtCeiling:    0,
             liqProtocolFee: EngineFlags.KEEP_CURRENT,
             eModeCategory:  EngineFlags.KEEP_CURRENT
+        });
+
+        return updates;
+    }
+
+    function borrowsUpdates() public pure override returns (IEngine.BorrowUpdate[] memory) {
+        IEngine.BorrowUpdate[] memory updates = new IEngine.BorrowUpdate[](1);
+
+        // wstETH: Increase reserve factor from 15% to 30%
+        updates[1] = IEngine.BorrowUpdate({
+            asset:                 Ethereum.WSTETH,
+            enabledToBorrow:       EngineFlags.KEEP_CURRENT,
+            flashloanable:         EngineFlags.KEEP_CURRENT,
+            stableRateModeEnabled: EngineFlags.KEEP_CURRENT,
+            borrowableInIsolation: EngineFlags.KEEP_CURRENT,
+            withSiloedBorrowing:   EngineFlags.KEEP_CURRENT,
+            reserveFactor:         30_00
         });
 
         return updates;
@@ -99,7 +117,17 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
     {
         IEngine.RateStrategyUpdate[] memory updates = new IEngine.RateStrategyUpdate[](1);
 
-        // TODO wstETH: possible IRM changes
+        Rates.RateStrategyParams memory wstethParams = LISTING_ENGINE
+            .RATE_STRATEGIES_FACTORY()
+            .getStrategyDataOfAsset(Ethereum.WSTETH);
+        wstethParams.baseVariableBorrowRate = 0;
+        wstethParams.optimalUsageRatio      = _bpsToRay(80_00);
+        wstethParams.variableRateSlope1     = _bpsToRay(2_00);
+        wstethParams.variableRateSlope2     = _bpsToRay(300_00);
+        updates[0] = IEngine.RateStrategyUpdate({
+            asset:  Ethereum.WSTETH,
+            params: wstethParams
+        });
 
         return updates;
     }
@@ -107,9 +135,29 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
     function _postExecute() internal override {
         // --- Cap Automator Updates ---
 
-        // TODO cbBTC: supply cap max, borrow and supply gap
-        // TODO wstETH: supply cap max
-        // TODO weETH: raise gap
+        // cbBTC: Increase max from 3k to 10k
+        ICapAutomator(Ethereum.CAP_AUTOMATOR).setSupplyCapConfig({
+            asset: Ethereum.CBBTC,
+            max: 10_000,
+            gap: 500,
+            increaseCooldown: 12 hours
+        });
+
+        // wstETH: Increase supply max from 1.2m to 2m
+        //         Increase borrow max from 3k to 100k, gap from 100 to 1000
+        // TODO confirm borrow numbers
+        ICapAutomator(Ethereum.CAP_AUTOMATOR).setSupplyCapConfig({
+            asset: Ethereum.WSTETH,
+            max: 2_000_000,
+            gap: 50_000,
+            increaseCooldown: 12 hours
+        });
+        ICapAutomator(Ethereum.CAP_AUTOMATOR).setBorrowCapConfig({
+            asset: Ethereum.WSTETH,
+            max: 100_000,
+            gap: 1_000,
+            increaseCooldown: 12 hours
+        });
 
         // --- Custom IRM Updates ---
 
@@ -117,54 +165,7 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
 
         // --- Morpho Supply Cap Updates ---
 
-        // TODO Reduce existing cap for PT-sUSDe-24Oct2024 100m -> 0
-        IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).submitCap(
-            MarketParams({
-                loanToken:       Ethereum.DAI,
-                collateralToken: PT_SUSDE_24OCT2024,
-                oracle:          PT_SUSDE_24OCT2024_PRICE_FEED,
-                irm:             Ethereum.MORPHO_DEFAULT_IRM,
-                lltv:            0.86e18
-            }),
-            0
-        );
-
-
-        // TODO Reduce existing cap for PT-sUSDe-26Dec2024 250m -> 0
-        IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).submitCap(
-            MarketParams({
-                loanToken:       Ethereum.DAI,
-                collateralToken: PT_SUSDE_26DEC2024,
-                oracle:          PT_SUSDE_26DEC2024_PRICE_FEED,
-                irm:             Ethereum.MORPHO_DEFAULT_IRM,
-                lltv:            0.915e18
-            }),
-            0
-        );
-
-        // TODO Increase existing cap for PT-sUSDe-27Mar2025 400m -> X
-        IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).submitCap(
-            MarketParams({
-                loanToken:       Ethereum.DAI,
-                collateralToken: PT_SUSDE_27MAR2025,
-                oracle:          PT_SUSDE_27MAR2025_PRICE_FEED,
-                irm:             Ethereum.MORPHO_DEFAULT_IRM,
-                lltv:            0.915e18
-            }),
-            600_000_000e18
-        );
-
-        // TODO Onboard PT-sUSDe-29May2025 0 -> X
-        IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).submitCap(
-            MarketParams({
-                loanToken:       Ethereum.DAI,
-                collateralToken: PT_SUSDE_29MAY2025,
-                oracle:          PT_SUSDE_29MAY2025_PRICE_FEED,
-                irm:             Ethereum.MORPHO_DEFAULT_IRM,
-                lltv:            0.915e18
-            }),
-            200_000_000e18
-        );
+        _morphoSupplyCapUpdates();
 
         // --- Spark Liquidity Layer Controller Upgrade ---
 
@@ -198,6 +199,106 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
             message:       _encodePayloadQueue(BASE_PAYLOAD),
             gasLimit:      1_000_000
         });
+    }
+
+    function _morphoSupplyCapUpdates() private {
+        // Reduce existing cap for USDe 94.5% LTV 10m -> 0
+        IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).submitCap(
+            MarketParams({
+                loanToken:       Ethereum.DAI,
+                collateralToken: Ethereum.USDE,
+                oracle:          Ethereum.MORPHO_USDE_ORACLE,
+                irm:             Ethereum.MORPHO_DEFAULT_IRM,
+                lltv:            0.945e18
+            }),
+            0
+        );
+
+        // Reduce existing cap for USDe 77% LTV 1b -> 0
+        IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).submitCap(
+            MarketParams({
+                loanToken:       Ethereum.DAI,
+                collateralToken: Ethereum.USDE,
+                oracle:          Ethereum.MORPHO_USDE_ORACLE,
+                irm:             Ethereum.MORPHO_DEFAULT_IRM,
+                lltv:            0.77e18
+            }),
+            0
+        );
+
+        // Reduce existing cap for sUSDe 94.5% LTV 10m -> 0
+        IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).submitCap(
+            MarketParams({
+                loanToken:       Ethereum.DAI,
+                collateralToken: Ethereum.SUSDE,
+                oracle:          Ethereum.MORPHO_SUSDE_ORACLE,
+                irm:             Ethereum.MORPHO_DEFAULT_IRM,
+                lltv:            0.945e18
+            }),
+            0
+        );
+
+        // Reduce existing cap for sUSDe 77% LTV 1b -> 0
+        IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).submitCap(
+            MarketParams({
+                loanToken:       Ethereum.DAI,
+                collateralToken: Ethereum.SUSDE,
+                oracle:          Ethereum.MORPHO_SUSDE_ORACLE,
+                irm:             Ethereum.MORPHO_DEFAULT_IRM,
+                lltv:            0.77e18
+            }),
+            0
+        );
+
+        // Reduce existing cap for PT-sUSDe-24Oct2024 100m -> 0
+        IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).submitCap(
+            MarketParams({
+                loanToken:       Ethereum.DAI,
+                collateralToken: PT_SUSDE_24OCT2024,
+                oracle:          PT_SUSDE_24OCT2024_PRICE_FEED,
+                irm:             Ethereum.MORPHO_DEFAULT_IRM,
+                lltv:            0.86e18
+            }),
+            0
+        );
+
+        // Reduce existing cap for PT-sUSDe-26Dec2024 250m -> 0
+        IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).submitCap(
+            MarketParams({
+                loanToken:       Ethereum.DAI,
+                collateralToken: PT_SUSDE_26DEC2024,
+                oracle:          PT_SUSDE_26DEC2024_PRICE_FEED,
+                irm:             Ethereum.MORPHO_DEFAULT_IRM,
+                lltv:            0.915e18
+            }),
+            0
+        );
+
+        // Increase existing cap for PT-sUSDe-27Mar2025 400m -> 500m
+        IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).submitCap(
+            MarketParams({
+                loanToken:       Ethereum.DAI,
+                collateralToken: PT_SUSDE_27MAR2025,
+                oracle:          PT_SUSDE_27MAR2025_PRICE_FEED,
+                irm:             Ethereum.MORPHO_DEFAULT_IRM,
+                lltv:            0.915e18
+            }),
+            500_000_000e18
+        );
+
+        // TODO USDe March increase?
+
+        // Onboard PT-sUSDe-29May2025 0 -> 200m
+        IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).submitCap(
+            MarketParams({
+                loanToken:       Ethereum.DAI,
+                collateralToken: PT_SUSDE_29MAY2025,
+                oracle:          PT_SUSDE_29MAY2025_PRICE_FEED,
+                irm:             Ethereum.MORPHO_DEFAULT_IRM,
+                lltv:            0.915e18
+            }),
+            200_000_000e18
+        );
     }
 
     function _upgradeController() private {
