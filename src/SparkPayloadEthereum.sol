@@ -22,24 +22,25 @@ abstract contract SparkPayloadEthereum is
     AaveV3PayloadBase(IEngine(Ethereum.CONFIG_ENGINE))
 {
 
-    address public immutable payloadBase;
-    address public immutable payloadGnosis;
+    // These need to be immutable (delegatecall) and can only be set in constructor
+    address public immutable PAYLOAD_BASE;
+    address public immutable PAYLOAD_GNOSIS;
 
     function execute() public override {
         super.execute();
 
-        if (payloadBase != address(0)) {
+        if (PAYLOAD_BASE != address(0)) {
             OptimismForwarder.sendMessageL1toL2({
                 l1CrossDomain: OptimismForwarder.L1_CROSS_DOMAIN_BASE,
                 target:        Base.SPARK_RECEIVER,
-                message:       _encodePayloadQueue(payloadBase),
+                message:       _encodePayloadQueue(PAYLOAD_BASE),
                 gasLimit:      1_000_000
             });
         }
-        if (payloadGnosis != address(0)) {
+        if (PAYLOAD_GNOSIS != address(0)) {
             AMBForwarder.sendMessageEthereumToGnosisChain({
                 target:   Gnosis.AMB_EXECUTOR,
-                message:  _encodePayloadQueue(payloadGnosis),
+                message:  _encodePayloadQueue(PAYLOAD_GNOSIS),
                 gasLimit: 1_000_000
             });
         }

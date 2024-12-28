@@ -192,9 +192,9 @@ abstract contract SpellRunner is Test {
     function getMainnetPayloadFromSpell(ChainId chainId) internal onChain(ChainIdUtils.Ethereum()) returns (address) {
         SparkPayloadEthereum spell = SparkPayloadEthereum(chainSpellMetadata[ChainIdUtils.Ethereum()].payload);
         if (chainId == ChainIdUtils.Base()) {
-            return spell.payloadBase();
+            return spell.PAYLOAD_BASE();
         } else if (chainId == ChainIdUtils.Gnosis()) {
-            return spell.payloadGnosis();
+            return spell.PAYLOAD_GNOSIS();
         } else {
             revert("Unsupported chainId");
         }

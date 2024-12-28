@@ -72,7 +72,7 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
     
     constructor() {
         // TODO update this when payload is deployed
-        payloadBase = address(0);
+        PAYLOAD_BASE = address(0);
     }
 
     function collateralsUpdates() public pure override returns (IEngine.CollateralUpdate[] memory) {
@@ -360,7 +360,7 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
             6
         );
         RateLimitHelpers.setRateLimitData(
-            MainnetController(NEW_ALM_CONTROLLER).LIMIT_USDE_MINT(),
+            MainnetController(NEW_ALM_CONTROLLER).LIMIT_USDE_BURN(),
             Ethereum.ALM_RATE_LIMITS,
             RateLimitData({
                 maxAmount : 20_000_000e18,

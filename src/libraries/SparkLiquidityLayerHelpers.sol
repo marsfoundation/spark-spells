@@ -6,8 +6,7 @@ import { IERC4626 } from 'forge-std/interfaces/IERC4626.sol';
 
 import { IAToken } from "aave-v3-origin/src/core/contracts/interfaces/IAToken.sol";
 
-import { IMetaMorpho, Id }       from "metamorpho/interfaces/IMetaMorpho.sol";
-import { MarketParamsLib }       from "morpho-blue/src/libraries/MarketParamsLib.sol";
+import { IMetaMorpho }           from "metamorpho/interfaces/IMetaMorpho.sol";
 import { IMorpho, MarketParams } from "morpho-blue/src/interfaces/IMorpho.sol";
 
 import { RateLimitHelpers, RateLimitData } from "spark-alm-controller/src/RateLimitHelpers.sol";

@@ -9,8 +9,11 @@ import { Base } from 'spark-address-registry/Base.sol';
 
 import { Domain, DomainHelpers } from "xchain-helpers/testing/Domain.sol";
 
+import { IALMProxy }         from 'spark-alm-controller/src/interfaces/IALMProxy.sol';
+import { MainnetController } from 'spark-alm-controller/src/MainnetController.sol';
 import { ForeignController } from 'spark-alm-controller/src/ForeignController.sol';
-import { IExecutor }         from 'spark-gov-relay/src/interfaces/IExecutor.sol';
+
+import { IExecutor } from 'spark-gov-relay/src/interfaces/IExecutor.sol';
 
 import { ChainIdUtils } from 'src/libraries/ChainId.sol';
 
@@ -35,10 +38,12 @@ contract SparkEthereum_20250109Test is SparkTestBase {
 
     using DomainHelpers for *;
 
-    address public constant OLD_DAI_INTEREST_RATE_STRATEGY = 0xC527A1B514796A6519f236dd906E73cab5aA2E71;
-    address public constant NEW_DAI_INTEREST_RATE_STRATEGY = 0xd957978711F705358dbE34B37D381a76E1555E28;
-    address public constant OLD_STABLECOINS_INTEREST_RATE_STRATEGY = 0x4Da18457A76C355B74F9e4A944EcC882aAc64043;
-    address public constant NEW_STABLECOINS_INTEREST_RATE_STRATEGY = 0xb7b734CF1F13652E930f8a604E8f837f85160174;
+    address internal constant NEW_ALM_CONTROLLER = 0x5cf73FDb7057E436A6eEaDFAd27E45E7ab6E431e;
+
+    address internal constant OLD_DAI_INTEREST_RATE_STRATEGY = 0xC527A1B514796A6519f236dd906E73cab5aA2E71;
+    address internal constant NEW_DAI_INTEREST_RATE_STRATEGY = 0xd957978711F705358dbE34B37D381a76E1555E28;
+    address internal constant OLD_STABLECOINS_INTEREST_RATE_STRATEGY = 0x4Da18457A76C355B74F9e4A944EcC882aAc64043;
+    address internal constant NEW_STABLECOINS_INTEREST_RATE_STRATEGY = 0xb7b734CF1F13652E930f8a604E8f837f85160174;
 
     address internal constant PT_SUSDE_24OCT2024_PRICE_FEED = 0xaE4750d0813B5E37A51f7629beedd72AF1f9cA35;
     address internal constant PT_SUSDE_24OCT2024            = 0xAE5099C39f023C91d3dd55244CAFB36225B0850E;
@@ -357,12 +362,83 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         assertEq(usdcConfigAfter.interestRateStrategy, usdtConfigAfter.interestRateStrategy);
     }
 
-    function test_ETHEREUM_BASE_USDSBridging() public onChain(ChainIdUtils.Base()) {
-        uint256 baseBalanceBefore = IERC20(Base.USDS).balanceOf(Base.ALM_PROXY);
+    function test_ETHEREUM_ControllerUpgrade() public {
+        // Deployment configuration is checked inside the spell
+
+        IALMProxy proxy = IALMProxy(Ethereum.ALM_PROXY);
+
+        assertEq(proxy.hasRole(proxy.CONTROLLER(), Ethereum.ALM_CONTROLLER), true);
+        assertEq(proxy.hasRole(proxy.CONTROLLER(), NEW_ALM_CONTROLLER),      false);
 
         executeAllPayloadsAndBridges();
 
-        assertEq(IERC20(Base.USDS).balanceOf(Base.ALM_PROXY), baseBalanceBefore + USDS_MINT_AMOUNT);
+        assertEq(proxy.hasRole(proxy.CONTROLLER(), Ethereum.ALM_CONTROLLER), false);
+        assertEq(proxy.hasRole(proxy.CONTROLLER(), NEW_ALM_CONTROLLER),      true);
+    }
+
+    function test_ETHEREUM_EthenaOnboardingIntegration() public {
+        executeAllPayloadsAndBridges();
+
+        vm.startPrank(Ethereum.ALM_RELAYER);
+        
+        IERC20 usdc    = IERC20(Ethereum.USDC);
+        IERC20 usde    = IERC20(Ethereum.USDE);
+        IERC4626 susde = IERC4626(Ethereum.SUSDE);
+
+        // Use a realistic number to check the rate limits
+        uint256 usdcAmount = 5_000_000e6;
+        uint256 usdeAmount = usdcAmount * 1e12;
+
+        MainnetController controller = MainnetController(NEW_ALM_CONTROLLER);
+        // Use deal2 for USDC because storage is not set in a common way
+        // Need to also stop pranking because deal2 uses prank
+        vm.stopPrank();
+        deal2(Ethereum.USDC, address(Ethereum.ALM_PROXY), usdcAmount);
+        vm.startPrank(Ethereum.ALM_RELAYER);
+
+        assertEq(usdc.allowance(Ethereum.ALM_PROXY, Ethereum.ETHENA_MINTER), 0);
+
+        controller.prepareUSDeMint(usdcAmount);
+
+        assertEq(usdc.allowance(Ethereum.ALM_PROXY, Ethereum.ETHENA_MINTER), usdcAmount);
+
+        // Fake the offchain swap
+        vm.stopPrank();
+        deal2(Ethereum.USDC, address(Ethereum.ALM_PROXY), 0);
+        vm.startPrank(Ethereum.ALM_RELAYER);
+        deal(Ethereum.USDE, address(Ethereum.ALM_PROXY), usdeAmount);
+
+        assertEq(usde.balanceOf(Ethereum.ALM_PROXY),  usdeAmount);
+        assertEq(susde.balanceOf(Ethereum.ALM_PROXY), 0);
+
+        uint256 susdeAmount = susde.previewDeposit(usdeAmount);
+        assertGt(susdeAmount, 0);
+
+        controller.depositERC4626(Ethereum.SUSDE, usdeAmount);
+
+        assertEq(usde.balanceOf(Ethereum.ALM_PROXY),  0);
+        assertEq(susde.balanceOf(Ethereum.ALM_PROXY), susdeAmount);
+
+        controller.cooldownSharesSUSDe(susdeAmount);
+
+        // Assets are locked in the silo
+        assertEq(usde.balanceOf(Ethereum.ALM_PROXY),  0);
+        assertEq(susde.balanceOf(Ethereum.ALM_PROXY), 0);
+
+        skip(7 days);
+
+        controller.unstakeSUSDe();
+
+        usdeAmount -= 1;  // Rounding
+
+        assertEq(usde.balanceOf(Ethereum.ALM_PROXY),  usdeAmount);
+        assertEq(susde.balanceOf(Ethereum.ALM_PROXY), 0);
+
+        assertEq(usde.allowance(Ethereum.ALM_PROXY, Ethereum.ETHENA_MINTER), 0);
+
+        controller.prepareUSDeBurn(usdeAmount);
+
+        assertEq(usde.allowance(Ethereum.ALM_PROXY, Ethereum.ETHENA_MINTER), usdeAmount);
     }
 
     function test_BASE_MorphoSupplyCapUpdates() public onChain(ChainIdUtils.Base()) {
@@ -395,6 +471,14 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         
         _assertMorphoCap(BASE_MORPHO_SPARK_USDC, usdcIdle,  type(uint184).max);
         _assertMorphoCap(BASE_MORPHO_SPARK_USDC, usdcCBBTC, 100_000_000e6);
+    }
+
+    function test_ETHEREUM_BASE_USDSBridging() public onChain(ChainIdUtils.Base()) {
+        uint256 baseBalanceBefore = IERC20(Base.USDS).balanceOf(Base.ALM_PROXY);
+
+        executeAllPayloadsAndBridges();
+
+        assertEq(IERC20(Base.USDS).balanceOf(Base.ALM_PROXY), baseBalanceBefore + USDS_MINT_AMOUNT);
     }
 
 }
