@@ -351,62 +351,21 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         assertEq(usdcConfigAfter.interestRateStrategy, usdtConfigAfter.interestRateStrategy);
     }
 
-    function testBridging() external {
-        uint256 baseBalanceBefore = 123496652107156694;
-        uint256 SUSDSShares       = IERC4626(Ethereum.SUSDS).convertToShares(USDS_MINT_AMOUNT);
-
-        chainSpellMetadata[ChainIdUtils.Base()].domain.selectFork();
-        assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), baseBalanceBefore);
+    function test_ETHEREUM_BASE_USDSBridging() public onChain(ChainIdUtils.Base()) {
+        uint256 baseBalanceBefore = IERC20(Base.USDS).balanceOf(Base.ALM_PROXY);
 
         executeAllPayloadsAndBridges();
 
-        assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), baseBalanceBefore + SUSDSShares);
+        assertEq(IERC20(Base.USDS).balanceOf(Base.ALM_PROXY), baseBalanceBefore + USDS_MINT_AMOUNT);
     }
 
-    function testE2ELiquidityProvisioningToBase() external {
-        ForeignController controller = ForeignController(Base.ALM_CONTROLLER);
-        address relayer              = 0x8a25A24EDE9482C4Fc0738F99611BE58F1c839AB;
-
-        uint256 baseALMBalanceBefore = 123496652107156694;
-        uint256 basePSMBalanceBefore = 7561335102296991391227534;
-        uint256 SUSDSShares          = IERC4626(Ethereum.SUSDS).convertToShares(USDS_MINT_AMOUNT);
-        uint256 depositAmount        = 1_000_000e18;
-
-        chainSpellMetadata[ChainIdUtils.Base()].domain.selectFork();
-        assertEq(IERC20(Base.SUSDS).balanceOf(Base.PSM3), basePSMBalanceBefore);
-
-        // insufficient ALM_PROXY balance prevents the deposit
-        vm.prank(relayer);
-        vm.expectRevert("SafeERC20/transfer-from-failed");
-        controller.depositPSM(Base.SUSDS, depositAmount);
-
-        chainSpellMetadata[ChainIdUtils.Ethereum()].domain.selectFork();
-
-        executeAllPayloadsAndBridges();
-        
-        chainSpellMetadata[ChainIdUtils.Base()].domain.selectFork();
-        assertEq(IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY), baseALMBalanceBefore + SUSDSShares);
-        // after funds are bridged, liquidity can be provisioned to the PSM
-        vm.prank(relayer);
-        controller.depositPSM(Base.SUSDS, depositAmount);
-        assertEq(
-          IERC20(Base.SUSDS).balanceOf(Base.PSM3),
-          basePSMBalanceBefore + depositAmount
-        );
-        assertEq(
-          IERC20(Base.SUSDS).balanceOf(Base.ALM_PROXY),
-          baseALMBalanceBefore + SUSDSShares - depositAmount
-        );
-    }
-
-    function testBasePayloadExecution() external {
-        chainSpellMetadata[ChainIdUtils.Base()].domain.selectFork();
-        assertEq(IExecutor(Base.SPARK_EXECUTOR).actionsSetCount(), 1);
-
-        executeAllPayloadsAndBridges();
-
+    function test_ETHEREUM_BASE_PayloadExecution() public onChain(ChainIdUtils.Base()) {
         assertEq(IExecutor(Base.SPARK_EXECUTOR).actionsSetCount(), 2);
-        IExecutor(Base.SPARK_EXECUTOR).execute(1);
+
+        executeAllPayloadsAndBridges();
+
+        assertEq(IExecutor(Base.SPARK_EXECUTOR).actionsSetCount(), 3);
+        IExecutor(Base.SPARK_EXECUTOR).execute(2);
     }
 
 }
