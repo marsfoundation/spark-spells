@@ -1,7 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.25;
 
-import { Ethereum, SparkPayloadEthereum, IEngine, EngineFlags, Rates } from "../../SparkPayloadEthereum.sol";
+import {
+    Ethereum,
+    Base,
+    SparkPayloadEthereum,
+    IEngine,
+    EngineFlags,
+    Rates
+} from "../../SparkPayloadEthereum.sol";
 
 import { IERC20 } from "forge-std/interfaces/IERC20.sol";
 
@@ -13,8 +20,6 @@ import { IMetaMorpho, MarketParams } from "metamorpho/interfaces/IMetaMorpho.sol
 
 import { AllocatorBuffer } from "dss-allocator/src/AllocatorBuffer.sol";
 import { AllocatorVault }  from "dss-allocator/src/AllocatorVault.sol";
-
-import { OptimismForwarder } from "xchain-helpers/forwarders/OptimismForwarder.sol";
 
 import { ControllerInstance }              from "spark-alm-controller/deploy/ControllerInstance.sol";
 import { MainnetControllerInit }           from "spark-alm-controller/deploy/MainnetControllerInit.sol";
@@ -46,7 +51,7 @@ interface ITokenBridge {
  */
 contract SparkEthereum_20250109 is SparkPayloadEthereum {
 
-    address internal constant NEW_ALM_CONTROLLER = 0x122FdFe632628579Dd718b0e82012ccDC8886974;
+    address internal constant NEW_ALM_CONTROLLER = 0x5cf73FDb7057E436A6eEaDFAd27E45E7ab6E431e;
 
     address internal constant NEW_DAI_IRM         = 0xd957978711F705358dbE34B37D381a76E1555E28;
     address internal constant NEW_STABLECOINS_IRM = 0xb7b734CF1F13652E930f8a604E8f837f85160174;
@@ -64,8 +69,11 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
     address internal constant ATOKEN_USDC = 0x98C23E9d8f34FEFb1B7BD6a91B7FF122F4e16F5c;
 
     uint256 internal constant USDS_MINT_AMOUNT = 99_000_000e18;
-
-    address internal constant BASE_PAYLOAD = address(0);
+    
+    constructor() {
+        // TODO update this when payload is deployed
+        payloadBase = address(0);
+    }
 
     function collateralsUpdates() public pure override returns (IEngine.CollateralUpdate[] memory) {
         IEngine.CollateralUpdate[] memory updates = new IEngine.CollateralUpdate[](2);
@@ -206,15 +214,6 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
         // Bridge to Base
         IERC20(Ethereum.USDS).approve(Ethereum.BASE_TOKEN_BRIDGE, USDS_MINT_AMOUNT);
         ITokenBridge(Ethereum.BASE_TOKEN_BRIDGE).bridgeERC20To(Ethereum.USDS, Base.USDS, Base.ALM_PROXY, USDS_MINT_AMOUNT, 1_000_000, "");
-
-        // --- Trigger Base Payload ---
-
-        OptimismForwarder.sendMessageL1toL2({
-            l1CrossDomain: OptimismForwarder.L1_CROSS_DOMAIN_BASE,
-            target:        Base.SPARK_RECEIVER,
-            message:       _encodePayloadQueue(BASE_PAYLOAD),
-            gasLimit:      1_000_000
-        });
     }
 
     function _morphoSupplyCapUpdates() private {

@@ -3,9 +3,14 @@ pragma solidity ^0.8.0;
 
 import './AaveV3PayloadBase.sol';
 
+import { Base }     from 'spark-address-registry/Base.sol';
 import { Ethereum } from 'spark-address-registry/Ethereum.sol';
+import { Gnosis }   from 'spark-address-registry/Gnosis.sol';
 
 import { IExecutor } from 'spark-gov-relay/src/interfaces/IExecutor.sol';
+
+import { OptimismForwarder } from "xchain-helpers/forwarders/OptimismForwarder.sol";
+import { AMBForwarder }      from "xchain-helpers/forwarders/AMBForwarder.sol";
 
 import { SparkLiquidityLayerHelpers } from './libraries/SparkLiquidityLayerHelpers.sol';
 
@@ -16,6 +21,29 @@ import { SparkLiquidityLayerHelpers } from './libraries/SparkLiquidityLayerHelpe
 abstract contract SparkPayloadEthereum is
     AaveV3PayloadBase(IEngine(Ethereum.CONFIG_ENGINE))
 {
+
+    address public immutable payloadBase;
+    address public immutable payloadGnosis;
+
+    function execute() public override {
+        super.execute();
+
+        if (payloadBase != address(0)) {
+            OptimismForwarder.sendMessageL1toL2({
+                l1CrossDomain: OptimismForwarder.L1_CROSS_DOMAIN_BASE,
+                target:        Base.SPARK_RECEIVER,
+                message:       _encodePayloadQueue(payloadBase),
+                gasLimit:      1_000_000
+            });
+        }
+        if (payloadGnosis != address(0)) {
+            AMBForwarder.sendMessageEthereumToGnosisChain({
+                target:   Gnosis.AMB_EXECUTOR,
+                message:  _encodePayloadQueue(payloadGnosis),
+                gasLimit: 1_000_000
+            });
+        }
+    }
 
     function getPoolContext() public pure override returns (IEngine.PoolContext memory) {
         return IEngine.PoolContext({networkName: 'Ethereum', networkAbbreviation: 'Eth'});

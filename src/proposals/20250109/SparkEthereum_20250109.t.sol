@@ -49,6 +49,12 @@ contract SparkEthereum_20250109Test is SparkTestBase {
     address internal constant PT_SUSDE_29MAY2025_PRICE_FEED = 0xE84f7e0a890e5e57d0beEa2c8716dDf0c9846B4A;
     address internal constant PT_SUSDE_29MAY2025            = 0xb7de5dFCb74d25c2f21841fbd6230355C50d9308;
 
+    address internal constant BASE_CBBTC              = 0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf;
+    address internal constant BASE_CBBTC_USDC_ORACLE  = 0x663BECd10daE6C4A3Dcd89F1d76c1174199639B9;
+    address internal constant BASE_MORPHO_DEFAULT_IRM = 0x46415998764C29aB2a25CbeA6254146D50D22687;
+
+    address internal constant BASE_MORPHO_SPARK_USDC = 0x305E03Ed9ADaAB22F4A58c24515D79f2B1E2FD5D;
+
     address internal constant AUTO_LINE     = 0xC7Bdd1F2B16447dcf3dE045C4a039A60EC2f0ba3;
     bytes32 internal constant ALLOCATOR_ILK = "ALLOCATOR-SPARK-A";
 
@@ -60,8 +66,8 @@ contract SparkEthereum_20250109Test is SparkTestBase {
 
     function setUp() public {
         setupDomains({
-            mainnetForkBlock: 21502540,
-            baseForkBlock:    24309280,
+            mainnetForkBlock: 21503780,
+            baseForkBlock:    24316766,
             gnosisForkBlock:  37691338
         });
         deployPayloads();
@@ -232,32 +238,32 @@ contract SparkEthereum_20250109Test is SparkTestBase {
             lltv:            0.915e18
         });
 
-        _assertMorphoCap(usde945,    10_000_000e18);
-        _assertMorphoCap(usde77,     1_000_000_000e18);
-        _assertMorphoCap(susde945,   10_000_000e18);
-        _assertMorphoCap(susde77,    1_000_000_000e18);
-        _assertMorphoCap(ptsusdeoct, 100_000_000e18);
-        _assertMorphoCap(ptsusdedec, 250_000_000e18);
-        _assertMorphoCap(ptsusdemar, 400_000_000e18);
-        _assertMorphoCap(ptsusdemay, 0);
+        _assertMorphoCap(Ethereum.MORPHO_VAULT_DAI_1, usde945,    10_000_000e18);
+        _assertMorphoCap(Ethereum.MORPHO_VAULT_DAI_1, usde77,     1_000_000_000e18);
+        _assertMorphoCap(Ethereum.MORPHO_VAULT_DAI_1, susde945,   10_000_000e18);
+        _assertMorphoCap(Ethereum.MORPHO_VAULT_DAI_1, susde77,    1_000_000_000e18);
+        _assertMorphoCap(Ethereum.MORPHO_VAULT_DAI_1, ptsusdeoct, 100_000_000e18);
+        _assertMorphoCap(Ethereum.MORPHO_VAULT_DAI_1, ptsusdedec, 250_000_000e18);
+        _assertMorphoCap(Ethereum.MORPHO_VAULT_DAI_1, ptsusdemar, 400_000_000e18);
+        _assertMorphoCap(Ethereum.MORPHO_VAULT_DAI_1, ptsusdemay, 0);
 
         executeAllPayloadsAndBridges();
 
-        _assertMorphoCap(usde945,    0);
-        _assertMorphoCap(usde77,     0);
-        _assertMorphoCap(susde945,   0);
-        _assertMorphoCap(susde77,    0);
-        _assertMorphoCap(ptsusdeoct, 0);
-        _assertMorphoCap(ptsusdedec, 0);
-        _assertMorphoCap(ptsusdemar, 400_000_000e18, 500_000_000e18);
-        _assertMorphoCap(ptsusdemay, 0,              200_000_000e18);
+        _assertMorphoCap(Ethereum.MORPHO_VAULT_DAI_1, usde945,    0);
+        _assertMorphoCap(Ethereum.MORPHO_VAULT_DAI_1, usde77,     0);
+        _assertMorphoCap(Ethereum.MORPHO_VAULT_DAI_1, susde945,   0);
+        _assertMorphoCap(Ethereum.MORPHO_VAULT_DAI_1, susde77,    0);
+        _assertMorphoCap(Ethereum.MORPHO_VAULT_DAI_1, ptsusdeoct, 0);
+        _assertMorphoCap(Ethereum.MORPHO_VAULT_DAI_1, ptsusdedec, 0);
+        _assertMorphoCap(Ethereum.MORPHO_VAULT_DAI_1, ptsusdemar, 400_000_000e18, 500_000_000e18);
+        _assertMorphoCap(Ethereum.MORPHO_VAULT_DAI_1, ptsusdemay, 0,              200_000_000e18);
 
         skip(1 days);
         IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).acceptCap(ptsusdemar);
         IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).acceptCap(ptsusdemay);
         
-        _assertMorphoCap(ptsusdemar, 500_000_000e18);
-        _assertMorphoCap(ptsusdemay, 200_000_000e18);
+        _assertMorphoCap(Ethereum.MORPHO_VAULT_DAI_1, ptsusdemar, 500_000_000e18);
+        _assertMorphoCap(Ethereum.MORPHO_VAULT_DAI_1, ptsusdemay, 200_000_000e18);
     }
 
     function test_ETHEREUM_StablecoinUpdates() public {
@@ -359,13 +365,36 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         assertEq(IERC20(Base.USDS).balanceOf(Base.ALM_PROXY), baseBalanceBefore + USDS_MINT_AMOUNT);
     }
 
-    function test_ETHEREUM_BASE_PayloadExecution() public onChain(ChainIdUtils.Base()) {
-        assertEq(IExecutor(Base.SPARK_EXECUTOR).actionsSetCount(), 2);
+    function test_BASE_MorphoSupplyCapUpdates() public onChain(ChainIdUtils.Base()) {
+        MarketParams memory usdcIdle = MarketParams({
+            loanToken:       Base.USDC,
+            collateralToken: address(0),
+            oracle:          address(0),
+            irm:             address(0),
+            lltv:            0
+        });
+        MarketParams memory usdcCBBTC =  MarketParams({
+            loanToken:       Base.USDC,
+            collateralToken: BASE_CBBTC,
+            oracle:          BASE_CBBTC_USDC_ORACLE,
+            irm:             BASE_MORPHO_DEFAULT_IRM,
+            lltv:            0.86e18
+        });
+
+        _assertMorphoCap(BASE_MORPHO_SPARK_USDC, usdcIdle,  0);
+        _assertMorphoCap(BASE_MORPHO_SPARK_USDC, usdcCBBTC, 0);
 
         executeAllPayloadsAndBridges();
 
-        assertEq(IExecutor(Base.SPARK_EXECUTOR).actionsSetCount(), 3);
-        IExecutor(Base.SPARK_EXECUTOR).execute(2);
+        _assertMorphoCap(BASE_MORPHO_SPARK_USDC, usdcIdle,  0, type(uint184).max);
+        _assertMorphoCap(BASE_MORPHO_SPARK_USDC, usdcCBBTC, 0, 100_000_000e6);
+
+        skip(1 days);
+        IMetaMorpho(BASE_MORPHO_SPARK_USDC).acceptCap(usdcIdle);
+        IMetaMorpho(BASE_MORPHO_SPARK_USDC).acceptCap(usdcCBBTC);
+        
+        _assertMorphoCap(BASE_MORPHO_SPARK_USDC, usdcIdle,  type(uint184).max);
+        _assertMorphoCap(BASE_MORPHO_SPARK_USDC, usdcCBBTC, 100_000_000e6);
     }
 
 }

@@ -9,7 +9,7 @@ fs_permissions = [
 solc = "0.8.25"
 optimizer = true
 ffi = true
-evm_version = "paris"
+evm_version = "shanghai"
 
 # 2x the default to accomodate E2E tests
 gas_limit = 2147483648

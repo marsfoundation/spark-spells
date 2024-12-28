@@ -124,7 +124,6 @@ library SparkLiquidityLayerHelpers {
      * @dev This will do the following:
      *      - Add the idle market for the underlying asset with unlimited size
      *      - Add the relayer as an allocator
-     *      - Set the supply queue to the idle market
      */
     function activateMorphoVault(
         address vault,
@@ -148,10 +147,6 @@ library SparkLiquidityLayerHelpers {
             idleMarket,
             type(uint184).max
         );
-
-        Id[] memory supplyQueue = new Id[](1);
-        supplyQueue[0] = MarketParamsLib.id(idleMarket);
-        IMetaMorpho(vault).setSupplyQueue(supplyQueue);
     }
 
 }

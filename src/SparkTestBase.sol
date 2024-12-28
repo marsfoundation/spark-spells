@@ -26,11 +26,13 @@ import { IExecutor } from 'lib/spark-gov-relay/src/interfaces/IExecutor.sol';
 import { IRateLimits } from "spark-alm-controller/src/interfaces/IRateLimits.sol";
 
 import { Domain, DomainHelpers } from "xchain-helpers/testing/Domain.sol";
-import { ChainIdUtils, ChainId } from "src/libraries/ChainId.sol";
 import { OptimismBridgeTesting } from "xchain-helpers/testing/bridges/OptimismBridgeTesting.sol";
 import { AMBBridgeTesting }      from "xchain-helpers/testing/bridges/AMBBridgeTesting.sol";
 import { CCTPBridgeTesting }     from "xchain-helpers/testing/bridges/CCTPBridgeTesting.sol";
 import { Bridge }                from "xchain-helpers/testing/Bridge.sol";
+
+import { ChainIdUtils, ChainId } from "./libraries/ChainId.sol";
+import { SparkPayloadEthereum }  from "./SparkPayloadEthereum.sol";
 
 // REPO ARCHITECTURE TODOs
 // TODO: Refactor Mock logic for executor to be more realistic, consider fork + prank.
@@ -143,6 +145,8 @@ abstract contract SpellRunner is Test {
         executeMainnetPayload();
         // then use bridges to execute other chains' payloads
         relayMessageOverBridges();
+        // execute the foreign payloads if they haven't been done by the spell
+        executeForeignPayloads();
     }
 
     /// @dev bridge contracts themselves are stored on mainnet
@@ -166,11 +170,34 @@ abstract contract SpellRunner is Test {
         }
     }
 
-    function executeL2PayloadsFromBridges() private onChain(ChainIdUtils.Ethereum()) {
-        // Base
-        chainSpellMetadata[ChainIdUtils.Base()].domain.selectFork();
-        IExecutor(Base.SPARK_EXECUTOR).execute(IExecutor(Base.SPARK_EXECUTOR).actionsSetCount() - 1);
-        // Gnosis: TODO
+    function executeForeignPayloads() private onChain(ChainIdUtils.Ethereum()) {
+        for (uint256 i = 0; i < allChains.length; i++) {
+            ChainId chainId = ChainIdUtils.fromDomain(chainSpellMetadata[allChains[i]].domain);
+            if (chainId == ChainIdUtils.Ethereum()) continue;  // Don't execute mainnet
+            if (getMainnetPayloadFromSpell(chainId) != address(0)) continue;  // Payload is already defined in mainnet spell
+            address payload = chainSpellMetadata[chainId].payload;
+            if (payload != address(0)) {
+                // We will simulate execution until the real spell is deployed in the mainnet spell
+                chainSpellMetadata[chainId].domain.selectFork();
+                IExecutor executor = chainSpellMetadata[chainId].executor;
+                vm.prank(address(executor));
+                executor.executeDelegateCall(
+                    payload,
+                    abi.encodeWithSignature('execute()')
+                );
+            }
+        }
+    }
+
+    function getMainnetPayloadFromSpell(ChainId chainId) internal onChain(ChainIdUtils.Ethereum()) returns (address) {
+        SparkPayloadEthereum spell = SparkPayloadEthereum(chainSpellMetadata[ChainIdUtils.Ethereum()].payload);
+        if (chainId == ChainIdUtils.Base()) {
+            return spell.payloadBase();
+        } else if (chainId == ChainIdUtils.Gnosis()) {
+            return spell.payloadGnosis();
+        } else {
+            revert("Unsupported chainId");
+        }
     }
 
     function executeMainnetPayload() internal onChain(ChainIdUtils.Ethereum()){
@@ -509,6 +536,24 @@ abstract contract SparkEthereumTests is SparklendTests {
         _runCapAutomatorTests();
     }
 
+    function test_ETHEREUM_PayloadsConfigured() public onChain(ChainIdUtils.Ethereum()){
+         for (uint256 i = 0; i < allChains.length; i++) {
+            ChainId chainId = ChainIdUtils.fromDomain(chainSpellMetadata[allChains[i]].domain);
+            if (chainId == ChainIdUtils.Ethereum()) continue;  // Checking only foreign payloads
+            address payload = chainSpellMetadata[chainId].payload;
+            if (payload != address(0)) {
+                // A payload is defined for this domain
+                // We verify the mainnet spell defines this payload correctly
+                address mainnetPayload = getMainnetPayloadFromSpell(chainId);
+                assertEq(mainnetPayload, payload, "Mainnet payload not matching deployed payload");
+            }
+        }
+
+        executeAllPayloadsAndBridges();
+
+        _runRewardsConfigurationTests();
+    }
+
     function _runRewardsConfigurationTests() internal {
         address[] memory reserves = pool.getReservesList();
 
@@ -682,14 +727,15 @@ abstract contract SparkEthereumTests is SparklendTests {
     }
 
     function _assertMorphoCap(
+        address             _vault,
         MarketParams memory _config,
         uint256             _currentCap,
         bool                _hasPending,
         uint256             _pendingCap
     ) internal {
         Id id = MarketParamsLib.id(_config);
-        assertEq(IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).config(id).cap, _currentCap);
-        PendingUint192 memory pendingCap = IMetaMorpho(Ethereum.MORPHO_VAULT_DAI_1).pendingCap(id);
+        assertEq(IMetaMorpho(_vault).config(id).cap, _currentCap);
+        PendingUint192 memory pendingCap = IMetaMorpho(_vault).pendingCap(id);
         if (_hasPending) {
             assertEq(pendingCap.value,   _pendingCap);
             assertGt(pendingCap.validAt, 0);
@@ -700,18 +746,20 @@ abstract contract SparkEthereumTests is SparklendTests {
     }
 
     function _assertMorphoCap(
+        address             _vault,
         MarketParams memory _config,
         uint256             _currentCap,
         uint256             _pendingCap
     ) internal {
-        _assertMorphoCap(_config, _currentCap, true, _pendingCap);
+        _assertMorphoCap(_vault, _config, _currentCap, true, _pendingCap);
     }
 
     function _assertMorphoCap(
+        address             _vault,
         MarketParams memory _config,
         uint256             _currentCap
     ) internal {
-        _assertMorphoCap(_config, _currentCap, false, 0);
+        _assertMorphoCap(_vault, _config, _currentCap, false, 0);
     }
 }
 
