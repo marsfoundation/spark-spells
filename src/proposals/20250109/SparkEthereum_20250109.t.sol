@@ -131,6 +131,15 @@ contract SparkEthereum_20250109Test is SparkTestBase {
     }
 
     function test_ETHEREUM_WEETHChanges() public {
+        deal(Ethereum.WEETH, address(this), 10e18);
+        IERC20(Ethereum.WEETH).approve(Ethereum.POOL, 10e18);
+        pool.supply(Ethereum.WEETH, 10e18, address(this), 0);
+        pool.borrow(Ethereum.DAI, 1e18, 2, 0, address(this));
+
+        // Cannot borrow another asset
+        vm.expectRevert(bytes(34));
+        pool.borrow(Ethereum.WETH, 1e18, 2, 0, address(this));
+
         ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', pool);
         ReserveConfig memory weethConfig        = _findReserveConfigBySymbol(allConfigsBefore, 'weETH');
 
@@ -142,6 +151,9 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         weethConfig.debtCeiling                = 0;
 
         _validateReserveConfig(weethConfig, allConfigsAfter);
+
+        // Can now borrow another asset
+        pool.borrow(Ethereum.WETH, 1e18, 2, 0, address(this));
     }
 
     function test_ETHEREUM_MorphoSupplyCapUpdates() public {
