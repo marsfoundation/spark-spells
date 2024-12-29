@@ -78,7 +78,7 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
     function collateralsUpdates() public pure override returns (IEngine.CollateralUpdate[] memory) {
         IEngine.CollateralUpdate[] memory updates = new IEngine.CollateralUpdate[](2);
 
-        // WBTC: Reduce LT from 65% to 60%
+        // WBTC: Reduce LT from 60% to 55%
         updates[0] = IEngine.CollateralUpdate({
             asset:          Ethereum.WBTC,
             ltv:            EngineFlags.KEEP_CURRENT,
@@ -134,7 +134,7 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
         wstethParams.baseVariableBorrowRate = 0;
         wstethParams.optimalUsageRatio      = _bpsToRay(70_00);
         wstethParams.variableRateSlope1     = _bpsToRay(2_00);
-        wstethParams.variableRateSlope2     = _bpsToRay(300_00);
+        wstethParams.variableRateSlope2     = _bpsToRay(200_00);
         updates[0] = IEngine.RateStrategyUpdate({
             asset:  Ethereum.WSTETH,
             params: wstethParams
@@ -148,24 +148,24 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
 
         // cbBTC: Increase max from 3k to 10k
         ICapAutomator(Ethereum.CAP_AUTOMATOR).setSupplyCapConfig({
-            asset: Ethereum.CBBTC,
-            max: 10_000,
-            gap: 500,
+            asset:            Ethereum.CBBTC,
+            max:              10_000,
+            gap:              500,
             increaseCooldown: 12 hours
         });
 
         // wstETH: Increase supply max from 1.2m to 2m
         //         Increase borrow max from 100k to 1m, gap from 5k to 10k
         ICapAutomator(Ethereum.CAP_AUTOMATOR).setSupplyCapConfig({
-            asset: Ethereum.WSTETH,
-            max: 2_000_000,
-            gap: 50_000,
+            asset:            Ethereum.WSTETH,
+            max:              2_000_000,
+            gap:              50_000,
             increaseCooldown: 12 hours
         });
         ICapAutomator(Ethereum.CAP_AUTOMATOR).setBorrowCapConfig({
-            asset: Ethereum.WSTETH,
-            max: 1_000_000,
-            gap: 10_000,
+            asset:            Ethereum.WSTETH,
+            max:              1_000_000,
+            gap:              10_000,
             increaseCooldown: 12 hours
         });
 

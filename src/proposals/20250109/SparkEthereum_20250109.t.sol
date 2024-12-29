@@ -165,7 +165,7 @@ contract SparkEthereum_20250109Test is SparkTestBase {
                 stableRateSlope2:              prevIRM.getStableRateSlope2(),
                 baseVariableBorrowRate:        0,
                 variableRateSlope1:            0.02e27,
-                variableRateSlope2:            3e27
+                variableRateSlope2:            2e27
             })
         );
 
@@ -293,7 +293,7 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         ReserveConfig memory usdcConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'USDC');
         ReserveConfig memory usdtConfigBefore = _findReserveConfigBySymbol(allConfigsBefore, 'USDT');
 
-        assertEq(daiConfigBefore.interestRateStrategy, OLD_DAI_INTEREST_RATE_STRATEGY);
+        assertEq(daiConfigBefore.interestRateStrategy,  OLD_DAI_INTEREST_RATE_STRATEGY);
         assertEq(usdcConfigBefore.interestRateStrategy, OLD_STABLECOINS_INTEREST_RATE_STRATEGY);
         assertEq(usdtConfigBefore.interestRateStrategy, OLD_STABLECOINS_INTEREST_RATE_STRATEGY);
 
