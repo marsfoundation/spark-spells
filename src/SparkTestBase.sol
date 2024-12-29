@@ -101,6 +101,12 @@ abstract contract SpellRunner is Test {
                 chainSpellMetadata[ChainIdUtils.Base()].domain
         ));
         chainSpellMetadata[ChainIdUtils.Base()].bridgeTypes.push(BridgeType.OPTIMISM);
+        chainSpellMetadata[ChainIdUtils.Base()].bridges.push(
+            CCTPBridgeTesting.createCircleBridge(
+                chainSpellMetadata[ChainIdUtils.Ethereum()].domain,
+                chainSpellMetadata[ChainIdUtils.Base()].domain
+        ));
+        chainSpellMetadata[ChainIdUtils.Base()].bridgeTypes.push(BridgeType.CCTP);
 
         chainSpellMetadata[ChainIdUtils.Gnosis()].bridges.push(
             AMBBridgeTesting.createGnosisBridge(
@@ -150,7 +156,7 @@ abstract contract SpellRunner is Test {
     }
 
     /// @dev bridge contracts themselves are stored on mainnet
-    function relayMessageOverBridges() private onChain(ChainIdUtils.Ethereum()) {
+    function relayMessageOverBridges() internal onChain(ChainIdUtils.Ethereum()) {
         for (uint256 i = 0; i < allChains.length; i++) {
             ChainId chainId = ChainIdUtils.fromDomain(chainSpellMetadata[allChains[i]].domain);
             for (uint256 j = 0; j < chainSpellMetadata[chainId].bridges.length ; j++){
@@ -165,6 +171,7 @@ abstract contract SpellRunner is Test {
             OptimismBridgeTesting.relayMessagesToDestination(bridge, false);
         } else if (bridgeType == BridgeType.CCTP) {
             CCTPBridgeTesting.relayMessagesToDestination(bridge, false);
+            CCTPBridgeTesting.relayMessagesToSource(bridge, false);
         } else if (bridgeType == BridgeType.GNOSIS) {
             AMBBridgeTesting.relayMessagesToDestination(bridge, false);
         }

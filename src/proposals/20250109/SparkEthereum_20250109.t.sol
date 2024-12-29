@@ -994,4 +994,36 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         assertEq(IERC20(Base.USDS).balanceOf(Base.ALM_PROXY), baseBalanceBefore + USDS_MINT_AMOUNT);
     }
 
+    function test_ETHEREUM_BASE_SparkLiquidityLayerE2E() public {
+        executeAllPayloadsAndBridges();
+
+        uint256 usdcAmount = 100_000e6;
+
+        vm.startPrank(Ethereum.ALM_RELAYER);
+        MainnetController(NEW_ALM_CONTROLLER).mintUSDS(usdcAmount * 1e12);
+        MainnetController(NEW_ALM_CONTROLLER).swapUSDSToUSDC(usdcAmount);
+        MainnetController(NEW_ALM_CONTROLLER).transferUSDCToCCTP(usdcAmount, CCTPForwarder.DOMAIN_ID_CIRCLE_BASE);
+        vm.stopPrank();
+
+        chainSpellMetadata[ChainIdUtils.Base()].domain.selectFork();
+
+        uint256 initialUsdc = IERC20(Base.USDC).balanceOf(Base.ALM_PROXY);
+
+        relayMessageOverBridges();
+
+        assertEq(IERC20(Base.USDC).balanceOf(Base.ALM_PROXY), initialUsdc + usdcAmount);
+
+        vm.startPrank(Base.ALM_RELAYER);
+        MainnetController(BASE_NEW_ALM_CONTROLLER).transferUSDCToCCTP(usdcAmount, CCTPForwarder.DOMAIN_ID_CIRCLE_ETHEREUM);
+        vm.stopPrank();
+
+        chainSpellMetadata[ChainIdUtils.Ethereum()].domain.selectFork();
+
+        initialUsdc = IERC20(Ethereum.USDC).balanceOf(Ethereum.ALM_PROXY);
+
+        relayMessageOverBridges();
+
+        assertEq(IERC20(Ethereum.USDC).balanceOf(Ethereum.ALM_PROXY), initialUsdc + usdcAmount);
+    }
+
 }
