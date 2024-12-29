@@ -39,7 +39,6 @@ contract SparkBase_20250109 is SparkPayloadBase {
 
         // --- Spark Liquidity Layer Onboarding ---
 
-        // TODO limits
         // Aave V3
         _onboardAaveToken(ATOKEN_USDC, 50_000_000e6, 25_000_000e6 / uint256(1 days));
 

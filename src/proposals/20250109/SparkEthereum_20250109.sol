@@ -199,7 +199,6 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
         _onboardEthena();
 
         // Aave V3
-        // TODO limits
         _onboardAaveToken(ATOKEN_USDS, 50_000_000e18, 25_000_000e18 / uint256(1 days));
         _onboardAaveToken(ATOKEN_USDC, 50_000_000e6,  25_000_000e6 / uint256(1 days));
 
@@ -345,15 +344,13 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
     }
 
     function _onboardEthena() private {
-        // TODO limits
-
         // USDe mint/burn
         RateLimitHelpers.setRateLimitData(
             MainnetController(NEW_ALM_CONTROLLER).LIMIT_USDE_MINT(),
             Ethereum.ALM_RATE_LIMITS,
             RateLimitData({
-                maxAmount : 20_000_000e6,
-                slope     : 10_000_000e6 / uint256(1 days)
+                maxAmount : 50_000_000e6,
+                slope     : 50_000_000e6 / uint256(1 days)
             }),
             "ethenaMintLimit",
             6
@@ -362,8 +359,8 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
             MainnetController(NEW_ALM_CONTROLLER).LIMIT_USDE_BURN(),
             Ethereum.ALM_RATE_LIMITS,
             RateLimitData({
-                maxAmount : 20_000_000e18,
-                slope     : 10_000_000e18 / uint256(1 days)
+                maxAmount : 100_000_000e18,
+                slope     : 100_000_000e18 / uint256(1 days)
             }),
             "ethenaBurnLimit",
             18
@@ -377,8 +374,8 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
             ),
             Ethereum.ALM_RATE_LIMITS,
             RateLimitData({
-                maxAmount : 200_000_000e18,
-                slope     : 50_000_000e6 / uint256(1 days)
+                maxAmount : 100_000_000e18,
+                slope     : 100_000_000e6 / uint256(1 days)
             }),
             "susdeDepositLimit",
             18
@@ -389,8 +386,8 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
             MainnetController(NEW_ALM_CONTROLLER).LIMIT_SUSDE_COOLDOWN(),
             Ethereum.ALM_RATE_LIMITS,
             RateLimitData({
-                maxAmount : 200_000_000e18,
-                slope     : 50_000_000e18 / uint256(1 days)
+                maxAmount : 500_000_000e18,
+                slope     : 250_000_000e18 / uint256(1 days)
             }),
             "susdeCooldownLimit",
             18
