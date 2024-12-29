@@ -38,6 +38,8 @@ contract SparkEthereum_20250109Test is SparkTestBase {
 
     using DomainHelpers for *;
 
+    // --- Ethereum Addresses ---
+
     address internal constant NEW_ALM_CONTROLLER = 0x5cf73FDb7057E436A6eEaDFAd27E45E7ab6E431e;
 
     address internal constant OLD_DAI_INTEREST_RATE_STRATEGY = 0xC527A1B514796A6519f236dd906E73cab5aA2E71;
@@ -57,16 +59,22 @@ contract SparkEthereum_20250109Test is SparkTestBase {
     address internal constant ATOKEN_USDS = 0x32a6268f9Ba3642Dda7892aDd74f1D34469A4259;
     address internal constant ATOKEN_USDC = 0x98C23E9d8f34FEFb1B7BD6a91B7FF122F4e16F5c;
 
+    address internal constant AUTO_LINE     = 0xC7Bdd1F2B16447dcf3dE045C4a039A60EC2f0ba3;
+    bytes32 internal constant ALLOCATOR_ILK = "ALLOCATOR-SPARK-A";
+
+    // --- Base Addresses ---
+
+    uint256 internal constant USDS_MINT_AMOUNT = 99_000_000e18;
+
+    address internal constant BASE_NEW_ALM_CONTROLLER = 0x5F032555353f3A1D16aA6A4ADE0B35b369da0440;
+
     address internal constant BASE_CBBTC              = 0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf;
     address internal constant BASE_CBBTC_USDC_ORACLE  = 0x663BECd10daE6C4A3Dcd89F1d76c1174199639B9;
     address internal constant BASE_MORPHO_DEFAULT_IRM = 0x46415998764C29aB2a25CbeA6254146D50D22687;
 
+    address internal constant BASE_ATOKEN_USDC = 0x4e65fE4DbA92790696d040ac24Aa414708F5c0AB;
+
     address internal constant BASE_MORPHO_SPARK_USDC = 0x305E03Ed9ADaAB22F4A58c24515D79f2B1E2FD5D;
-
-    address internal constant AUTO_LINE     = 0xC7Bdd1F2B16447dcf3dE045C4a039A60EC2f0ba3;
-    bytes32 internal constant ALLOCATOR_ILK = "ALLOCATOR-SPARK-A";
-
-    uint256 internal constant USDS_MINT_AMOUNT = 99_000_000e18;
 
     constructor() {
         id = '20250109';
@@ -497,6 +505,38 @@ contract SparkEthereum_20250109Test is SparkTestBase {
 
         assertEq(usdc.balanceOf(Ethereum.ALM_PROXY),  usdcAmount);
         assertEq(ausdc.balanceOf(Ethereum.ALM_PROXY), 0);
+    }
+
+    function test_BASE_AaveOnboardingIntegration() public onChain(ChainIdUtils.Base()) {
+        executeAllPayloadsAndBridges();
+
+        ForeignController controller = ForeignController(BASE_NEW_ALM_CONTROLLER);
+        
+        IERC20 usdc  = IERC20(Base.USDC);
+        IERC20 ausdc = IERC20(BASE_ATOKEN_USDC);
+
+        // Use a realistic numbers to check the rate limits
+        uint256 usdcAmount = 5_000_000e6;
+
+        // Use deal2 for USDC because storage is not set in a common way
+        deal2(Base.USDC, Base.ALM_PROXY, usdcAmount);
+
+        // USDC
+
+        assertEq(usdc.balanceOf(Base.ALM_PROXY),  usdcAmount);
+        assertEq(ausdc.balanceOf(Base.ALM_PROXY), 0);
+
+        vm.startPrank(Base.ALM_RELAYER);
+
+        controller.depositAave(BASE_ATOKEN_USDC, usdcAmount);
+
+        assertEq(usdc.balanceOf(Base.ALM_PROXY),  0);
+        assertEq(ausdc.balanceOf(Base.ALM_PROXY), usdcAmount);
+
+        controller.withdrawAave(BASE_ATOKEN_USDC, usdcAmount);
+
+        assertEq(usdc.balanceOf(Base.ALM_PROXY),  usdcAmount);
+        assertEq(ausdc.balanceOf(Base.ALM_PROXY), 0);
     }
 
     function test_BASE_MorphoSupplyCapUpdates() public onChain(ChainIdUtils.Base()) {
