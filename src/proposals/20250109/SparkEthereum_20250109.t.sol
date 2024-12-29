@@ -170,7 +170,7 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         );
 
         _assertSupplyCapConfig(Ethereum.WSTETH, 2_000_000, 50_000, 12 hours);
-        _assertBorrowCapConfig(Ethereum.WSTETH, 500_000, 5_000, 12 hours);
+        _assertBorrowCapConfig(Ethereum.WSTETH, 1_000_000, 10_000, 12 hours);
     }
 
     function test_ETHEREUM_WEETHChanges() public {

@@ -155,8 +155,7 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
         });
 
         // wstETH: Increase supply max from 1.2m to 2m
-        //         Increase borrow max from 3k to 100k, gap from 100 to 1000
-        // TODO confirm borrow numbers
+        //         Increase borrow max from 100k to 1m, gap from 5k to 10k
         ICapAutomator(Ethereum.CAP_AUTOMATOR).setSupplyCapConfig({
             asset: Ethereum.WSTETH,
             max: 2_000_000,
@@ -165,8 +164,8 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
         });
         ICapAutomator(Ethereum.CAP_AUTOMATOR).setBorrowCapConfig({
             asset: Ethereum.WSTETH,
-            max: 500_000,
-            gap: 5_000,
+            max: 1_000_000,
+            gap: 10_000,
             increaseCooldown: 12 hours
         });
 
@@ -201,8 +200,8 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
 
         // Aave V3
         // TODO limits
-        _onboardAaveToken(ATOKEN_USDS, 20_000_000e18, 2_000_000e18 / uint256(1 days));
-        _onboardAaveToken(ATOKEN_USDC, 20_000_000e6,  2_000_000e6 / uint256(1 days));
+        _onboardAaveToken(ATOKEN_USDS, 50_000_000e18, 25_000_000e18 / uint256(1 days));
+        _onboardAaveToken(ATOKEN_USDC, 50_000_000e6,  25_000_000e6 / uint256(1 days));
 
         // --- Send USDS and sUSDS to Base ---
 

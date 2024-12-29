@@ -41,11 +41,11 @@ contract SparkBase_20250109 is SparkPayloadBase {
 
         // TODO limits
         // Aave V3
-        _onboardAaveToken(ATOKEN_USDC, 20_000_000e6, 2_000_000e6 / uint256(1 days));
+        _onboardAaveToken(ATOKEN_USDC, 50_000_000e6, 25_000_000e6 / uint256(1 days));
 
         // Morpho
         _activateMorphoVault(MORPHO_SPARK_USDC, false);
-        _onboardERC4626Vault(MORPHO_SPARK_USDC, 20_000_000e6, 2_000_000e6 / uint256(1 days));
+        _onboardERC4626Vault(MORPHO_SPARK_USDC, 50_000_000e6, 25_000_000e6 / uint256(1 days));
 
         // Onboard cbBTC/USDC 0 -> 100m
         IMetaMorpho(MORPHO_SPARK_USDC).submitCap(
@@ -56,7 +56,6 @@ contract SparkBase_20250109 is SparkPayloadBase {
                 irm:             MORPHO_DEFAULT_IRM,
                 lltv:            0.86e18
             }),
-            // TODO check if this needs to be 6 decimals or 18
             100_000_000e6
         );
     }
