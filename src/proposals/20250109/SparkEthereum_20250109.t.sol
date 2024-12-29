@@ -8,6 +8,7 @@ import { IERC4626 } from 'forge-std/interfaces/IERC4626.sol';
 import { Base } from 'spark-address-registry/Base.sol';
 
 import { DomainHelpers } from "xchain-helpers/testing/Domain.sol";
+import { CCTPForwarder } from "xchain-helpers/forwarders/CCTPForwarder.sol";
 
 import { IALMProxy }         from 'spark-alm-controller/src/interfaces/IALMProxy.sol';
 import { IRateLimits }       from 'spark-alm-controller/src/interfaces/IRateLimits.sol';
@@ -402,15 +403,27 @@ contract SparkEthereum_20250109Test is SparkTestBase {
     function test_ETHEREUM_ControllerUpgrade() public {
         // Deployment configuration is checked inside the spell
 
-        IALMProxy proxy = IALMProxy(Ethereum.ALM_PROXY);
+        MainnetController controller = MainnetController(NEW_ALM_CONTROLLER);
+        IALMProxy proxy              = IALMProxy(Ethereum.ALM_PROXY);
+        IRateLimits rateLimits       = IRateLimits(Ethereum.ALM_RATE_LIMITS);
 
-        assertEq(proxy.hasRole(proxy.CONTROLLER(), Ethereum.ALM_CONTROLLER), true);
-        assertEq(proxy.hasRole(proxy.CONTROLLER(), NEW_ALM_CONTROLLER),      false);
+        assertEq(proxy.hasRole(proxy.CONTROLLER(), Ethereum.ALM_CONTROLLER),           true);
+        assertEq(proxy.hasRole(proxy.CONTROLLER(), NEW_ALM_CONTROLLER),                false);
+        assertEq(rateLimits.hasRole(rateLimits.CONTROLLER(), Ethereum.ALM_CONTROLLER), true);
+        assertEq(rateLimits.hasRole(rateLimits.CONTROLLER(), NEW_ALM_CONTROLLER),      false);
+        assertEq(controller.hasRole(controller.RELAYER(), Ethereum.ALM_RELAYER),       false);
+        assertEq(controller.hasRole(controller.FREEZER(), Ethereum.ALM_FREEZER),       false);
+        assertEq(controller.mintRecipients(CCTPForwarder.DOMAIN_ID_CIRCLE_BASE),       bytes32(uint256(uint160(address(0)))));
 
         executeAllPayloadsAndBridges();
 
-        assertEq(proxy.hasRole(proxy.CONTROLLER(), Ethereum.ALM_CONTROLLER), false);
-        assertEq(proxy.hasRole(proxy.CONTROLLER(), NEW_ALM_CONTROLLER),      true);
+        assertEq(proxy.hasRole(proxy.CONTROLLER(), Ethereum.ALM_CONTROLLER),           false);
+        assertEq(proxy.hasRole(proxy.CONTROLLER(), NEW_ALM_CONTROLLER),                true);
+        assertEq(rateLimits.hasRole(rateLimits.CONTROLLER(), Ethereum.ALM_CONTROLLER), false);
+        assertEq(rateLimits.hasRole(rateLimits.CONTROLLER(), NEW_ALM_CONTROLLER),      true);
+        assertEq(controller.hasRole(controller.RELAYER(), Ethereum.ALM_RELAYER),       true);
+        assertEq(controller.hasRole(controller.FREEZER(), Ethereum.ALM_FREEZER),       true);
+        assertEq(controller.mintRecipients(CCTPForwarder.DOMAIN_ID_CIRCLE_BASE),       bytes32(uint256(uint160(address(Base.ALM_PROXY)))));
     }
 
     function test_ETHEREUM_EthenaOnboardingIntegration() public {
@@ -692,15 +705,27 @@ contract SparkEthereum_20250109Test is SparkTestBase {
     function test_BASE_ControllerUpgrade() public onChain(ChainIdUtils.Base()) {
         // Deployment configuration is checked inside the spell
 
-        IALMProxy proxy = IALMProxy(Base.ALM_PROXY);
+        ForeignController controller = ForeignController(BASE_NEW_ALM_CONTROLLER);
+        IALMProxy proxy              = IALMProxy(Base.ALM_PROXY);
+        IRateLimits rateLimits       = IRateLimits(Base.ALM_RATE_LIMITS);
 
-        assertEq(proxy.hasRole(proxy.CONTROLLER(), Base.ALM_CONTROLLER),     true);
-        assertEq(proxy.hasRole(proxy.CONTROLLER(), BASE_NEW_ALM_CONTROLLER), false);
+        assertEq(proxy.hasRole(proxy.CONTROLLER(), Base.ALM_CONTROLLER),               true);
+        assertEq(proxy.hasRole(proxy.CONTROLLER(), BASE_NEW_ALM_CONTROLLER),           false);
+        assertEq(rateLimits.hasRole(rateLimits.CONTROLLER(), Base.ALM_CONTROLLER),     true);
+        assertEq(rateLimits.hasRole(rateLimits.CONTROLLER(), BASE_NEW_ALM_CONTROLLER), false);
+        assertEq(controller.hasRole(controller.RELAYER(), Base.ALM_RELAYER),           false);
+        assertEq(controller.hasRole(controller.FREEZER(), Base.ALM_FREEZER),           false);
+        assertEq(controller.mintRecipients(CCTPForwarder.DOMAIN_ID_CIRCLE_ETHEREUM),   bytes32(uint256(uint160(address(0)))));
 
         executeAllPayloadsAndBridges();
 
-        assertEq(proxy.hasRole(proxy.CONTROLLER(), Base.ALM_CONTROLLER),     false);
-        assertEq(proxy.hasRole(proxy.CONTROLLER(), BASE_NEW_ALM_CONTROLLER), true);
+        assertEq(proxy.hasRole(proxy.CONTROLLER(), Base.ALM_CONTROLLER),               false);
+        assertEq(proxy.hasRole(proxy.CONTROLLER(), BASE_NEW_ALM_CONTROLLER),           true);
+        assertEq(rateLimits.hasRole(rateLimits.CONTROLLER(), Base.ALM_CONTROLLER),     false);
+        assertEq(rateLimits.hasRole(rateLimits.CONTROLLER(), BASE_NEW_ALM_CONTROLLER), true);
+        assertEq(controller.hasRole(controller.RELAYER(), Base.ALM_RELAYER),           true);
+        assertEq(controller.hasRole(controller.FREEZER(), Base.ALM_FREEZER),           true);
+        assertEq(controller.mintRecipients(CCTPForwarder.DOMAIN_ID_CIRCLE_ETHEREUM),   bytes32(uint256(uint160(address(Ethereum.ALM_PROXY)))));
     }
 
     function test_BASE_AaveOnboardingIntegration() public onChain(ChainIdUtils.Base()) {
