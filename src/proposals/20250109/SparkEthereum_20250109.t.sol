@@ -507,6 +507,20 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         assertEq(ausdc.balanceOf(Ethereum.ALM_PROXY), 0);
     }
 
+    function test_BASE_ControllerUpgrade() public onChain(ChainIdUtils.Base()) {
+        // Deployment configuration is checked inside the spell
+
+        IALMProxy proxy = IALMProxy(Base.ALM_PROXY);
+
+        assertEq(proxy.hasRole(proxy.CONTROLLER(), Base.ALM_CONTROLLER),     true);
+        assertEq(proxy.hasRole(proxy.CONTROLLER(), BASE_NEW_ALM_CONTROLLER), false);
+
+        executeAllPayloadsAndBridges();
+
+        assertEq(proxy.hasRole(proxy.CONTROLLER(), Base.ALM_CONTROLLER),     false);
+        assertEq(proxy.hasRole(proxy.CONTROLLER(), BASE_NEW_ALM_CONTROLLER), true);
+    }
+
     function test_BASE_AaveOnboardingIntegration() public onChain(ChainIdUtils.Base()) {
         executeAllPayloadsAndBridges();
 
