@@ -7,13 +7,13 @@ import { IERC4626 } from 'forge-std/interfaces/IERC4626.sol';
 
 import { Base } from 'spark-address-registry/Base.sol';
 
-import { Domain, DomainHelpers } from "xchain-helpers/testing/Domain.sol";
+import { DomainHelpers } from "xchain-helpers/testing/Domain.sol";
 
 import { IALMProxy }         from 'spark-alm-controller/src/interfaces/IALMProxy.sol';
+import { IRateLimits }       from 'spark-alm-controller/src/interfaces/IRateLimits.sol';
 import { MainnetController } from 'spark-alm-controller/src/MainnetController.sol';
 import { ForeignController } from 'spark-alm-controller/src/ForeignController.sol';
-
-import { IExecutor } from 'spark-gov-relay/src/interfaces/IExecutor.sol';
+import { RateLimitHelpers }  from 'spark-alm-controller/src/RateLimitHelpers.sol';
 
 import { IMorpho, MarketAllocation } from 'metamorpho/interfaces/IMetaMorpho.sol';
 
@@ -460,6 +460,78 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         assertEq(usde.allowance(Ethereum.ALM_PROXY, Ethereum.ETHENA_MINTER), usdeAmount);
     }
 
+    function test_ETHEREUM_EthenaRateLimits() public {
+        executeAllPayloadsAndBridges();
+
+        MainnetController controller = MainnetController(NEW_ALM_CONTROLLER);
+        IRateLimits rateLimits       = IRateLimits(Ethereum.ALM_RATE_LIMITS);
+        
+        IERC20 usdc    = IERC20(Ethereum.USDC);
+        IERC20 usde    = IERC20(Ethereum.USDE);
+        IERC4626 susde = IERC4626(Ethereum.SUSDE);
+        
+        vm.startPrank(Ethereum.ALM_RELAYER);
+
+        // Mint
+
+        assertEq(rateLimits.getCurrentRateLimit(controller.LIMIT_USDE_MINT()), 50_000_000e6);
+        assertEq(usdc.allowance(Ethereum.ALM_PROXY, Ethereum.ETHENA_MINTER), 0);
+
+        controller.prepareUSDeMint(50_000_000e6);
+
+        assertEq(rateLimits.getCurrentRateLimit(controller.LIMIT_USDE_MINT()), 0);
+        assertEq(usdc.allowance(Ethereum.ALM_PROXY, Ethereum.ETHENA_MINTER), 50_000_000e6);
+
+        // Burn
+
+        assertEq(rateLimits.getCurrentRateLimit(controller.LIMIT_USDE_BURN()), 100_000_000e18);
+        assertEq(usde.allowance(Ethereum.ALM_PROXY, Ethereum.ETHENA_MINTER), 0);
+
+        controller.prepareUSDeBurn(100_000_000e18);
+
+        assertEq(rateLimits.getCurrentRateLimit(controller.LIMIT_USDE_BURN()), 0);
+        assertEq(usde.allowance(Ethereum.ALM_PROXY, Ethereum.ETHENA_MINTER), 100_000_000e18);
+
+        // sUSDe Deposit
+
+        deal(Ethereum.USDE, Ethereum.ALM_PROXY, 100_000_000e18);
+
+        bytes32 depositKey = RateLimitHelpers.makeAssetKey(
+            controller.LIMIT_4626_DEPOSIT(),
+            Ethereum.SUSDE
+        );
+
+        assertEq(rateLimits.getCurrentRateLimit(depositKey),                 100_000_000e18);
+        assertEq(usde.balanceOf(Ethereum.ALM_PROXY),                         100_000_000e18);
+        assertEq(susde.convertToAssets(susde.balanceOf(Ethereum.ALM_PROXY)), 0);
+
+        controller.depositERC4626(address(susde), 100_000_000e18);
+
+        assertEq(rateLimits.getCurrentRateLimit(depositKey),                 0);
+        assertEq(usde.balanceOf(Ethereum.ALM_PROXY),                         0);
+        assertEq(susde.convertToAssets(susde.balanceOf(Ethereum.ALM_PROXY)), 100_000_000e18 - 2);  // Rounding
+
+        // sUSDe Cooldown
+
+        deal(Ethereum.SUSDE, Ethereum.ALM_PROXY, susde.convertToShares(500_000_000e18) + 1);
+
+        assertEq(rateLimits.getCurrentRateLimit(controller.LIMIT_SUSDE_COOLDOWN()), 500_000_000e18);
+        assertEq(susde.convertToAssets(susde.balanceOf(Ethereum.ALM_PROXY)),        500_000_000e18);
+
+        controller.cooldownAssetsSUSDe(500_000_000e18);
+
+        assertEq(rateLimits.getCurrentRateLimit(controller.LIMIT_SUSDE_COOLDOWN()), 0);
+        assertEq(susde.convertToAssets(susde.balanceOf(Ethereum.ALM_PROXY)),        0);
+
+        // All limits should be reset in 2 days + 1 (rounding)
+        skip(2 days + 1);
+
+        assertEq(rateLimits.getCurrentRateLimit(controller.LIMIT_USDE_MINT()),      50_000_000e6);
+        assertEq(rateLimits.getCurrentRateLimit(controller.LIMIT_USDE_BURN()),      100_000_000e18);
+        assertEq(rateLimits.getCurrentRateLimit(depositKey),                        100_000_000e18);
+        assertEq(rateLimits.getCurrentRateLimit(controller.LIMIT_SUSDE_COOLDOWN()), 500_000_000e18);
+    }
+
     function test_ETHEREUM_AaveOnboardingIntegration() public {
         executeAllPayloadsAndBridges();
 
@@ -511,6 +583,76 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         assertEq(ausdc.balanceOf(Ethereum.ALM_PROXY), 0);
     }
 
+    function test_ETHEREUM_AaveRateLimits() public {
+        executeAllPayloadsAndBridges();
+
+        MainnetController controller = MainnetController(NEW_ALM_CONTROLLER);
+        IRateLimits rateLimits       = IRateLimits(Ethereum.ALM_RATE_LIMITS);
+        
+        IERC20 usds  = IERC20(Ethereum.USDS);
+        IERC20 usdc  = IERC20(Ethereum.USDC);
+        IERC20 ausds = IERC20(ATOKEN_USDS);
+        IERC20 ausdc = IERC20(ATOKEN_USDC);
+
+        deal(Ethereum.USDS, Ethereum.ALM_PROXY, 50_000_000e18);
+        // Use deal2 for USDC because storage is not set in a common way
+        deal2(Ethereum.USDC, Ethereum.ALM_PROXY, 50_000_000e6);
+
+        // USDS
+
+        vm.startPrank(Ethereum.ALM_RELAYER);
+
+        bytes32 usdsDepositKey = RateLimitHelpers.makeAssetKey(
+            controller.LIMIT_AAVE_DEPOSIT(),
+            address(ausds)
+        );
+        bytes32 usdsWithdrawKey = RateLimitHelpers.makeAssetKey(
+            controller.LIMIT_AAVE_WITHDRAW(),
+            address(ausds)
+        );
+
+        assertEq(rateLimits.getCurrentRateLimit(usdsDepositKey), 50_000_000e18);
+        assertEq(usds.balanceOf(Ethereum.ALM_PROXY),             50_000_000e18);
+        assertEq(ausds.balanceOf(Ethereum.ALM_PROXY),            0);
+
+        controller.depositAave(address(ausds), 50_000_000e18);
+
+        assertEq(rateLimits.getCurrentRateLimit(usdsDepositKey), 0);
+        assertEq(usds.balanceOf(Ethereum.ALM_PROXY),             0);
+        assertEq(ausds.balanceOf(Ethereum.ALM_PROXY),            50_000_000e18);
+
+        assertEq(rateLimits.getCurrentRateLimit(usdsWithdrawKey), type(uint256).max);
+
+        // USDC
+
+        bytes32 usdcDepositKey = RateLimitHelpers.makeAssetKey(
+            controller.LIMIT_AAVE_DEPOSIT(),
+            address(ausdc)
+        );
+        bytes32 usdcWithdrawKey = RateLimitHelpers.makeAssetKey(
+            controller.LIMIT_AAVE_WITHDRAW(),
+            address(ausdc)
+        );
+
+        assertEq(rateLimits.getCurrentRateLimit(usdcDepositKey), 50_000_000e6);
+        assertEq(usdc.balanceOf(Ethereum.ALM_PROXY),             50_000_000e6);
+        assertEq(ausdc.balanceOf(Ethereum.ALM_PROXY),            0);
+
+        controller.depositAave(address(ausdc), 50_000_000e6);
+
+        assertEq(rateLimits.getCurrentRateLimit(usdcDepositKey), 0);
+        assertEq(usdc.balanceOf(Ethereum.ALM_PROXY),             0);
+        assertEq(ausdc.balanceOf(Ethereum.ALM_PROXY),            50_000_000e6);
+
+        assertEq(rateLimits.getCurrentRateLimit(usdcWithdrawKey), type(uint256).max);
+
+        // All limits should be reset in 2 days + 1 (rounding)
+        skip(2 days + 1);
+
+        assertEq(rateLimits.getCurrentRateLimit(usdsDepositKey), 50_000_000e18);
+        assertEq(rateLimits.getCurrentRateLimit(usdcDepositKey), 50_000_000e6);
+    }
+
     function test_BASE_ControllerUpgrade() public onChain(ChainIdUtils.Base()) {
         // Deployment configuration is checked inside the spell
 
@@ -555,6 +697,49 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         assertEq(ausdc.balanceOf(Base.ALM_PROXY), 0);
     }
 
+    function test_BASE_AaveRateLimits() public onChain(ChainIdUtils.Base()) {
+        executeAllPayloadsAndBridges();
+
+        MainnetController controller = MainnetController(BASE_NEW_ALM_CONTROLLER);
+        IRateLimits rateLimits       = IRateLimits(Base.ALM_RATE_LIMITS);
+        
+        IERC20 usdc  = IERC20(Base.USDC);
+        IERC20 ausdc = IERC20(BASE_ATOKEN_USDC);
+
+        // Use deal2 for USDC because storage is not set in a common way
+        deal2(Base.USDC, Base.ALM_PROXY, 50_000_000e6);
+
+        vm.startPrank(Base.ALM_RELAYER);
+
+        // USDC
+
+        bytes32 usdcDepositKey = RateLimitHelpers.makeAssetKey(
+            controller.LIMIT_AAVE_DEPOSIT(),
+            address(ausdc)
+        );
+        bytes32 usdcWithdrawKey = RateLimitHelpers.makeAssetKey(
+            controller.LIMIT_AAVE_WITHDRAW(),
+            address(ausdc)
+        );
+
+        assertEq(rateLimits.getCurrentRateLimit(usdcDepositKey), 50_000_000e6);
+        assertEq(usdc.balanceOf(Base.ALM_PROXY),                 50_000_000e6);
+        assertEq(ausdc.balanceOf(Base.ALM_PROXY),                0);
+
+        controller.depositAave(address(ausdc), 50_000_000e6);
+
+        assertEq(rateLimits.getCurrentRateLimit(usdcDepositKey), 0);
+        assertEq(usdc.balanceOf(Base.ALM_PROXY),                 0);
+        assertEq(ausdc.balanceOf(Base.ALM_PROXY),                50_000_000e6);
+
+        assertEq(rateLimits.getCurrentRateLimit(usdcWithdrawKey), type(uint256).max);
+
+        // All limits should be reset in 2 days + 1 (rounding)
+        skip(2 days + 1);
+
+        assertEq(rateLimits.getCurrentRateLimit(usdcDepositKey), 50_000_000e6);
+    }
+
     function test_BASE_MorphoSupplyCapUpdates() public onChain(ChainIdUtils.Base()) {
         MarketParams memory usdcIdle = MarketParams({
             loanToken:       Base.USDC,
@@ -587,6 +772,29 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         _assertMorphoCap(BASE_MORPHO_SPARK_USDC, usdcCBBTC, 100_000_000e6);
     }
 
+    function _initMorphoVault(address vault) internal {
+        skip(1 days);
+        MarketParams memory usdcIdle = MarketParams({
+            loanToken:       Base.USDC,
+            collateralToken: address(0),
+            oracle:          address(0),
+            irm:             address(0),
+            lltv:            0
+        });
+        MarketParams memory usdcCBBTC =  MarketParams({
+            loanToken:       Base.USDC,
+            collateralToken: BASE_CBBTC,
+            oracle:          BASE_CBBTC_USDC_ORACLE,
+            irm:             BASE_MORPHO_DEFAULT_IRM,
+            lltv:            0.86e18
+        });
+        IMetaMorpho(vault).acceptCap(usdcIdle);
+        IMetaMorpho(vault).acceptCap(usdcCBBTC);
+        Id[] memory supplyQueue = new Id[](1);
+        supplyQueue[0] = MarketParamsLib.id(usdcIdle);
+        IMetaMorpho(vault).setSupplyQueue(supplyQueue);
+    }
+
     function test_BASE_MorphoVaultIntegration() public onChain(ChainIdUtils.Base()) {
         executeAllPayloadsAndBridges();
 
@@ -608,7 +816,8 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         vm.expectRevert(abi.encodeWithSignature("AllCapsReached()"));
         controller.depositERC4626(BASE_MORPHO_SPARK_USDC, usdcAmount);
 
-        skip(1 days);
+        _initMorphoVault(address(susdc));
+
         MarketParams memory usdcIdle = MarketParams({
             loanToken:       Base.USDC,
             collateralToken: address(0),
@@ -623,12 +832,6 @@ contract SparkEthereum_20250109Test is SparkTestBase {
             irm:             BASE_MORPHO_DEFAULT_IRM,
             lltv:            0.86e18
         });
-        susdc.acceptCap(usdcIdle);
-        susdc.acceptCap(usdcCBBTC);
-        Id[] memory supplyQueue = new Id[](1);
-        supplyQueue[0] = MarketParamsLib.id(usdcIdle);
-        susdc.setSupplyQueue(supplyQueue);
-
         uint256 susdcAmount = susdc.previewDeposit(usdcAmount);
 
         assertEq(usdc.balanceOf(Base.ALM_PROXY),  usdcAmount);
@@ -667,6 +870,51 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         assertEq(susdc.balanceOf(Base.ALM_PROXY), 0);
     }
 
+    function test_BASE_MorphoRateLimits() public onChain(ChainIdUtils.Base()) {
+        executeAllPayloadsAndBridges();
+
+        MainnetController controller = MainnetController(BASE_NEW_ALM_CONTROLLER);
+        IRateLimits rateLimits       = IRateLimits(Base.ALM_RATE_LIMITS);
+        
+        IERC20 usdc    = IERC20(Base.USDC);
+        IERC4626 susdc = IERC4626(BASE_MORPHO_SPARK_USDC);
+
+        // Use deal2 for USDC because storage is not set in a common way
+        deal2(Base.USDC, Base.ALM_PROXY, 50_000_000e6);
+
+        vm.startPrank(Base.ALM_RELAYER);
+
+        _initMorphoVault(address(susdc));
+
+        // USDC
+
+        bytes32 usdcDepositKey = RateLimitHelpers.makeAssetKey(
+            controller.LIMIT_4626_DEPOSIT(),
+            address(susdc)
+        );
+        bytes32 usdcWithdrawKey = RateLimitHelpers.makeAssetKey(
+            controller.LIMIT_4626_WITHDRAW(),
+            address(susdc)
+        );
+
+        assertEq(rateLimits.getCurrentRateLimit(usdcDepositKey),         50_000_000e6);
+        assertEq(usdc.balanceOf(Base.ALM_PROXY),                         50_000_000e6);
+        assertEq(susdc.convertToAssets(susdc.balanceOf(Base.ALM_PROXY)), 0);
+
+        controller.depositERC4626(address(susdc), 50_000_000e6);
+
+        assertEq(rateLimits.getCurrentRateLimit(usdcDepositKey),         0);
+        assertEq(usdc.balanceOf(Base.ALM_PROXY),                         0);
+        assertEq(susdc.convertToAssets(susdc.balanceOf(Base.ALM_PROXY)), 50_000_000e6);
+
+        assertEq(rateLimits.getCurrentRateLimit(usdcWithdrawKey), type(uint256).max);
+
+        // All limits should be reset in 2 days + 1 (rounding)
+        skip(2 days + 1);
+
+        assertEq(rateLimits.getCurrentRateLimit(usdcDepositKey), 50_000_000e6);
+    }
+
     function test_ETHEREUM_BASE_USDSBridging() public onChain(ChainIdUtils.Base()) {
         uint256 baseBalanceBefore = IERC20(Base.USDS).balanceOf(Base.ALM_PROXY);
 
@@ -674,7 +922,5 @@ contract SparkEthereum_20250109Test is SparkTestBase {
 
         assertEq(IERC20(Base.USDS).balanceOf(Base.ALM_PROXY), baseBalanceBefore + USDS_MINT_AMOUNT);
     }
-
-    // TODO assert rate limits
 
 }

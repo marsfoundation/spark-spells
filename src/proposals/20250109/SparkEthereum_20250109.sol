@@ -375,7 +375,7 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
             Ethereum.ALM_RATE_LIMITS,
             RateLimitData({
                 maxAmount : 100_000_000e18,
-                slope     : 100_000_000e6 / uint256(1 days)
+                slope     : 100_000_000e18 / uint256(1 days)
             }),
             "susdeDepositLimit",
             18
