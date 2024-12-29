@@ -15,6 +15,8 @@ import { ForeignController } from 'spark-alm-controller/src/ForeignController.so
 
 import { IExecutor } from 'spark-gov-relay/src/interfaces/IExecutor.sol';
 
+import { MarketAllocation } from 'metamorpho/interfaces/IMetaMorpho.sol';
+
 import { ChainIdUtils } from 'src/libraries/ChainId.sol';
 
 interface DssAutoLineLike {
@@ -535,8 +537,6 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         // Use deal2 for USDC because storage is not set in a common way
         deal2(Base.USDC, Base.ALM_PROXY, usdcAmount);
 
-        // USDC
-
         assertEq(usdc.balanceOf(Base.ALM_PROXY),  usdcAmount);
         assertEq(ausdc.balanceOf(Base.ALM_PROXY), 0);
 
@@ -583,6 +583,79 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         
         _assertMorphoCap(BASE_MORPHO_SPARK_USDC, usdcIdle,  type(uint184).max);
         _assertMorphoCap(BASE_MORPHO_SPARK_USDC, usdcCBBTC, 100_000_000e6);
+    }
+
+    function test_BASE_MorphoVaultIntegration() public onChain(ChainIdUtils.Base()) {
+        executeAllPayloadsAndBridges();
+
+        ForeignController controller = ForeignController(BASE_NEW_ALM_CONTROLLER);
+
+        IERC20 usdc       = IERC20(Base.USDC);
+        IMetaMorpho susdc = IMetaMorpho(BASE_MORPHO_SPARK_USDC);
+
+        // Use a realistic numbers to check the rate limits
+        uint256 usdcAmount = 5_000_000e6;
+
+        // Use deal2 for USDC because storage is not set in a common way
+        deal2(Base.USDC, Base.ALM_PROXY, usdcAmount);
+
+        vm.startPrank(Base.ALM_RELAYER);
+
+        // Cannot deposit until caps are accepted and supply queue is set
+        vm.expectRevert(abi.encodeWithSignature("AllCapsReached()"));
+        controller.depositERC4626(BASE_MORPHO_SPARK_USDC, usdcAmount);
+
+        skip(1 days);
+        MarketParams memory usdcIdle = MarketParams({
+            loanToken:       Base.USDC,
+            collateralToken: address(0),
+            oracle:          address(0),
+            irm:             address(0),
+            lltv:            0
+        });
+        MarketParams memory usdcCBBTC =  MarketParams({
+            loanToken:       Base.USDC,
+            collateralToken: BASE_CBBTC,
+            oracle:          BASE_CBBTC_USDC_ORACLE,
+            irm:             BASE_MORPHO_DEFAULT_IRM,
+            lltv:            0.86e18
+        });
+        susdc.acceptCap(usdcIdle);
+        susdc.acceptCap(usdcCBBTC);
+        Id[] memory supplyQueue = new Id[](1);
+        supplyQueue[0] = MarketParamsLib.id(usdcIdle);
+        susdc.setSupplyQueue(supplyQueue);
+
+        uint256 susdcAmount = susdc.previewDeposit(usdcAmount);
+
+        assertEq(usdc.balanceOf(Base.ALM_PROXY),  usdcAmount);
+        assertEq(susdc.balanceOf(Base.ALM_PROXY), 0);
+
+        controller.depositERC4626(BASE_MORPHO_SPARK_USDC, usdcAmount);
+
+        assertEq(usdc.balanceOf(Base.ALM_PROXY),  0);
+        assertEq(susdc.balanceOf(Base.ALM_PROXY), susdcAmount);
+
+        // The relayer can reallocate the funds into the cbBTC market
+        MarketAllocation[] memory reallocation = new MarketAllocation[](2);
+        reallocation[0] = MarketAllocation({
+            marketParams: usdcIdle,
+            assets:       0
+        });
+        reallocation[1] = MarketAllocation({
+            marketParams: usdcCBBTC,
+            assets:       usdcAmount 
+        });
+        susdc.reallocate(reallocation);
+
+        // TODO show the USDC is in the cbBTC market
+
+        usdcAmount -= 1;  // Rounding
+
+        controller.withdrawERC4626(BASE_MORPHO_SPARK_USDC, usdcAmount);
+
+        assertEq(usdc.balanceOf(Base.ALM_PROXY),  usdcAmount);
+        assertEq(susdc.balanceOf(Base.ALM_PROXY), 0);
     }
 
     function test_ETHEREUM_BASE_USDSBridging() public onChain(ChainIdUtils.Base()) {
