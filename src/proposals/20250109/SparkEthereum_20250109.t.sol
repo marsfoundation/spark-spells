@@ -15,7 +15,7 @@ import { ForeignController } from 'spark-alm-controller/src/ForeignController.so
 
 import { IExecutor } from 'spark-gov-relay/src/interfaces/IExecutor.sol';
 
-import { MarketAllocation } from 'metamorpho/interfaces/IMetaMorpho.sol';
+import { IMorpho, MarketAllocation } from 'metamorpho/interfaces/IMetaMorpho.sol';
 
 import { ChainIdUtils } from 'src/libraries/ChainId.sol';
 
@@ -39,6 +39,8 @@ interface IRateSource {
 contract SparkEthereum_20250109Test is SparkTestBase {
 
     using DomainHelpers for *;
+
+    address internal constant MORPHO = 0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb;
 
     // --- Ethereum Addresses ---
 
@@ -589,6 +591,7 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         executeAllPayloadsAndBridges();
 
         ForeignController controller = ForeignController(BASE_NEW_ALM_CONTROLLER);
+        IMorpho morpho               = IMorpho(MORPHO);
 
         IERC20 usdc       = IERC20(Base.USDC);
         IMetaMorpho susdc = IMetaMorpho(BASE_MORPHO_SPARK_USDC);
@@ -636,6 +639,10 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         assertEq(usdc.balanceOf(Base.ALM_PROXY),  0);
         assertEq(susdc.balanceOf(Base.ALM_PROXY), susdcAmount);
 
+        // Note: Greater than
+        assertGt(morpho.position(MarketParamsLib.id(usdcIdle), BASE_MORPHO_SPARK_USDC).supplyShares,  0);
+        assertEq(morpho.position(MarketParamsLib.id(usdcCBBTC), BASE_MORPHO_SPARK_USDC).supplyShares, 0);
+
         // The relayer can reallocate the funds into the cbBTC market
         MarketAllocation[] memory reallocation = new MarketAllocation[](2);
         reallocation[0] = MarketAllocation({
@@ -648,7 +655,9 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         });
         susdc.reallocate(reallocation);
 
-        // TODO show the USDC is in the cbBTC market
+        assertEq(morpho.position(MarketParamsLib.id(usdcIdle), BASE_MORPHO_SPARK_USDC).supplyShares,  0);
+        // Note: Greater than
+        assertGt(morpho.position(MarketParamsLib.id(usdcCBBTC), BASE_MORPHO_SPARK_USDC).supplyShares, 0);
 
         usdcAmount -= 1;  // Rounding
 
