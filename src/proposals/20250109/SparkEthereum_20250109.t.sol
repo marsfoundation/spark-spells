@@ -297,6 +297,28 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         assertEq(usdcConfigBefore.interestRateStrategy, OLD_STABLECOINS_INTEREST_RATE_STRATEGY);
         assertEq(usdtConfigBefore.interestRateStrategy, OLD_STABLECOINS_INTEREST_RATE_STRATEGY);
 
+        // DSR + 1% APR
+        uint256 expectedPrevDaiBaseVariableBorrowRate = 0.118244145468537494478864e27;
+
+        // Approx 12.5% APY (deviation due to addition of APR)
+        assertEq(_getAPY(expectedPrevDaiBaseVariableBorrowRate), 0.125518867907576113321554893e27);
+
+        _validateInterestRateStrategy(
+            daiConfigBefore.interestRateStrategy,
+            OLD_DAI_INTEREST_RATE_STRATEGY,
+            InterestStrategyValues({
+                addressesProvider:             address(IDefaultInterestRateStrategy(daiConfigBefore.interestRateStrategy).ADDRESSES_PROVIDER()),
+                optimalUsageRatio:             1e27,
+                optimalStableToTotalDebtRatio: 0,
+                baseStableBorrowRate:          0,
+                stableRateSlope1:              0,
+                stableRateSlope2:              0,
+                baseVariableBorrowRate:        expectedPrevDaiBaseVariableBorrowRate,
+                variableRateSlope1:            0,
+                variableRateSlope2:            0
+            })
+        );
+
         IDefaultInterestRateStrategy prevIRM = IDefaultInterestRateStrategy(usdcConfigBefore.interestRateStrategy);
         uint256 currVarSlope1 = 0.11885440509995120663752e27;
         _validateInterestRateStrategy(
@@ -475,22 +497,22 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         // Mint
 
         assertEq(rateLimits.getCurrentRateLimit(controller.LIMIT_USDE_MINT()), 50_000_000e6);
-        assertEq(usdc.allowance(Ethereum.ALM_PROXY, Ethereum.ETHENA_MINTER), 0);
+        assertEq(usdc.allowance(Ethereum.ALM_PROXY, Ethereum.ETHENA_MINTER),   0);
 
         controller.prepareUSDeMint(50_000_000e6);
 
         assertEq(rateLimits.getCurrentRateLimit(controller.LIMIT_USDE_MINT()), 0);
-        assertEq(usdc.allowance(Ethereum.ALM_PROXY, Ethereum.ETHENA_MINTER), 50_000_000e6);
+        assertEq(usdc.allowance(Ethereum.ALM_PROXY, Ethereum.ETHENA_MINTER),   50_000_000e6);
 
         // Burn
 
         assertEq(rateLimits.getCurrentRateLimit(controller.LIMIT_USDE_BURN()), 100_000_000e18);
-        assertEq(usde.allowance(Ethereum.ALM_PROXY, Ethereum.ETHENA_MINTER), 0);
+        assertEq(usde.allowance(Ethereum.ALM_PROXY, Ethereum.ETHENA_MINTER),   0);
 
         controller.prepareUSDeBurn(100_000_000e18);
 
         assertEq(rateLimits.getCurrentRateLimit(controller.LIMIT_USDE_BURN()), 0);
-        assertEq(usde.allowance(Ethereum.ALM_PROXY, Ethereum.ETHENA_MINTER), 100_000_000e18);
+        assertEq(usde.allowance(Ethereum.ALM_PROXY, Ethereum.ETHENA_MINTER),   100_000_000e18);
 
         // sUSDe Deposit
 

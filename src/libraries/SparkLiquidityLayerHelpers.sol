@@ -56,10 +56,7 @@ library SparkLiquidityLayerHelpers {
                 token
             ),
             rateLimits,
-            RateLimitData({
-                maxAmount : type(uint256).max,
-                slope     : 0
-            }),
+            RateLimitHelpers.unlimitedRateLimit(),
             "atokenWithdrawLimit",
             underlying.decimals()
         );
@@ -97,10 +94,7 @@ library SparkLiquidityLayerHelpers {
                 vault
             ),
             rateLimits,
-            RateLimitData({
-                maxAmount : type(uint256).max,
-                slope     : 0
-            }),
+            RateLimitHelpers.unlimitedRateLimit(),
             "vaultWithdrawLimit",
             asset.decimals()
         );
