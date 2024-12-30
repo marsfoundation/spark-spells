@@ -569,10 +569,10 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         // Confirm proper recharge rate
         skip(1 hours);
 
-        assertEq(rateLimits.getCurrentRateLimit(controller.LIMIT_USDE_MINT()),      2_083_333.3308e6);
-        assertEq(rateLimits.getCurrentRateLimit(controller.LIMIT_USDE_BURN()),      4_166_666.6666666666666652e18);
-        assertEq(rateLimits.getCurrentRateLimit(depositKey),                        4_166_666.6666666666666652e18);
-        assertEq(rateLimits.getCurrentRateLimit(controller.LIMIT_SUSDE_COOLDOWN()), 10_416_666.6666666666666648e18);
+        assertEq(rateLimits.getCurrentRateLimit(controller.LIMIT_USDE_MINT()),      50_000_000e6 / uint256(1 days) * 1 hours);
+        assertEq(rateLimits.getCurrentRateLimit(controller.LIMIT_USDE_BURN()),      100_000_000e18 / uint256(1 days) * 1 hours);
+        assertEq(rateLimits.getCurrentRateLimit(depositKey),                        100_000_000e18 / uint256(1 days) * 1 hours);
+        assertEq(rateLimits.getCurrentRateLimit(controller.LIMIT_SUSDE_COOLDOWN()), 250_000_000e18 / uint256(1 days) * 1 hours);
 
         // All limits should be reset in 2 days + 1 (rounding)
         skip(47 hours + 1);
@@ -700,8 +700,8 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         // Confirm proper recharge rate
         skip(1 hours);
 
-        assertEq(rateLimits.getCurrentRateLimit(usdsDepositKey), 1_041_666.6666666666666636e18);
-        assertEq(rateLimits.getCurrentRateLimit(usdcDepositKey), 1_041_666.663600e6);
+        assertEq(rateLimits.getCurrentRateLimit(usdsDepositKey), 25_000_000e18 / uint256(1 days) * 1 hours);
+        assertEq(rateLimits.getCurrentRateLimit(usdcDepositKey), 25_000_000e6 / uint256(1 days) * 1 hours);
 
         // All limits should be reset in 2 days + 1 (rounding)
         skip(47 hours + 1);
@@ -806,7 +806,7 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         // Confirm proper recharge rate
         skip(1 hours);
 
-        assertEq(rateLimits.getCurrentRateLimit(usdcDepositKey), 1_041_666.663600e6);
+        assertEq(rateLimits.getCurrentRateLimit(usdcDepositKey), 25_000_000e6 / uint256(1 days) * 1 hours);
 
         // All limits should be reset in 2 days + 1 (rounding)
         skip(47 hours + 1);
@@ -962,7 +962,7 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         // Confirm proper recharge rate
         skip(1 hours);
 
-        assertEq(rateLimits.getCurrentRateLimit(usdcDepositKey), 1_041_666.663600e6);
+        assertEq(rateLimits.getCurrentRateLimit(usdcDepositKey), 25_000_000e6 / uint256(1 days) * 1 hours);
 
         // All limits should be reset in 2 days + 1 (rounding)
         skip(47 hours + 1);
