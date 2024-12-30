@@ -993,7 +993,7 @@ contract SparkEthereum_20250109Test is SparkTestBase {
 
         uint256 initialUsdc = IERC20(Base.USDC).balanceOf(Base.ALM_PROXY);
 
-        relayMessageOverBridges();
+        _relayMessageOverBridges();
 
         assertEq(IERC20(Base.USDC).balanceOf(Base.ALM_PROXY), initialUsdc + usdcAmount);
 
@@ -1005,7 +1005,7 @@ contract SparkEthereum_20250109Test is SparkTestBase {
 
         initialUsdc = IERC20(Ethereum.USDC).balanceOf(Ethereum.ALM_PROXY);
 
-        relayMessageOverBridges();
+        _relayMessageOverBridges();
 
         assertEq(IERC20(Ethereum.USDC).balanceOf(Ethereum.ALM_PROXY), initialUsdc + usdcAmount);
     }
