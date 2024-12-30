@@ -6,10 +6,12 @@ import { IERC4626 } from 'forge-std/interfaces/IERC4626.sol';
 
 import { IAToken } from "aave-v3-origin/src/core/contracts/interfaces/IAToken.sol";
 
-import { IMetaMorpho }           from "metamorpho/interfaces/IMetaMorpho.sol";
+import { IMetaMorpho, Id }       from "metamorpho/interfaces/IMetaMorpho.sol";
 import { IMorpho, MarketParams } from "morpho-blue/src/interfaces/IMorpho.sol";
+import { MarketParamsLib }       from "morpho-blue/src/libraries/MarketParamsLib.sol";
 
 import { RateLimitHelpers, RateLimitData } from "spark-alm-controller/src/RateLimitHelpers.sol";
+
 
 /**
  * @notice Helper functions for Spark Liquidity Layer
@@ -117,6 +119,7 @@ library SparkLiquidityLayerHelpers {
      * @dev This will do the following:
      *      - Add the idle market for the underlying asset with unlimited size
      *      - Add the relayer as an allocator
+     *      - Set the supply queue to the idle market
      */
     function activateMorphoVault(
         address vault,
@@ -140,6 +143,12 @@ library SparkLiquidityLayerHelpers {
             idleMarket,
             type(uint184).max
         );
+        IMetaMorpho(vault).acceptCap(
+            idleMarket
+        );
+        Id[] memory supplyQueue = new Id[](1);
+        supplyQueue[0] = MarketParamsLib.id(idleMarket);
+        IMetaMorpho(vault).setSupplyQueue(supplyQueue);
     }
 
 }

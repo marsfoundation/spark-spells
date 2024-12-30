@@ -26,7 +26,7 @@ contract SparkBase_20250109 is SparkPayloadBase {
 
     address internal constant ATOKEN_USDC = 0x4e65fE4DbA92790696d040ac24Aa414708F5c0AB;
 
-    address internal constant MORPHO_SPARK_USDC = 0x305E03Ed9ADaAB22F4A58c24515D79f2B1E2FD5D;
+    address internal constant MORPHO_SPARK_USDC = 0x7BfA7C4f149E7415b73bdeDfe609237e29CBF34A;
 
     address internal constant CBBTC              = 0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf;
     address internal constant CBBTC_USDC_ORACLE  = 0x663BECd10daE6C4A3Dcd89F1d76c1174199639B9;
@@ -47,15 +47,19 @@ contract SparkBase_20250109 is SparkPayloadBase {
         _onboardERC4626Vault(MORPHO_SPARK_USDC, 50_000_000e6, 25_000_000e6 / uint256(1 days));
 
         // Onboard cbBTC/USDC 0 -> 100m
+        MarketParams memory usdcCBBTC = MarketParams({
+            loanToken:       Base.USDC,
+            collateralToken: CBBTC,
+            oracle:          CBBTC_USDC_ORACLE,
+            irm:             MORPHO_DEFAULT_IRM,
+            lltv:            0.86e18
+        });
         IMetaMorpho(MORPHO_SPARK_USDC).submitCap(
-            MarketParams({
-                loanToken:       Base.USDC,
-                collateralToken: CBBTC,
-                oracle:          CBBTC_USDC_ORACLE,
-                irm:             MORPHO_DEFAULT_IRM,
-                lltv:            0.86e18
-            }),
+            usdcCBBTC,
             100_000_000e6
+        );
+        IMetaMorpho(MORPHO_SPARK_USDC).acceptCap(
+            usdcCBBTC
         );
     }
 

@@ -79,7 +79,7 @@ contract SparkEthereum_20250109Test is SparkTestBase {
 
     address internal constant BASE_ATOKEN_USDC = 0x4e65fE4DbA92790696d040ac24Aa414708F5c0AB;
 
-    address internal constant BASE_MORPHO_SPARK_USDC = 0x305E03Ed9ADaAB22F4A58c24515D79f2B1E2FD5D;
+    address internal constant BASE_MORPHO_SPARK_USDC = 0x7BfA7C4f149E7415b73bdeDfe609237e29CBF34A;
 
     constructor() {
         id = '20250109';
@@ -87,8 +87,8 @@ contract SparkEthereum_20250109Test is SparkTestBase {
 
     function setUp() public {
         setupDomains({
-            mainnetForkBlock: 21503780,
-            baseForkBlock:    24316766,
+            mainnetForkBlock: 21516435,
+            baseForkBlock:    24393026,
             gnosisForkBlock:  37691338
         });
         deployPayloads();
@@ -544,7 +544,7 @@ contract SparkEthereum_20250109Test is SparkTestBase {
 
         assertEq(rateLimits.getCurrentRateLimit(depositKey),                 0);
         assertEq(usde.balanceOf(Ethereum.ALM_PROXY),                         0);
-        assertEq(susde.convertToAssets(susde.balanceOf(Ethereum.ALM_PROXY)), 100_000_000e18 - 2);  // Rounding
+        assertEq(susde.convertToAssets(susde.balanceOf(Ethereum.ALM_PROXY)), 100_000_000e18 - 1);  // Rounding
 
         // sUSDe Cooldown
 
@@ -806,40 +806,17 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         assertEq(rateLimits.getCurrentRateLimit(usdcDepositKey), 50_000_000e6);
     }
 
-    function test_BASE_MorphoSupplyCapUpdates() public onChain(ChainIdUtils.Base()) {
-        MarketParams memory usdcIdle = MarketParams({
-            loanToken:       Base.USDC,
-            collateralToken: address(0),
-            oracle:          address(0),
-            irm:             address(0),
-            lltv:            0
-        });
-        MarketParams memory usdcCBBTC =  MarketParams({
-            loanToken:       Base.USDC,
-            collateralToken: BASE_CBBTC,
-            oracle:          BASE_CBBTC_USDC_ORACLE,
-            irm:             BASE_MORPHO_DEFAULT_IRM,
-            lltv:            0.86e18
-        });
+    function test_BASE_MorphoVaultDeploy() public onChain(ChainIdUtils.Base()) {
+        IMetaMorpho susdc = IMetaMorpho(BASE_MORPHO_SPARK_USDC);
 
-        _assertMorphoCap(BASE_MORPHO_SPARK_USDC, usdcIdle,  0);
-        _assertMorphoCap(BASE_MORPHO_SPARK_USDC, usdcCBBTC, 0);
-
-        executeAllPayloadsAndBridges();
-
-        _assertMorphoCap(BASE_MORPHO_SPARK_USDC, usdcIdle,  0, type(uint184).max);
-        _assertMorphoCap(BASE_MORPHO_SPARK_USDC, usdcCBBTC, 0, 100_000_000e6);
-
-        skip(1 days);
-        IMetaMorpho(BASE_MORPHO_SPARK_USDC).acceptCap(usdcIdle);
-        IMetaMorpho(BASE_MORPHO_SPARK_USDC).acceptCap(usdcCBBTC);
-        
-        _assertMorphoCap(BASE_MORPHO_SPARK_USDC, usdcIdle,  type(uint184).max);
-        _assertMorphoCap(BASE_MORPHO_SPARK_USDC, usdcCBBTC, 100_000_000e6);
+        assertEq(susdc.name(),     "Spark USDC Vault");
+        assertEq(susdc.symbol(),   "sparkUSDC");
+        assertEq(susdc.timelock(), 0);
     }
 
-    function _initMorphoVault(address vault) internal {
-        skip(1 days);
+    function test_BASE_MorphoConfiguration() public onChain(ChainIdUtils.Base()) {
+        IMetaMorpho susdc = IMetaMorpho(BASE_MORPHO_SPARK_USDC);
+
         MarketParams memory usdcIdle = MarketParams({
             loanToken:       Base.USDC,
             collateralToken: address(0),
@@ -854,11 +831,18 @@ contract SparkEthereum_20250109Test is SparkTestBase {
             irm:             BASE_MORPHO_DEFAULT_IRM,
             lltv:            0.86e18
         });
-        IMetaMorpho(vault).acceptCap(usdcIdle);
-        IMetaMorpho(vault).acceptCap(usdcCBBTC);
-        Id[] memory supplyQueue = new Id[](1);
-        supplyQueue[0] = MarketParamsLib.id(usdcIdle);
-        IMetaMorpho(vault).setSupplyQueue(supplyQueue);
+
+        _assertMorphoCap(address(susdc), usdcIdle,  0);
+        _assertMorphoCap(address(susdc), usdcCBBTC, 0);
+        
+        assertEq(susdc.isAllocator(Base.ALM_RELAYER), false);
+
+        executeAllPayloadsAndBridges();
+        
+        _assertMorphoCap(address(susdc), usdcIdle,  type(uint184).max);
+        _assertMorphoCap(address(susdc), usdcCBBTC, 100_000_000e6);
+        
+        assertEq(susdc.isAllocator(Base.ALM_RELAYER), true);
     }
 
     function test_BASE_MorphoVaultIntegration() public onChain(ChainIdUtils.Base()) {
@@ -877,12 +861,6 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         deal2(Base.USDC, Base.ALM_PROXY, usdcAmount);
 
         vm.startPrank(Base.ALM_RELAYER);
-
-        // Cannot deposit until caps are accepted and supply queue is set
-        vm.expectRevert(abi.encodeWithSignature("AllCapsReached()"));
-        controller.depositERC4626(BASE_MORPHO_SPARK_USDC, usdcAmount);
-
-        _initMorphoVault(address(susdc));
 
         MarketParams memory usdcIdle = MarketParams({
             loanToken:       Base.USDC,
@@ -933,7 +911,7 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         controller.withdrawERC4626(BASE_MORPHO_SPARK_USDC, usdcAmount);
 
         assertEq(usdc.balanceOf(Base.ALM_PROXY),  usdcAmount);
-        assertEq(susdc.balanceOf(Base.ALM_PROXY), 0);
+        assertEq(susdc.balanceOf(Base.ALM_PROXY), 1e12);  // Some dust left
     }
 
     function test_BASE_MorphoRateLimits() public onChain(ChainIdUtils.Base()) {
@@ -949,8 +927,6 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         deal2(Base.USDC, Base.ALM_PROXY, 50_000_000e6);
 
         vm.startPrank(Base.ALM_RELAYER);
-
-        _initMorphoVault(address(susdc));
 
         // USDC
 
