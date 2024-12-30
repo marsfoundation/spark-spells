@@ -47,7 +47,16 @@ interface ITokenBridge {
                                   Aave V3 and increase liquidity available to Base
  * @author Phoenix Labs
  * Forum:  https://forum.sky.money/t/27-dec-2024-proposed-changes-to-spark-for-upcoming-spell/25760
- * Vote:   TODO
+ * Vote:   https://vote.makerdao.com/polling/QmYScEHT
+ *         https://vote.makerdao.com/polling/Qma1xA18
+ *         https://vote.makerdao.com/polling/QmeEvuG2
+ *         https://vote.makerdao.com/polling/QmVpv1G8
+ *         https://vote.makerdao.com/polling/QmZ2Qmy5
+ *         https://vote.makerdao.com/polling/QmSTYyW5
+ *         https://vote.makerdao.com/polling/QmTFsGw8
+ *         https://vote.makerdao.com/polling/QmYDGkjM
+ *         https://vote.makerdao.com/polling/QmZfSDMH
+ *         https://vote.makerdao.com/polling/QmQ6bYou
  */
 contract SparkEthereum_20250109 is SparkPayloadEthereum {
 

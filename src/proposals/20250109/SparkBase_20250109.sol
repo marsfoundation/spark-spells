@@ -18,7 +18,8 @@ import { ForeignControllerInit } from "spark-alm-controller/deploy/ForeignContro
  * @notice Onboard Aave aUSDC and Morpho USDC Vault
  * @author Phoenix Labs
  * Forum:  https://forum.sky.money/t/27-dec-2024-proposed-changes-to-spark-for-upcoming-spell/25760
- * Vote:   TODO
+ * Vote:   https://vote.makerdao.com/polling/QmeZTfHR
+ *         https://vote.makerdao.com/polling/QmQarR2U
  */
 contract SparkBase_20250109 is SparkPayloadBase {
 
