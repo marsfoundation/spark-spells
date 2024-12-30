@@ -43,7 +43,7 @@ contract SparkBase_20250109 is SparkPayloadBase {
         _onboardAaveToken(ATOKEN_USDC, 50_000_000e6, 25_000_000e6 / uint256(1 days));
 
         // Morpho
-        _activateMorphoVault(MORPHO_SPARK_USDC, false);
+        _activateMorphoVault(MORPHO_SPARK_USDC);
         _onboardERC4626Vault(MORPHO_SPARK_USDC, 50_000_000e6, 25_000_000e6 / uint256(1 days));
 
         // Onboard cbBTC/USDC 0 -> 100m

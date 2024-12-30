@@ -122,17 +122,10 @@ library SparkLiquidityLayerHelpers {
      */
     function activateMorphoVault(
         address vault,
-        address relayer,
-        bool createIdleMarket
+        address relayer
     ) internal {
         IERC20 asset = IERC20(IERC4626(vault).asset());
         MarketParams memory idleMarket = morphoIdleMarket(address(asset));
-
-        if (createIdleMarket) {
-            IMorpho(MORPHO).createMarket(
-                idleMarket
-            );
-        }
         
         IMetaMorpho(vault).setIsAllocator(
             relayer,

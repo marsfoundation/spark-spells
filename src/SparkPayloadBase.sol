@@ -29,11 +29,10 @@ abstract contract SparkPayloadBase {
         );
     }
 
-    function _activateMorphoVault(address vault, bool createIdleMarket) internal {
+    function _activateMorphoVault(address vault) internal {
         SparkLiquidityLayerHelpers.activateMorphoVault(
             vault,
-            Base.ALM_RELAYER,
-            createIdleMarket
+            Base.ALM_RELAYER
         );
     }
 
