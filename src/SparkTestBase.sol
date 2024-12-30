@@ -152,7 +152,7 @@ abstract contract SpellRunner is Test {
         // then use bridges to execute other chains' payloads
         relayMessageOverBridges();
         // execute the foreign payloads if they haven't been done by the spell
-        executeForeignPayloads();
+        _simulateExecuteForeignPayloads();
     }
 
     /// @dev bridge contracts themselves are stored on mainnet
@@ -177,11 +177,11 @@ abstract contract SpellRunner is Test {
         }
     }
 
-    function executeForeignPayloads() private onChain(ChainIdUtils.Ethereum()) {
+    function _simulateExecuteForeignPayloads() private onChain(ChainIdUtils.Ethereum()) {
         for (uint256 i = 0; i < allChains.length; i++) {
             ChainId chainId = ChainIdUtils.fromDomain(chainSpellMetadata[allChains[i]].domain);
             if (chainId == ChainIdUtils.Ethereum()) continue;  // Don't execute mainnet
-            if (getMainnetPayloadFromSpell(chainId) != address(0)) continue;  // Payload is already defined in mainnet spell
+            if (_getMainnetPayloadFromSpell(chainId) != address(0)) continue;  // Payload is already defined in mainnet spell
             address payload = chainSpellMetadata[chainId].payload;
             if (payload != address(0)) {
                 // We will simulate execution until the real spell is deployed in the mainnet spell
@@ -196,7 +196,7 @@ abstract contract SpellRunner is Test {
         }
     }
 
-    function getMainnetPayloadFromSpell(ChainId chainId) internal onChain(ChainIdUtils.Ethereum()) returns (address) {
+    function _getMainnetPayloadFromSpell(ChainId chainId) internal onChain(ChainIdUtils.Ethereum()) returns (address) {
         SparkPayloadEthereum spell = SparkPayloadEthereum(chainSpellMetadata[ChainIdUtils.Ethereum()].payload);
         if (chainId == ChainIdUtils.Base()) {
             return spell.PAYLOAD_BASE();
@@ -551,7 +551,7 @@ abstract contract SparkEthereumTests is SparklendTests {
             if (payload != address(0)) {
                 // A payload is defined for this domain
                 // We verify the mainnet spell defines this payload correctly
-                address mainnetPayload = getMainnetPayloadFromSpell(chainId);
+                address mainnetPayload = _getMainnetPayloadFromSpell(chainId);
                 assertEq(mainnetPayload, payload, "Mainnet payload not matching deployed payload");
             }
         }
