@@ -322,6 +322,10 @@ contract SparkEthereum_20250109Test is SparkTestBase {
 
         IDefaultInterestRateStrategy prevIRM = IDefaultInterestRateStrategy(usdcConfigBefore.interestRateStrategy);
         uint256 currVarSlope1 = 0.11885440509995120663752e27;
+
+        // Approx 12.5% APY, but off by a bit because 11.5% DSR APY + 1% APR != 12.5% APY
+        assertEq(_getAPY(currVarSlope1), 0.126205936258187976959810466e27);
+
         _validateInterestRateStrategy(
             address(prevIRM),
             OLD_STABLECOINS_INTEREST_RATE_STRATEGY,
@@ -382,6 +386,10 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         // Note: the slope1 changes slightly due to the difference between APY and APR addition
         //       (11.5% APY + 1% APR != 12.5% APY + 0% APR)
         uint256 newVarSlope1 = 0.117783035876335945414896e27;
+
+        // Will be almost exactly 12.5% APY
+        assertEq(_getAPY(newVarSlope1), 0.124999999999999999980492118e27);
+
         _validateInterestRateStrategy(
             usdcConfigAfter.interestRateStrategy,
             NEW_STABLECOINS_INTEREST_RATE_STRATEGY,

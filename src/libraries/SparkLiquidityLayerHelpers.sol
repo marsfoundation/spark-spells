@@ -12,7 +12,6 @@ import { MarketParamsLib }       from "morpho-blue/src/libraries/MarketParamsLib
 
 import { RateLimitHelpers, RateLimitData } from "spark-alm-controller/src/RateLimitHelpers.sol";
 
-
 /**
  * @notice Helper functions for Spark Liquidity Layer
  */
