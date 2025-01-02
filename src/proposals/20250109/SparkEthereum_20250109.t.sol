@@ -161,6 +161,7 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
         wstethConfig.reserveFactor        = 30_00;
         wstethConfig.interestRateStrategy = _findReserveConfigBySymbol(allConfigsAfter, 'wstETH').interestRateStrategy;
+        assertNotEq(wstethConfig.interestRateStrategy, address(prevIRM));
 
         _validateReserveConfig(wstethConfig, allConfigsAfter);
         _validateInterestRateStrategy(
