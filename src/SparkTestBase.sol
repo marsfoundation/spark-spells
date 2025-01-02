@@ -192,6 +192,8 @@ abstract contract SpellRunner is Test {
                     payload,
                     abi.encodeWithSignature('execute()')
                 );
+
+                console.log("simulating execution payload for network: ", chainId.toDomainString());
             }
         }
     }
