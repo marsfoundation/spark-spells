@@ -181,7 +181,7 @@ abstract contract SpellRunner is Test {
         for (uint256 i = 0; i < allChains.length; i++) {
             ChainId chainId = ChainIdUtils.fromDomain(chainSpellMetadata[allChains[i]].domain);
             if (chainId == ChainIdUtils.Ethereum()) continue;  // Don't execute mainnet
-            if (_getMainnetPayloadFromSpell(chainId) != address(0)) continue;  // Payload is already defined in mainnet spell
+            if (_getForeignPayloadFromMainnetSpell(chainId) != address(0)) continue;  // Payload is already defined in mainnet spell
             address payload = chainSpellMetadata[chainId].payload;
             if (payload != address(0)) {
                 // We will simulate execution until the real spell is deployed in the mainnet spell
@@ -198,7 +198,7 @@ abstract contract SpellRunner is Test {
         }
     }
 
-    function _getMainnetPayloadFromSpell(ChainId chainId) internal onChain(ChainIdUtils.Ethereum()) returns (address) {
+    function _getForeignPayloadFromMainnetSpell(ChainId chainId) internal onChain(ChainIdUtils.Ethereum()) returns (address) {
         SparkPayloadEthereum spell = SparkPayloadEthereum(chainSpellMetadata[ChainIdUtils.Ethereum()].payload);
         if (chainId == ChainIdUtils.Base()) {
             return spell.PAYLOAD_BASE();
@@ -553,7 +553,7 @@ abstract contract SparkEthereumTests is SparklendTests {
             if (payload != address(0)) {
                 // A payload is defined for this domain
                 // We verify the mainnet spell defines this payload correctly
-                address mainnetPayload = _getMainnetPayloadFromSpell(chainId);
+                address mainnetPayload = _getForeignPayloadFromMainnetSpell(chainId);
                 assertEq(mainnetPayload, payload, "Mainnet payload not matching deployed payload");
             }
         }
