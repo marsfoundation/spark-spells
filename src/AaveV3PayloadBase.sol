@@ -58,7 +58,7 @@ abstract contract AaveV3PayloadBase {
   /// @dev to be overriden on the child if any extra logic is needed post-listing
   function _postExecute() internal virtual {}
 
-  function execute() external {
+  function execute() public virtual {
     _preExecute();
 
     IEngine.Listing[] memory listings = newListings();
