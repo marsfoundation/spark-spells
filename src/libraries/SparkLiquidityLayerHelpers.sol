@@ -116,8 +116,8 @@ library SparkLiquidityLayerHelpers {
     /**
      * @notice Activate a Morpho Vault
      * @dev This will do the following:
-     *      - Add the idle market for the underlying asset with unlimited size
      *      - Add the relayer as an allocator
+     *      - Add the idle market for the underlying asset with unlimited size
      *      - Set the supply queue to the idle market
      */
     function activateMorphoVault(
