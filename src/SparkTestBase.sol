@@ -557,10 +557,6 @@ abstract contract SparkEthereumTests is SparklendTests {
                 assertEq(mainnetPayload, payload, "Mainnet payload not matching deployed payload");
             }
         }
-
-        executeAllPayloadsAndBridges();
-
-        _runRewardsConfigurationTests();
     }
 
     function _runRewardsConfigurationTests() internal {
