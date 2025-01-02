@@ -37,6 +37,14 @@ interface IRateSource {
     function getAPR() external view returns (uint256);
 }
 
+interface IMorphoChainlinkOracle {
+    function price() external view returns (uint256);
+}
+
+interface IPendlePT {
+    function expiry() external view returns (uint256);
+}
+
 contract SparkEthereum_20250109Test is SparkTestBase {
 
     using DomainHelpers for *;
@@ -60,6 +68,7 @@ contract SparkEthereum_20250109Test is SparkTestBase {
     address internal constant PT_SUSDE_27MAR2025            = 0xE00bd3Df25fb187d6ABBB620b3dfd19839947b81;
     address internal constant PT_SUSDE_29MAY2025_PRICE_FEED = 0xE84f7e0a890e5e57d0beEa2c8716dDf0c9846B4A;
     address internal constant PT_SUSDE_29MAY2025            = 0xb7de5dFCb74d25c2f21841fbd6230355C50d9308;
+    uint256 internal constant PT_SUSDE_29MAY2025_YIELD      = 0.25e18;
 
     address internal constant ATOKEN_USDS = 0x32a6268f9Ba3642Dda7892aDd74f1D34469A4259;
     address internal constant ATOKEN_USDC = 0x98C23E9d8f34FEFb1B7BD6a91B7FF122F4e16F5c;
@@ -285,6 +294,36 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         
         _assertMorphoCap(Ethereum.MORPHO_VAULT_DAI_1, ptsusdemar, 500_000_000e18);
         _assertMorphoCap(Ethereum.MORPHO_VAULT_DAI_1, ptsusdemay, 200_000_000e18);
+
+        // --- Test the May PT Oracle in more detail ---
+
+        uint256 ptSUSDE29MAY2025Price = IMorphoChainlinkOracle(PT_SUSDE_29MAY2025_PRICE_FEED).price();
+
+        assertEq(ptSUSDE29MAY2025Price, 0.898410475329781837e36);
+
+        uint256 timeSkip = 60 days;
+        skip(timeSkip);
+
+        uint256 newPTSUSDE29MAY2025Price = IMorphoChainlinkOracle(PT_SUSDE_29MAY2025_PRICE_FEED).price();
+
+        // Price for both feeds increases over time
+        assertGt(newPTSUSDE29MAY2025Price, ptSUSDE29MAY2025Price);
+
+        uint256 ptSUSDE29MAY2025YearlyPriceIncrease = (newPTSUSDE29MAY2025Price - ptSUSDE29MAY2025Price) * 365 days / (timeSkip);
+
+        // Calculated yield should equal the expected one
+        assertApproxEqAbs(ptSUSDE29MAY2025YearlyPriceIncrease / 1e18, PT_SUSDE_29MAY2025_YIELD, 4);
+
+        assertLt(IMorphoChainlinkOracle(PT_SUSDE_29MAY2025_PRICE_FEED).price(), 1e36);
+
+        // Prices on maturity should be 1e36
+        vm.warp(IPendlePT(PT_SUSDE_29MAY2025).expiry());
+        assertEq(IMorphoChainlinkOracle(PT_SUSDE_29MAY2025_PRICE_FEED).price(), 1e36);
+
+        skip(365 days);
+
+        // Prices should remain to be 1e36
+        assertEq(IMorphoChainlinkOracle(PT_SUSDE_29MAY2025_PRICE_FEED).price(), 1e36);
     }
 
     function test_ETHEREUM_StablecoinUpdates() public {
