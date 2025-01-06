@@ -151,8 +151,8 @@ abstract contract SpellRunner is Test {
         executeMainnetPayload();
         // then use bridges to execute other chains' payloads
         _relayMessageOverBridges();
-        // execute the foreign payloads if they haven't been done by the spell
-        _simulateExecuteForeignPayloads();
+        // execute the foreign payloads (either by simulation or real execute)
+        _executeForeignPayloads();
     }
 
     /// @dev bridge contracts themselves are stored on mainnet
@@ -165,7 +165,7 @@ abstract contract SpellRunner is Test {
         }
     }
 
-    /// @dev this does not relay messages/USDC from L2s to mainnet
+    /// @dev this does not relay messages from L2s to mainnet except in the case of USDC
     function _executeBridge(Bridge storage bridge, BridgeType bridgeType) private {
         if (bridgeType == BridgeType.OPTIMISM) {
             OptimismBridgeTesting.relayMessagesToDestination(bridge, false);
@@ -177,24 +177,31 @@ abstract contract SpellRunner is Test {
         }
     }
 
-    function _simulateExecuteForeignPayloads() private onChain(ChainIdUtils.Ethereum()) {
+    function _executeForeignPayloads() private onChain(ChainIdUtils.Ethereum()) {
         for (uint256 i = 0; i < allChains.length; i++) {
             ChainId chainId = ChainIdUtils.fromDomain(chainSpellMetadata[allChains[i]].domain);
             if (chainId == ChainIdUtils.Ethereum()) continue;  // Don't execute mainnet
-            if (_getForeignPayloadFromMainnetSpell(chainId) != address(0)) continue;  // Payload is already defined in mainnet spell
-            address payload = chainSpellMetadata[chainId].payload;
-            if (payload != address(0)) {
-                // We will simulate execution until the real spell is deployed in the mainnet spell
+            address mainnetSpellPayload = _getForeignPayloadFromMainnetSpell(chainId);
+            IExecutor executor = chainSpellMetadata[chainId].executor;
+            if (mainnetSpellPayload != address(0)) {
+                // We assume the payload has been queued in the executor (will revert otherwise)
                 chainSpellMetadata[chainId].domain.selectFork();
-                IExecutor executor = chainSpellMetadata[chainId].executor;
-                vm.prank(address(executor));
-                executor.executeDelegateCall(
-                    payload,
-                    abi.encodeWithSignature('execute()')
-                );
+                executor.execute(executor.actionsSetCount() - 1);
+            } else {
+                // We will simulate execution until the real spell is deployed in the mainnet spell
+                address payload = chainSpellMetadata[chainId].payload;
+                if (payload != address(0)) {
+                    chainSpellMetadata[chainId].domain.selectFork();
+                    vm.prank(address(executor));
+                    executor.executeDelegateCall(
+                        payload,
+                        abi.encodeWithSignature('execute()')
+                    );
 
-                console.log("simulating execution payload for network: ", chainId.toDomainString());
+                    console.log("simulating execution payload for network: ", chainId.toDomainString());
+                }
             }
+            
         }
     }
 

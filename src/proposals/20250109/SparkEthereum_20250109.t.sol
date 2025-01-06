@@ -96,11 +96,13 @@ contract SparkEthereum_20250109Test is SparkTestBase {
 
     function setUp() public {
         setupDomains({
-            mainnetForkBlock: 21516435,
-            baseForkBlock:    24393026,
+            mainnetForkBlock: 21566972,
+            baseForkBlock:    24697931,
             gnosisForkBlock:  37691338
         });
-        deployPayloads();
+        deployPayloads();  // FIXME: Not sure why this is required, but it is
+        chainSpellMetadata[ChainIdUtils.Ethereum()].payload = 0x7fb2967cDC6816Dc508f35C5A6CB035C8B6507Ec;
+        chainSpellMetadata[ChainIdUtils.Base()].payload     = 0x02C3eA4e34C0cBd694D2adFa2c690EECbC1793eE;
 
         // mock Sky increase max line to 1b, which will be executed as part of this spell
         vm.prank(Ethereum.PAUSE_PROXY);
@@ -300,7 +302,7 @@ contract SparkEthereum_20250109Test is SparkTestBase {
 
         uint256 ptSUSDE29MAY2025Price = IMorphoChainlinkOracle(PT_SUSDE_29MAY2025_PRICE_FEED).price();
 
-        assertEq(ptSUSDE29MAY2025Price, 0.898410475329781837e36);
+        assertEq(ptSUSDE29MAY2025Price, 0.903243903792491122e36);
 
         uint256 timeSkip = 60 days;
         skip(timeSkip);
@@ -605,7 +607,7 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         deal(Ethereum.SUSDE, Ethereum.ALM_PROXY, susde.convertToShares(500_000_000e18) + 1);
 
         assertEq(rateLimits.getCurrentRateLimit(controller.LIMIT_SUSDE_COOLDOWN()), 500_000_000e18);
-        assertEq(susde.convertToAssets(susde.balanceOf(Ethereum.ALM_PROXY)),        500_000_000e18);
+        assertEq(susde.convertToAssets(susde.balanceOf(Ethereum.ALM_PROXY)),        500_000_000e18 + 1);  // Rounding
 
         controller.cooldownAssetsSUSDe(500_000_000e18);
 
@@ -744,7 +746,7 @@ contract SparkEthereum_20250109Test is SparkTestBase {
 
         assertEq(rateLimits.getCurrentRateLimit(usdcDepositKey), 0);
         assertEq(usdc.balanceOf(Ethereum.ALM_PROXY),             0);
-        assertEq(ausdc.balanceOf(Ethereum.ALM_PROXY),            50_000_000e6);
+        assertEq(ausdc.balanceOf(Ethereum.ALM_PROXY),            50_000_000e6 - 1);  // Rounding
 
         assertEq(rateLimits.getCurrentRateLimit(usdcWithdrawKey), type(uint256).max);
 
