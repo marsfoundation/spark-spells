@@ -100,7 +100,6 @@ contract SparkEthereum_20250109Test is SparkTestBase {
             baseForkBlock:    24697931,
             gnosisForkBlock:  37691338
         });
-        deployPayloads();  // FIXME: Not sure why this is required, but it is
         chainSpellMetadata[ChainIdUtils.Ethereum()].payload = 0x7fb2967cDC6816Dc508f35C5A6CB035C8B6507Ec;
         chainSpellMetadata[ChainIdUtils.Base()].payload     = 0x02C3eA4e34C0cBd694D2adFa2c690EECbC1793eE;
 
@@ -110,7 +109,9 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         DssAutoLineLike(AUTO_LINE).exec(ALLOCATOR_ILK);
     }
 
-    function test_ETHEREUM_WBTCChanges() public {
+    function test_ETHEREUM_WBTCChanges() public onChain(ChainIdUtils.Ethereum()) {
+        loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
+
         ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', pool);
         ReserveConfig memory wbtcConfig         = _findReserveConfigBySymbol(allConfigsBefore, 'WBTC');
 
@@ -124,7 +125,9 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         _validateReserveConfig(wbtcConfig, allConfigsAfter);
     }
 
-    function test_ETHEREUM_CBBTCChanges() public {
+    function test_ETHEREUM_CBBTCChanges() public onChain(ChainIdUtils.Ethereum()) {
+        loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
+        
         _assertSupplyCapConfig(Ethereum.CBBTC, 3_000, 500, 12 hours);
 
         executeAllPayloadsAndBridges();
@@ -132,7 +135,9 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         _assertSupplyCapConfig(Ethereum.CBBTC, 10_000, 500, 12 hours);
     }
 
-    function test_ETHEREUM_WSTETHChanges() public {
+    function test_ETHEREUM_WSTETHChanges() public onChain(ChainIdUtils.Ethereum()) {
+        loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
+        
         ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', pool);
         ReserveConfig memory wstethConfig       = _findReserveConfigBySymbol(allConfigsBefore, 'wstETH');
 
@@ -186,7 +191,9 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         _assertBorrowCapConfig(Ethereum.WSTETH, 1_000_000, 10_000, 12 hours);
     }
 
-    function test_ETHEREUM_WEETHChanges() public {
+    function test_ETHEREUM_WEETHChanges() public onChain(ChainIdUtils.Ethereum()) {
+        loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
+        
         deal(Ethereum.WEETH, address(this), 10e18);
         IERC20(Ethereum.WEETH).approve(Ethereum.POOL, 10e18);
         pool.supply(Ethereum.WEETH, 10e18, address(this), 0);
@@ -213,7 +220,7 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         pool.borrow(Ethereum.WETH, 1e18, 2, 0, address(this));
     }
 
-    function test_ETHEREUM_MorphoSupplyCapUpdates() public {
+    function test_ETHEREUM_MorphoSupplyCapUpdates() public onChain(ChainIdUtils.Ethereum()) {
         MarketParams memory usde945 =  MarketParams({
             loanToken:       Ethereum.DAI,
             collateralToken: Ethereum.USDE,
@@ -329,7 +336,9 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         assertEq(IMorphoChainlinkOracle(PT_SUSDE_29MAY2025_PRICE_FEED).price(), 1e36);
     }
 
-    function test_ETHEREUM_StablecoinUpdates() public {
+    function test_ETHEREUM_StablecoinUpdates() public onChain(ChainIdUtils.Ethereum()) {
+        loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
+        
         ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', pool);
 
         ReserveConfig memory daiConfigBefore  = _findReserveConfigBySymbol(allConfigsBefore, 'DAI');
@@ -450,7 +459,7 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         assertEq(usdcConfigAfter.interestRateStrategy, usdtConfigAfter.interestRateStrategy);
     }
 
-    function test_ETHEREUM_ControllerUpgrade() public {
+    function test_ETHEREUM_ControllerUpgrade() public onChain(ChainIdUtils.Ethereum()) {
         // Deployment configuration is checked inside the spell
 
         MainnetController controller = MainnetController(NEW_ALM_CONTROLLER);
@@ -476,7 +485,7 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         assertEq(controller.mintRecipients(CCTPForwarder.DOMAIN_ID_CIRCLE_BASE),       bytes32(uint256(uint160(address(Base.ALM_PROXY)))));
     }
 
-    function test_ETHEREUM_EthenaOnboardingIntegration() public {
+    function test_ETHEREUM_EthenaOnboardingIntegration() public onChain(ChainIdUtils.Ethereum()) {
         executeAllPayloadsAndBridges();
 
         MainnetController controller = MainnetController(NEW_ALM_CONTROLLER);
@@ -545,7 +554,7 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         assertEq(usde.allowance(Ethereum.ALM_PROXY, Ethereum.ETHENA_MINTER), usdeAmount);
     }
 
-    function test_ETHEREUM_EthenaRateLimits() public {
+    function test_ETHEREUM_EthenaRateLimits() public onChain(ChainIdUtils.Ethereum()) {
         MainnetController controller = MainnetController(NEW_ALM_CONTROLLER);
         IRateLimits rateLimits       = IRateLimits(Ethereum.ALM_RATE_LIMITS);
 
@@ -631,7 +640,7 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         assertEq(rateLimits.getCurrentRateLimit(controller.LIMIT_SUSDE_COOLDOWN()), 500_000_000e18);
     }
 
-    function test_ETHEREUM_AaveOnboardingIntegration() public {
+    function test_ETHEREUM_AaveOnboardingIntegration() public onChain(ChainIdUtils.Ethereum()) {
         executeAllPayloadsAndBridges();
 
         MainnetController controller = MainnetController(NEW_ALM_CONTROLLER);
@@ -682,7 +691,7 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         assertEq(ausdc.balanceOf(Ethereum.ALM_PROXY), 0);
     }
 
-    function test_ETHEREUM_AaveRateLimits() public {
+    function test_ETHEREUM_AaveRateLimits() public onChain(ChainIdUtils.Ethereum()) {
         MainnetController controller = MainnetController(NEW_ALM_CONTROLLER);
         IRateLimits rateLimits       = IRateLimits(Ethereum.ALM_RATE_LIMITS);
         
@@ -1037,7 +1046,7 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         assertEq(IERC20(Base.USDS).balanceOf(Base.ALM_PROXY), baseBalanceBefore + USDS_MINT_AMOUNT);
     }
 
-    function test_ETHEREUM_BASE_SparkLiquidityLayerE2E() public {
+    function test_ETHEREUM_BASE_SparkLiquidityLayerE2E() public onChain(ChainIdUtils.Ethereum()) {
         executeAllPayloadsAndBridges();
 
         uint256 usdcAmount = 100_000e6;

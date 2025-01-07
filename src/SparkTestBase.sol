@@ -317,20 +317,6 @@ abstract contract SparklendTests is ProtocolV3TestBase, SpellRunner {
     /// @notice local to market currently under test
     IAaveOracle                    internal priceOracle;
 
-    modifier onChain(ChainId chainId) override virtual {
-        ChainId currentChain = ChainIdUtils.fromUint(block.chainid);
-        chainSpellMetadata[chainId].domain.selectFork();
-        // this mimics the logic of legacy spells where they had a
-        // `loadPoolContext` call in the setup of every test contract involving
-        // sparklend, while not overriding explicit pool context setup if on
-        // nested modifier invocations
-        if(address(pool) == address(0)){
-            loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
-        }
-        _;
-        chainSpellMetadata[currentChain].domain.selectFork();
-    }
-
     function loadPoolContext(address poolProvider) internal {
         IPoolAddressesProvider poolAddressesProvider = IPoolAddressesProvider(poolProvider);
         pool                  = IPool(poolAddressesProvider.getPool());
@@ -424,6 +410,8 @@ abstract contract SparklendTests is ProtocolV3TestBase, SpellRunner {
     }
 
     function _assertTokenImplementationsMatch(ChainId chainId) private onChain(chainId) {
+        loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
+
         // This test is to avoid a footgun where the token implementations are upgraded (possibly in an emergency) and
         // the config engine is not redeployed to use the new implementation. As a general rule all reserves should
         // use the same implementation for AToken, StableDebtToken and VariableDebtToken.
@@ -456,6 +444,8 @@ abstract contract SparklendTests is ProtocolV3TestBase, SpellRunner {
     }
 
     function _runOraclesTests(ChainId chainId) private onChain(chainId) {
+        loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
+        
         _validateOracles();
 
         executeAllPayloadsAndBridges();
@@ -473,6 +463,8 @@ abstract contract SparklendTests is ProtocolV3TestBase, SpellRunner {
     }
 
     function _assertAllReservesSeeded(ChainId chainId) private onChain(chainId) {
+        loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
+        
         executeAllPayloadsAndBridges();
 
         address[] memory reserves = pool.getReservesList();
@@ -567,6 +559,8 @@ abstract contract SparkEthereumTests is SparklendTests {
     }
 
     function _runRewardsConfigurationTests() internal {
+        loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
+        
         address[] memory reserves = pool.getReservesList();
 
         for (uint256 i = 0; i < reserves.length; i++) {
@@ -612,6 +606,8 @@ abstract contract SparkEthereumTests is SparklendTests {
     }
 
     function _runFreezerMomTests() internal {
+        loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
+        
         // Sanity checks - cannot call Freezer Mom unless you have the hat
         vm.expectRevert("SparkLendFreezerMom/not-authorized");
         freezerMom.freezeMarket(Ethereum.DAI, true);
@@ -644,6 +640,8 @@ abstract contract SparkEthereumTests is SparklendTests {
     }
 
     function _runCapAutomatorTests() internal {
+        loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
+        
         address[] memory reserves = pool.getReservesList();
 
         for (uint256 i = 0; i < reserves.length; i++) {
@@ -799,18 +797,4 @@ abstract contract AdvancedLiquidityManagementTests is SpellRunner {
 /// @dev convenience contract meant to be the single point of entry for all
 /// spell-specifictest contracts
 abstract contract SparkTestBase is AdvancedLiquidityManagementTests, SparkEthereumTests, CommonSpellAssertions {
-    using DomainHelpers for StdChains.Chain;
-    using DomainHelpers for Domain;
-
-    // cant really instruct the compiler to simply use the SparklendTests
-    // implementation, so I copied it.
-    modifier onChain(ChainId chainId) override(SparklendTests, SpellRunner) {
-        ChainId currentChain = ChainIdUtils.fromUint(block.chainid);
-        chainSpellMetadata[chainId].domain.selectFork();
-        if(address(pool) == address(0)){
-            loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
-        }
-        _;
-        chainSpellMetadata[currentChain].domain.selectFork();
-    }
 }
