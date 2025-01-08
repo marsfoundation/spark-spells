@@ -1027,6 +1027,17 @@ contract SparkEthereum_20250109Test is SparkTestBase {
 
         assertEq(usdc.balanceOf(Base.ALM_PROXY),  usdcAmount);
         assertEq(susdc.balanceOf(Base.ALM_PROXY), 1e12);  // Some dust left
+
+        // Third party can deposit in vault
+        vm.stopPrank();
+        deal2(Base.USDC, address(this), 100e6);
+        usdc.approve(address(susdc), 100e6);
+
+        assertEq(susdc.balanceOf(address(this)), 0);
+
+        susdc.deposit(100e6, address(this));
+
+        assertEq(susdc.balanceOf(address(this)), 100e18);
     }
 
     function test_BASE_MorphoRateLimits() public onChain(ChainIdUtils.Base()) {
