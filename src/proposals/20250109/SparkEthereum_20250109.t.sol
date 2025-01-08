@@ -889,6 +889,7 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         assertEq(susdc.symbol(),   "sparkUSDC");
 
         // The vault should be such that the Spark admin is the owner with nothing else configured
+        assertEq(susdc.owner(),               Base.SPARK_EXECUTOR);
         assertEq(susdc.curator(),             address(0));
         assertEq(susdc.guardian(),            address(0));
         assertEq(susdc.fee(),                 0);
