@@ -45,6 +45,10 @@ interface IPendlePT {
     function expiry() external view returns (uint256);
 }
 
+interface IEthenaMinter {
+    function setCooldownDuration(uint24 duration) external;
+}
+
 contract SparkEthereum_20250109Test is SparkTestBase {
 
     using DomainHelpers for *;
@@ -75,6 +79,8 @@ contract SparkEthereum_20250109Test is SparkTestBase {
 
     address internal constant AUTO_LINE     = 0xC7Bdd1F2B16447dcf3dE045C4a039A60EC2f0ba3;
     bytes32 internal constant ALLOCATOR_ILK = "ALLOCATOR-SPARK-A";
+
+    address internal constant ETHENA_OWNER = 0x3B0AAf6e6fCd4a7cEEf8c92C32DFeA9E64dC1862;
 
     // --- Base Addresses ---
 
@@ -543,9 +549,28 @@ contract SparkEthereum_20250109Test is SparkTestBase {
 
         skip(1);
 
+        uint256 snapshot = vm.snapshot();
+
         controller.unstakeSUSDe();
 
         usdeAmount -= 1;  // Rounding
+
+        assertEq(usde.balanceOf(Ethereum.ALM_PROXY),  usdeAmount);
+        assertEq(susde.balanceOf(Ethereum.ALM_PROXY), 0);
+
+        assertEq(usde.allowance(Ethereum.ALM_PROXY, Ethereum.ETHENA_MINTER), 0);
+
+        vm.revertTo(snapshot);
+
+        assertEq(usde.balanceOf(Ethereum.ALM_PROXY),  0);
+        assertEq(susde.balanceOf(Ethereum.ALM_PROXY), 0);
+
+        // Test unstaking with cooldown set to zero
+        vm.stopPrank();
+        vm.prank(ETHENA_OWNER);
+        IEthenaMinter(Ethereum.SUSDE).setCooldownDuration(0);
+        vm.startPrank(Ethereum.ALM_RELAYER);
+        controller.unstakeSUSDe();
 
         assertEq(usde.balanceOf(Ethereum.ALM_PROXY),  usdeAmount);
         assertEq(susde.balanceOf(Ethereum.ALM_PROXY), 0);
