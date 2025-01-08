@@ -582,6 +582,90 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         assertEq(usde.allowance(Ethereum.ALM_PROXY, Ethereum.ETHENA_MINTER), usdeAmount);
     }
 
+
+    function test_ETHEREUM_EthenaAfterCooldownIsDisabled() public onChain(ChainIdUtils.Ethereum()) {
+        executeAllPayloadsAndBridges();
+
+        MainnetController controller = MainnetController(NEW_ALM_CONTROLLER);
+        
+        IERC20 usdc    = IERC20(Ethereum.USDC);
+        IERC20 usde    = IERC20(Ethereum.USDE);
+        IERC4626 susde = IERC4626(Ethereum.SUSDE);
+
+        // Use a realistic numbers to check the rate limits
+        uint256 usdcAmount = 5_000_000e6;
+        uint256 usdeAmount = usdcAmount * 1e12;
+
+        vm.prank(ETHENA_OWNER);
+        IEthenaMinter(Ethereum.SUSDE).setCooldownDuration(0);
+
+        // Use deal2 for USDC because storage is not set in a common way
+        deal2(Ethereum.USDC, Ethereum.ALM_PROXY, usdcAmount);
+
+        assertEq(usdc.allowance(Ethereum.ALM_PROXY, Ethereum.ETHENA_MINTER), 0);
+        
+        vm.startPrank(Ethereum.ALM_RELAYER);
+
+        controller.prepareUSDeMint(usdcAmount);
+
+        assertEq(usdc.allowance(Ethereum.ALM_PROXY, Ethereum.ETHENA_MINTER), usdcAmount);
+
+        // Fake the offchain swap
+        // Need to also stop pranking because deal2 uses prank
+        vm.stopPrank();
+        deal2(Ethereum.USDC, Ethereum.ALM_PROXY, 0);
+        vm.startPrank(Ethereum.ALM_RELAYER);
+        deal(Ethereum.USDE, Ethereum.ALM_PROXY, usdeAmount);
+
+        assertEq(usde.balanceOf(Ethereum.ALM_PROXY),  usdeAmount);
+        assertEq(susde.balanceOf(Ethereum.ALM_PROXY), 0);
+
+        uint256 susdeAmount = susde.previewDeposit(usdeAmount);
+        assertGt(susdeAmount, 0);
+
+        controller.depositERC4626(Ethereum.SUSDE, usdeAmount);
+
+        assertEq(usde.balanceOf(Ethereum.ALM_PROXY),  0);
+        assertEq(susde.balanceOf(Ethereum.ALM_PROXY), susdeAmount);
+        vm.stopPrank();
+
+        // Test unstaking with cooldown set to zero
+        vm.startPrank(Ethereum.ALM_RELAYER);
+
+        // unstaking without cooling down shares first is a no-op
+        address usdeSilo = 0x7FC7c91D556B400AFa565013E3F32055a0713425;
+        vm.expectEmit();
+        emit IERC20.Transfer(usdeSilo, Ethereum.ALM_PROXY, 0);
+        controller.unstakeSUSDe();
+        // assets not yet locked in silo
+        assertEq(usde.balanceOf(Ethereum.ALM_PROXY),  0);
+        assertEq(susde.balanceOf(Ethereum.ALM_PROXY), susdeAmount);
+
+        // withdrawing via the ERC4626 (as suggested in cantina report 3.2.4) is 
+        // not possible since rate limit was not set
+        vm.expectRevert("RateLimits/zero-maxAmount");
+        controller.withdrawERC4626(
+            Ethereum.SUSDE,
+            usdeAmount / 2 // don't care about exact amount, only if *some* withdraw is possible
+        );
+
+        // using the regular cooldown, which has its own rate limit is the only
+        // valid way to go from sUSDe to USDe
+        // NOTE: here is where I hit a wall, I imagined the only difference
+        // would be `cooldownSharesSUSDe` not requiring to wait for a cooldown, but
+        // the operation fails since it's not allowed to cooldown the shares if
+        // there's no cooldown
+        controller.cooldownSharesSUSDe(susdeAmount);
+        // assets locked in silo
+        assertEq(usde.balanceOf(Ethereum.ALM_PROXY),  0);
+        assertEq(susde.balanceOf(Ethereum.ALM_PROXY), 0);
+
+        // but immediately unstakeable
+        controller.unstakeSUSDe();
+        assertEq(usde.balanceOf(Ethereum.ALM_PROXY),  usdeAmount);
+        assertEq(susde.balanceOf(Ethereum.ALM_PROXY), 0);
+    }
+
     function test_ETHEREUM_EthenaRateLimits() public onChain(ChainIdUtils.Ethereum()) {
         MainnetController controller = MainnetController(NEW_ALM_CONTROLLER);
         IRateLimits rateLimits       = IRateLimits(Ethereum.ALM_RATE_LIMITS);
@@ -591,10 +675,16 @@ contract SparkEthereum_20250109Test is SparkTestBase {
             Ethereum.SUSDE
         );
 
+        bytes32 withdrawKey = RateLimitHelpers.makeAssetKey(
+            controller.LIMIT_4626_WITHDRAW(),
+            Ethereum.SUSDE
+        );
+
         // All rates are zero initially
         assertEq(rateLimits.getCurrentRateLimit(controller.LIMIT_USDE_MINT()),      0);
         assertEq(rateLimits.getCurrentRateLimit(controller.LIMIT_USDE_BURN()),      0);
         assertEq(rateLimits.getCurrentRateLimit(depositKey),                        0);
+        assertEq(rateLimits.getCurrentRateLimit(withdrawKey),                       0);
         assertEq(rateLimits.getCurrentRateLimit(controller.LIMIT_SUSDE_COOLDOWN()), 0);
 
         executeAllPayloadsAndBridges();
@@ -645,6 +735,7 @@ contract SparkEthereum_20250109Test is SparkTestBase {
 
         assertEq(rateLimits.getCurrentRateLimit(controller.LIMIT_SUSDE_COOLDOWN()), 500_000_000e18);
         assertEq(susde.convertToAssets(susde.balanceOf(Ethereum.ALM_PROXY)),        500_000_000e18 + 1);  // Rounding
+        assertEq(rateLimits.getCurrentRateLimit(withdrawKey),                       0);
 
         controller.cooldownAssetsSUSDe(500_000_000e18);
 
