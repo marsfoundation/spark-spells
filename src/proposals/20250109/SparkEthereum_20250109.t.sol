@@ -16,7 +16,7 @@ import { MainnetController } from 'spark-alm-controller/src/MainnetController.so
 import { ForeignController } from 'spark-alm-controller/src/ForeignController.sol';
 import { RateLimitHelpers }  from 'spark-alm-controller/src/RateLimitHelpers.sol';
 
-import { IMorpho, MarketAllocation } from 'metamorpho/interfaces/IMetaMorpho.sol';
+import { IMorpho, MarketAllocation, MarketParams } from 'metamorpho/interfaces/IMetaMorpho.sol';
 
 import { ChainIdUtils } from 'src/libraries/ChainId.sol';
 
@@ -304,6 +304,9 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         
         _assertMorphoCap(Ethereum.MORPHO_VAULT_DAI_1, ptsusdemar, 500_000_000e18);
         _assertMorphoCap(Ethereum.MORPHO_VAULT_DAI_1, ptsusdemay, 200_000_000e18);
+
+        // --- Test the new May PT market is seeded ---
+        assertGe(IMorpho(MORPHO).market(MarketParamsLib.id(ptsusdemay)).totalSupplyAssets, 1e18);
 
         // --- Test the May PT Oracle in more detail ---
 
@@ -884,7 +887,16 @@ contract SparkEthereum_20250109Test is SparkTestBase {
 
         assertEq(susdc.name(),     "Spark USDC Vault");
         assertEq(susdc.symbol(),   "sparkUSDC");
-        assertEq(susdc.timelock(), 0);
+
+        // The vault should be such that the Spark admin is the owner with nothing else configured
+        assertEq(susdc.curator(),             address(0));
+        assertEq(susdc.guardian(),            address(0));
+        assertEq(susdc.fee(),                 0);
+        assertEq(susdc.feeRecipient(),        address(0));
+        assertEq(susdc.skimRecipient(),       address(0));
+        assertEq(susdc.timelock(),            0);
+        assertEq(susdc.supplyQueueLength(),   0);
+        assertEq(susdc.withdrawQueueLength(), 0);
     }
 
     function test_BASE_MorphoConfiguration() public onChain(ChainIdUtils.Base()) {
@@ -916,6 +928,10 @@ contract SparkEthereum_20250109Test is SparkTestBase {
         _assertMorphoCap(address(susdc), usdcCBBTC, 100_000_000e6);
         
         assertEq(susdc.isAllocator(Base.ALM_RELAYER), true);
+
+        // --- Test the markets are seeded ---
+        assertGe(IMorpho(MORPHO).market(MarketParamsLib.id(usdcIdle)).totalSupplyAssets,  1e6);
+        assertGe(IMorpho(MORPHO).market(MarketParamsLib.id(usdcCBBTC)).totalSupplyAssets, 1e8);
     }
 
     function test_BASE_MorphoVaultIntegration() public onChain(ChainIdUtils.Base()) {
