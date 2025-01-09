@@ -47,6 +47,7 @@ interface IPendlePT {
 
 interface IEthenaMinter {
     function setCooldownDuration(uint24 duration) external;
+    error OperationNotAllowed();
 }
 
 contract SparkEthereum_20250109Test is SparkTestBase {
@@ -649,21 +650,10 @@ contract SparkEthereum_20250109Test is SparkTestBase {
             usdeAmount / 2 // don't care about exact amount, only if *some* withdraw is possible
         );
 
-        // using the regular cooldown, which has its own rate limit is the only
-        // valid way to go from sUSDe to USDe
-        // NOTE: here is where I hit a wall, I imagined the only difference
-        // would be `cooldownSharesSUSDe` not requiring to wait for a cooldown, but
-        // the operation fails since it's not allowed to cooldown the shares if
-        // there's no cooldown
+        // `cooldownSharesSUSDe` reverts when the cooldown is disabled, and
+        // sUSDe cant be unstaked until next spell
+        vm.expectRevert(IEthenaMinter.OperationNotAllowed.selector);
         controller.cooldownSharesSUSDe(susdeAmount);
-        // assets locked in silo
-        assertEq(usde.balanceOf(Ethereum.ALM_PROXY),  0);
-        assertEq(susde.balanceOf(Ethereum.ALM_PROXY), 0);
-
-        // but immediately unstakeable
-        controller.unstakeSUSDe();
-        assertEq(usde.balanceOf(Ethereum.ALM_PROXY),  usdeAmount);
-        assertEq(susde.balanceOf(Ethereum.ALM_PROXY), 0);
     }
 
     function test_ETHEREUM_EthenaRateLimits() public onChain(ChainIdUtils.Ethereum()) {
