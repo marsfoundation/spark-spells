@@ -186,7 +186,11 @@ abstract contract SpellRunner is Test {
             if (mainnetSpellPayload != address(0)) {
                 // We assume the payload has been queued in the executor (will revert otherwise)
                 chainSpellMetadata[chainId].domain.selectFork();
-                executor.execute(executor.actionsSetCount() - 1);
+                uint256 actionsSetId = executor.actionsSetCount() - 1;
+                uint256 prevTimestamp = block.timestamp;
+                vm.warp(executor.getActionsSetById(actionsSetId).executionTime);
+                executor.execute(actionsSetId);
+                vm.warp(prevTimestamp);
             } else {
                 // We will simulate execution until the real spell is deployed in the mainnet spell
                 address payload = chainSpellMetadata[chainId].payload;
