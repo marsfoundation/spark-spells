@@ -157,7 +157,7 @@ contract ProtocolV3TestBase is CommonTestBase {
    * @param pool T he pool that should be tested
    */
   function e2eTest(IPool pool) public {
-    uint256 snapshot = vm.snapshot();
+    uint256 snapshot = vm.snapshotState();
 
     ReserveConfig[] memory configs = _getReservesConfigs(pool);
 
@@ -174,7 +174,7 @@ contract ProtocolV3TestBase is CommonTestBase {
         }
 
         e2eTestAsset(pool, configs[i], configs[j]);
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
       }
     }
   }
@@ -246,37 +246,37 @@ contract ProtocolV3TestBase is CommonTestBase {
       pool.setUserUseReserveAsCollateral(collateralConfig.underlying, true);
     }
 
-    uint256 snapshot = vm.snapshot();
+    uint256 snapshot = vm.snapshotState();
 
     // Test 1: Ensure user can't borrow more than LTV
 
     _e2eTestBorrowAboveLTV(pool, collateralSupplier, borrowConfig, maxBorrowAmount);
-    vm.revertTo(snapshot);
+    vm.revertToState(snapshot);
 
     // Test 2: Ensure user can borrow and repay with variable rates
 
     _e2eTestBorrowRepayWithdraw(pool, collateralSupplier, collateralConfig, borrowConfig, maxBorrowAmount);
-    vm.revertTo(snapshot);
+    vm.revertToState(snapshot);
 
     // Test 3: Ensure user cannot borrow with stable rates
 
     _e2eTestStableBorrowDisabled(pool, collateralSupplier, borrowConfig, maxBorrowAmount);
-    vm.revertTo(snapshot);
+    vm.revertToState(snapshot);
 
     // Test 4: Test liquidation
 
     _e2eTestLiquidationReceiveCollateral(pool, collateralSupplier, liquidator, collateralConfig, borrowConfig, maxBorrowAmount);
-    vm.revertTo(snapshot);
+    vm.revertToState(snapshot);
 
     // Test 5: Test flashloan
 
     _e2eTestFlashLoan(pool, borrowConfig, maxBorrowAmount);
-    vm.revertTo(snapshot);
+    vm.revertToState(snapshot);
 
     // Test 6: Test mintToTreasury
 
     _e2eTestMintToTreasury(pool, borrowConfig);
-    vm.revertTo(snapshot);
+    vm.revertToState(snapshot);
   }
 
   /**

@@ -515,11 +515,11 @@ abstract contract SparkEthereumTests is SparklendTests {
     }
 
     function test_ETHEREUM_FreezerMom() public onChain(ChainIdUtils.Ethereum()){
-        uint256 snapshot = vm.snapshot();
+        uint256 snapshot = vm.snapshotState();
 
         _runFreezerMomTests();
 
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
         executeAllPayloadsAndBridges();
 
         _runFreezerMomTests();
@@ -534,11 +534,11 @@ abstract contract SparkEthereumTests is SparklendTests {
     }
 
     function test_ETHEREUM_CapAutomator() public onChain(ChainIdUtils.Ethereum()){
-        uint256 snapshot = vm.snapshot();
+        uint256 snapshot = vm.snapshotState();
 
         _runCapAutomatorTests();
 
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
         executeAllPayloadsAndBridges();
 
         _runCapAutomatorTests();
