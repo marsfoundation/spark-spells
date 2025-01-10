@@ -80,7 +80,7 @@ contract SparkEthereum_20250109 is SparkPayloadEthereum {
     uint256 internal constant USDS_MINT_AMOUNT = 99_000_000e18;
     
     constructor() {
-        PAYLOAD_BASE = 0x02C3eA4e34C0cBd694D2adFa2c690EECbC1793eE;
+        // PAYLOAD_BASE = 0x02C3eA4e34C0cBd694D2adFa2c690EECbC1793eE;
     }
 
     function collateralsUpdates() public pure override returns (IEngine.CollateralUpdate[] memory) {

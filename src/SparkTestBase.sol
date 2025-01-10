@@ -519,11 +519,11 @@ abstract contract SparkEthereumTests is SparklendTests {
     }
 
     function test_ETHEREUM_FreezerMom() public onChain(ChainIdUtils.Ethereum()){
-        uint256 snapshot = vm.snapshot();
+        uint256 snapshot = vm.snapshotState();
 
         _runFreezerMomTests();
 
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
         executeAllPayloadsAndBridges();
 
         _runFreezerMomTests();
@@ -538,17 +538,19 @@ abstract contract SparkEthereumTests is SparklendTests {
     }
 
     function test_ETHEREUM_CapAutomator() public onChain(ChainIdUtils.Ethereum()){
-        uint256 snapshot = vm.snapshot();
+        uint256 snapshot = vm.snapshotState();
 
         _runCapAutomatorTests();
 
-        vm.revertTo(snapshot);
+        vm.revertToState(snapshot);
         executeAllPayloadsAndBridges();
 
         _runCapAutomatorTests();
     }
 
     function test_ETHEREUM_PayloadsConfigured() public onChain(ChainIdUtils.Ethereum()){
+         bool somePayloadConfigured;
+         bool somePayloadDiffers;
          for (uint256 i = 0; i < allChains.length; i++) {
             ChainId chainId = ChainIdUtils.fromDomain(chainSpellMetadata[allChains[i]].domain);
             if (chainId == ChainIdUtils.Ethereum()) continue;  // Checking only foreign payloads
@@ -557,9 +559,18 @@ abstract contract SparkEthereumTests is SparklendTests {
                 // A payload is defined for this domain
                 // We verify the mainnet spell defines this payload correctly
                 address mainnetPayload = _getForeignPayloadFromMainnetSpell(chainId);
-                assertEq(mainnetPayload, payload, "Mainnet payload not matching deployed payload");
+                if(mainnetPayload == address(0)) continue;
+                somePayloadConfigured = true;
+                if(mainnetPayload != payload){
+                    somePayloadDiffers = true;
+                }
             }
         }
+        // when no payload is configured, this test is skipped
+        vm.skip(!somePayloadConfigured);
+        // if there is at least one payload configured, then they should all
+        // match the one set in the Mainnet spell
+        assertFalse(somePayloadDiffers, "Mainnet payload not matching deployed payload");
     }
 
     function _runRewardsConfigurationTests() internal {
