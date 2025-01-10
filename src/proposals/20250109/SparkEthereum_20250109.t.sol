@@ -106,8 +106,9 @@ contract SparkEthereum_20250109Test is SparkTestBase {
             baseForkBlock:    24697931,
             gnosisForkBlock:  37691338
         });
-        chainSpellMetadata[ChainIdUtils.Ethereum()].payload = 0x7fb2967cDC6816Dc508f35C5A6CB035C8B6507Ec;
-        chainSpellMetadata[ChainIdUtils.Base()].payload     = 0x02C3eA4e34C0cBd694D2adFa2c690EECbC1793eE;
+        deployPayloads();
+        // chainSpellMetadata[ChainIdUtils.Ethereum()].payload = 0x7fb2967cDC6816Dc508f35C5A6CB035C8B6507Ec;
+        // chainSpellMetadata[ChainIdUtils.Base()].payload     = 0x02C3eA4e34C0cBd694D2adFa2c690EECbC1793eE;
 
         // mock Sky increase max line to 1b, which will be executed as part of this spell
         vm.prank(Ethereum.PAUSE_PROXY);

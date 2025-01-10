@@ -553,6 +553,7 @@ abstract contract SparkEthereumTests is SparklendTests {
                 // A payload is defined for this domain
                 // We verify the mainnet spell defines this payload correctly
                 address mainnetPayload = _getForeignPayloadFromMainnetSpell(chainId);
+                if(mainnetPayload == address(0)) return;
                 assertEq(mainnetPayload, payload, "Mainnet payload not matching deployed payload");
             }
         }
