@@ -12,6 +12,7 @@ library ChainIds {
     uint256 internal constant POLYGON = 137;
     uint256 internal constant FANTOM = 250;
     uint256 internal constant METIS = 1088;
+    uint256 internal constant BASE = 8453;
     uint256 internal constant ARBITRUM = 42161;
     uint256 internal constant AVALANCHE = 43114;
     uint256 internal constant HARMONY = 1666600000;
@@ -28,6 +29,8 @@ contract CommonTestBase is Test {
 
   address public constant EURE_GNOSIS  = 0xcB444e90D8198415266c6a2724b7900fb12FC56E;
   address public constant USDCE_GNOSIS = 0x2a22f9c3b484c3629090FeED35F17Ff8F88f76F0;
+
+  address public constant USDC_BASE = 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913;
 
   /**
    * @notice deal doesn't support amounts stored in a script right now.
@@ -55,6 +58,13 @@ contract CommonTestBase is Test {
       // USDC.e
       if (asset == USDCE_GNOSIS) {
         vm.prank(0xBA12222222228d8Ba445958a75a0704d566BF2C8);
+        IERC20(asset).transfer(user, amount);
+        return true;
+      }
+    } else if (block.chainid == ChainIds.BASE) {
+      // USDC
+      if (asset == USDC_BASE) {
+        vm.prank(0x7C310a03f4CFa19F7f3d7F36DD3E05828629fa78);
         IERC20(asset).transfer(user, amount);
         return true;
       }
