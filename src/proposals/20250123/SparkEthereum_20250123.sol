@@ -19,13 +19,21 @@ import { SparkPayloadEthereum } from "../../SparkPayloadEthereum.sol";
  */
 contract SparkEthereum_20250123 is SparkPayloadEthereum {
     address constant public AAVE_PRIME_USDS_ATOKEN = 0x09AA30b182488f769a9824F15E6Ce58591Da4781;
+    address constant public SPARKLEND_USDC_ATOKEN  = 0x377C3bd93f2a2984E1E7bE6A5C22c525eD4A4815;
+
     MainnetController controller = MainnetController(Ethereum.ALM_CONTROLLER);
 
     function _postExecute() internal override {
         _onboardAaveToken(
+            SPARKLEND_USDC_ATOKEN,
+            20_000_000e6,
+            uint256(10_000_000e6) / 1 days
+        );
+        _onboardAaveToken(
             AAVE_PRIME_USDS_ATOKEN,
             50_000_000e18,
-            uint256(50_000_000e18) / 1 days);
+            uint256(50_000_000e18) / 1 days
+        );
     }
 
 }
