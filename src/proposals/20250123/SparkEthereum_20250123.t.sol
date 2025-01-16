@@ -123,7 +123,7 @@ contract SparkEthereum_20250123Test is SparkTestBase {
         MainnetController controller = MainnetController(Ethereum.ALM_CONTROLLER);
         IRateLimits rateLimits       = IRateLimits(Ethereum.ALM_RATE_LIMITS);
         uint256 depositAmount        = 5_000_000e6;
-        deal(Ethereum.USDC, Ethereum.ALM_PROXY, 20 * depositAmount);
+        deal2(Ethereum.USDC, Ethereum.ALM_PROXY, 20 * depositAmount);
 
         bytes32 depositKey = RateLimitHelpers.makeAssetKey(
             controller.LIMIT_AAVE_DEPOSIT(),
