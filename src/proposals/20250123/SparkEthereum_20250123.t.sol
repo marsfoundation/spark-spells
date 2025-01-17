@@ -166,6 +166,16 @@ contract SparkEthereum_20250123Test is SparkTestBase {
         assertEq(rateLimits.getCurrentRateLimit(depositKey),  150_000_000e18);
     }
 
+    function test_ETHEREUM_SLL_AmendmentRateLimits() public onChain(ChainIdUtils.Ethereum()) {
+        MainnetController controller = MainnetController(Ethereum.ALM_CONTROLLER);
+
+        executeAllPayloadsAndBridges();
+
+        _assertRateLimit(controller.LIMIT_USDS_MINT(), 50_000_000e18, 50_000_000e18 / uint256(1 days));
+        _assertRateLimit(controller.LIMIT_USDS_TO_USDC(), 50_000_000e18, 50_000_000e18 / uint256(1 days));
+        _assertRateLimit(controller.LIMIT_USDS_TO_USDC(), 50_000_000e18, 50_000_000e18 / uint256(1 days));
+    }
+
     function test_ETHEREUM_SLL_USDCRateLimits() public onChain(ChainIdUtils.Ethereum()) {
         MainnetController controller = MainnetController(Ethereum.ALM_CONTROLLER);
         IRateLimits rateLimits       = IRateLimits(Ethereum.ALM_RATE_LIMITS);

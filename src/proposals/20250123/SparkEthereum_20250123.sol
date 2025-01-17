@@ -7,6 +7,7 @@ import { IERC20 }                         from 'lib/erc20-helpers/src/interfaces
 import { Ethereum }          from 'spark-address-registry/Ethereum.sol';
 import { MainnetController } from 'spark-alm-controller/src/MainnetController.sol';
 
+import { SparkLiquidityLayerHelpers }               from "src/libraries/SparkLiquidityLayerHelpers.sol";
 import { SparkPayloadEthereum, Rates, EngineFlags } from "../../SparkPayloadEthereum.sol";
 
 /**
@@ -15,6 +16,7 @@ import { SparkPayloadEthereum, Rates, EngineFlags } from "../../SparkPayloadEthe
            Spark Liquidity Layer: Onboard Aave Prime USDS, Sparklend USDS and Sparklend USDC
  * @author Wonderland
  * Forum:  http://forum.sky.money/t/jan-23-2025-proposed-changes-to-spark-for-upcoming-spell/25825
+ *         http://forum.sky.money/t/jan-23-2025-proposed-changes-to-spark-for-upcoming-spell-2/25837
  * Vote:   https://vote.makerdao.com/polling/QmRAavx5
  *         https://vote.makerdao.com/polling/QmY4D1u8
  *         https://vote.makerdao.com/polling/QmU3Xu4W
@@ -97,6 +99,18 @@ contract SparkEthereum_20250123 is SparkPayloadEthereum {
             sparklendUSDSAtoken,
             150_000_000e18,
             uint256(75_000_000e18) / 1 days
+        );
+
+        // amendment rate limits
+        SparkLiquidityLayerHelpers.setUSDSMintRateLimit(
+            Ethereum.ALM_RATE_LIMITS,
+            50_000_000e18,
+            uint256(50_000_000e18)/ 1 days
+        );
+        SparkLiquidityLayerHelpers.setUSDSToUSDCRateLimit(
+            Ethereum.ALM_RATE_LIMITS,
+            50_000_000e18,
+            uint256(50_000_000e18)/ 1 days
         );
     }
 
