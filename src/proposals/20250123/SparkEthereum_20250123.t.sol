@@ -1,20 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.25;
 
-import { Ethereum }          from 'spark-address-registry/Ethereum.sol';
-import { Base }              from 'spark-address-registry/Base.sol';
-import { MainnetController } from 'spark-alm-controller/src/MainnetController.sol';
-import { ForeignController } from 'spark-alm-controller/src/ForeignController.sol';
-import { IRateLimits }       from 'spark-alm-controller/src/interfaces/IRateLimits.sol';
-import { RateLimitHelpers }  from 'spark-alm-controller/src/RateLimitHelpers.sol';
-import { IERC20 }            from 'lib/erc20-helpers/src/interfaces/IERC20.sol';
-import { CCTPForwarder }     from "xchain-helpers/forwarders/CCTPForwarder.sol";
-import { ReserveConfig }     from '../../ProtocolV3TestBase.sol';
-
+import { Ethereum }              from 'spark-address-registry/Ethereum.sol';
+import { Base }                  from 'spark-address-registry/Base.sol';
+import { MainnetController }     from 'spark-alm-controller/src/MainnetController.sol';
+import { ForeignController }     from 'spark-alm-controller/src/ForeignController.sol';
+import { IRateLimits }           from 'spark-alm-controller/src/interfaces/IRateLimits.sol';
+import { RateLimitHelpers }      from 'spark-alm-controller/src/RateLimitHelpers.sol';
+import { IERC20 }                from 'lib/erc20-helpers/src/interfaces/IERC20.sol';
+import { CCTPForwarder }         from "xchain-helpers/forwarders/CCTPForwarder.sol";
 import { Domain, DomainHelpers } from "xchain-helpers/testing/Domain.sol";
 
 import { SparkTestBase, InterestStrategyValues } from 'src/SparkTestBase.sol';
 import { ChainIdUtils }                          from 'src/libraries/ChainId.sol';
+import { ReserveConfig }                         from '../../ProtocolV3TestBase.sol';
 
 interface IRMLike {
     function RATE_SOURCE() external view returns(address);
@@ -171,7 +170,6 @@ contract SparkEthereum_20250123Test is SparkTestBase {
 
     function test_ETHEREUM_SLL_AmendmentRateLimits() public onChain(ChainIdUtils.Ethereum()) {
         MainnetController controller = MainnetController(Ethereum.ALM_CONTROLLER);
-
         executeAllPayloadsAndBridges();
 
         _assertRateLimit(controller.LIMIT_USDS_MINT(), 50_000_000e18, 50_000_000e18 / uint256(1 days));

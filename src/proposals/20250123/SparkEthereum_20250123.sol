@@ -14,7 +14,7 @@ import { SparkPayloadEthereum, Rates, EngineFlags } from "../../SparkPayloadEthe
 /**
  * @title  Jan 23, 2025 Spark Ethereum Proposal
  * @notice Sparklend: Onboard SUSDS
-           Spark Liquidity Layer: Onboard Aave Prime USDS, Sparklend USDS and Sparklend USDC
+           Spark Liquidity Layer: Onboard Aave Prime USDS, Sparklend USDS and Sparklend USDC. Update CCTP limits
  * @author Wonderland
  * Forum:  http://forum.sky.money/t/jan-23-2025-proposed-changes-to-spark-for-upcoming-spell/25825
  *         http://forum.sky.money/t/jan-23-2025-proposed-changes-to-spark-for-upcoming-spell-2/25837
@@ -38,7 +38,7 @@ contract SparkEthereum_20250123 is SparkPayloadEthereum {
             asset:       Ethereum.USDS,
             assetSymbol: 'USDS',
             priceFeed:   FIXED_1USD_ORACLE,
-            // we are deploying the default one the listing engine uses out of
+            // deploying the default one the listing engine uses out of
             // convenience, will overwrite it in  _postExecute
             rateStrategyParams:                Rates.RateStrategyParams({
                 optimalUsageRatio:             0,
@@ -58,7 +58,7 @@ contract SparkEthereum_20250123 is SparkPayloadEthereum {
             flashloanable:         EngineFlags.DISABLED,
             ltv:                   0,
             liqThreshold:          0,
-            liqBonus:              0, // TODO: differs from forum post
+            liqBonus:              0,
             reserveFactor:         EngineFlags.KEEP_CURRENT, // overriden in _postExecute
             supplyCap:             0,
             borrowCap:             0,
@@ -88,11 +88,11 @@ contract SparkEthereum_20250123 is SparkPayloadEthereum {
         );
         // configure USDS market in ways not allowed by the listing engine
         LISTING_ENGINE.POOL_CONFIGURATOR().setReserveFactor(Ethereum.SUSDS, 0);
+        LISTING_ENGINE.POOL_CONFIGURATOR().setLiquidationProtocolFee(Ethereum.USDS, 10_00);
 
         // seed the newly listed pool
         IERC20(Ethereum.USDS).approve(address(LISTING_ENGINE.POOL()), 1e18);
         LISTING_ENGINE.POOL().supply(Ethereum.USDS, 1e18, address(this), 0);
-        LISTING_ENGINE.POOL_CONFIGURATOR().setLiquidationProtocolFee(Ethereum.USDS, 10_00);
 
         // set rate limits for the newly listed pool in SLL
         address sparklendUSDSAtoken = LISTING_ENGINE.POOL().getReserveData(Ethereum.USDS).aTokenAddress;
