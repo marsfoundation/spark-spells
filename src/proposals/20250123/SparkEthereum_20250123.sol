@@ -4,9 +4,8 @@ pragma solidity ^0.8.25;
 import { IAaveV3ConfigEngine as IEngine } from '../../interfaces/IAaveV3ConfigEngine.sol';
 import { IERC20 }                         from 'lib/erc20-helpers/src/interfaces/IERC20.sol';
 
-import { Ethereum }                        from 'spark-address-registry/Ethereum.sol';
-import { RateLimitHelpers, RateLimitData } from "spark-alm-controller/src/RateLimitHelpers.sol";
-import { MainnetController }               from 'spark-alm-controller/src/MainnetController.sol';
+import { Ethereum }          from 'spark-address-registry/Ethereum.sol';
+import { MainnetController } from 'spark-alm-controller/src/MainnetController.sol';
 
 import { SparkPayloadEthereum, Rates, EngineFlags } from "../../SparkPayloadEthereum.sol";
 
@@ -91,6 +90,14 @@ contract SparkEthereum_20250123 is SparkPayloadEthereum {
         IERC20(Ethereum.USDS).approve(address(LISTING_ENGINE.POOL()), 1e18);
         LISTING_ENGINE.POOL().supply(Ethereum.USDS, 1e18, address(this), 0);
         LISTING_ENGINE.POOL_CONFIGURATOR().setLiquidationProtocolFee(Ethereum.USDS, 10_00);
+
+        // set rate limits for the newly listed pool in SLL
+        address sparklendUSDSAtoken = LISTING_ENGINE.POOL().getReserveData(Ethereum.USDS).aTokenAddress;
+        _onboardAaveToken(
+            sparklendUSDSAtoken,
+            150_000_000e18,
+            uint256(75_000_000e18) / 1 days
+        );
     }
 
 }

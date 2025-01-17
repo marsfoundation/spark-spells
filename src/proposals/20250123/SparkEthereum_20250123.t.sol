@@ -117,7 +117,54 @@ contract SparkEthereum_20250123Test is SparkTestBase {
         assertGe(IERC20(Ethereum.USDS).balanceOf(Ethereum.SPARK_PROXY), 1e18);
     }
 
-    function test_ETHEREUM_SLL_USDSRateLimits() public onChain(ChainIdUtils.Ethereum()) {}
+    function test_ETHEREUM_SLL_USDSRateLimits() public onChain(ChainIdUtils.Ethereum()) {
+        loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
+        executeAllPayloadsAndBridges();
+        address sparklendUSDSAtoken = pool.getReserveData(Ethereum.USDS).aTokenAddress;
+
+        MainnetController controller = MainnetController(Ethereum.ALM_CONTROLLER);
+        IRateLimits rateLimits       = IRateLimits(Ethereum.ALM_RATE_LIMITS);
+        uint256 depositAmount        = 7_500_000e18;
+        deal(Ethereum.USDS, Ethereum.ALM_PROXY, 20*depositAmount);
+        bytes32 depositKey = RateLimitHelpers.makeAssetKey(
+            controller.LIMIT_AAVE_DEPOSIT(),
+            sparklendUSDSAtoken
+        );
+        bytes32 withdrawKey = RateLimitHelpers.makeAssetKey(
+            controller.LIMIT_AAVE_WITHDRAW(),
+            sparklendUSDSAtoken
+        );
+
+        _assertRateLimit(depositKey, 150_000_000e18, uint256(75_000_000e18) / 1 days);
+        _assertRateLimit(withdrawKey, type(uint256).max, 0);
+
+        vm.prank(Ethereum.ALM_RELAYER);
+        vm.expectRevert("RateLimits/rate-limit-exceeded");
+        controller.depositAave(sparklendUSDSAtoken, 150_000_001e18);
+
+        assertEq(rateLimits.getCurrentRateLimit(depositKey),  150_000_000e18);
+        assertEq(rateLimits.getCurrentRateLimit(withdrawKey), type(uint256).max);
+
+        vm.prank(Ethereum.ALM_RELAYER);
+        controller.depositAave(sparklendUSDSAtoken, depositAmount);
+
+        assertEq(rateLimits.getCurrentRateLimit(depositKey),  150_000_000e18 - depositAmount);
+        assertEq(rateLimits.getCurrentRateLimit(withdrawKey), type(uint256).max);
+
+        vm.prank(Ethereum.ALM_RELAYER);
+        controller.withdrawAave(sparklendUSDSAtoken, depositAmount);
+
+        assertEq(rateLimits.getCurrentRateLimit(depositKey),  150_000_000e18 - depositAmount);
+        assertEq(rateLimits.getCurrentRateLimit(withdrawKey), type(uint256).max);
+
+        // slope is 75M/day, the deposit amount of 5M should be replenished in a tenth of a day.
+        // we wait for half of that, and assert half of the rate limit was replenished.
+        skip(1 days / 20);
+        assertApproxEqAbs(rateLimits.getCurrentRateLimit(depositKey),  150_000_000e18 - depositAmount/2, 5000);
+        // wait for 1 more second to avoid rounding issues
+        skip(1 days / 20 + 1);
+        assertEq(rateLimits.getCurrentRateLimit(depositKey),  150_000_000e18);
+    }
 
     function test_ETHEREUM_SLL_USDCRateLimits() public onChain(ChainIdUtils.Ethereum()) {
         MainnetController controller = MainnetController(Ethereum.ALM_CONTROLLER);

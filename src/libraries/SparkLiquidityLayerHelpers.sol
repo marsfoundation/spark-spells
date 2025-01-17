@@ -24,6 +24,7 @@ library SparkLiquidityLayerHelpers {
     bytes32 private constant LIMIT_4626_WITHDRAW = keccak256("LIMIT_4626_WITHDRAW");
     bytes32 private constant LIMIT_AAVE_DEPOSIT  = keccak256("LIMIT_AAVE_DEPOSIT");
     bytes32 private constant LIMIT_AAVE_WITHDRAW = keccak256("LIMIT_AAVE_WITHDRAW");
+    bytes32 private constant LIMIT_USDE_MINT     = keccak256("LIMIT_USDE_MINT");
 
     /**
      * @notice Onboard an Aave token
