@@ -177,7 +177,7 @@ library SparkLiquidityLayerHelpers {
                 slope     : slope
             }),
             "Swap USDS to USDC limit",
-            18
+            6
         );
     }
 
@@ -212,7 +212,7 @@ library SparkLiquidityLayerHelpers {
                 slope     : slope
             }),
             "Send USDC via CCTP to a specific domain limit",
-            18
+            6
         );
     }
 }
