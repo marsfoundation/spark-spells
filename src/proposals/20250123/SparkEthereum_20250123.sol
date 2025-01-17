@@ -3,6 +3,7 @@ pragma solidity ^0.8.25;
 
 import { IAaveV3ConfigEngine as IEngine } from '../../interfaces/IAaveV3ConfigEngine.sol';
 import { IERC20 }                         from 'lib/erc20-helpers/src/interfaces/IERC20.sol';
+import { CCTPForwarder }                  from "xchain-helpers/forwarders/CCTPForwarder.sol";
 
 import { Ethereum }          from 'spark-address-registry/Ethereum.sol';
 import { MainnetController } from 'spark-alm-controller/src/MainnetController.sol';
@@ -111,6 +112,17 @@ contract SparkEthereum_20250123 is SparkPayloadEthereum {
             Ethereum.ALM_RATE_LIMITS,
             50_000_000e18,
             uint256(50_000_000e18)/ 1 days
+        );
+        SparkLiquidityLayerHelpers.setUSDCToCCTPRateLimit(
+            Ethereum.ALM_RATE_LIMITS,
+            50_000_000e6,
+            uint256(25_000_000e6)/ 1 days
+        );
+        SparkLiquidityLayerHelpers.setUSDCToDomainRateLimit(
+            Ethereum.ALM_RATE_LIMITS,
+            CCTPForwarder.DOMAIN_ID_CIRCLE_BASE,
+            50_000_000e6,
+            uint256(25_000_000e6)/ 1 days
         );
     }
 

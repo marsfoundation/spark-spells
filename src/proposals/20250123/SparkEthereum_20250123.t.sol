@@ -2,10 +2,12 @@
 pragma solidity ^0.8.25;
 
 import { Ethereum }          from 'spark-address-registry/Ethereum.sol';
+import { Base }              from 'spark-address-registry/Base.sol';
 import { MainnetController } from 'spark-alm-controller/src/MainnetController.sol';
 import { IRateLimits }       from 'spark-alm-controller/src/interfaces/IRateLimits.sol';
 import { RateLimitHelpers }  from 'spark-alm-controller/src/RateLimitHelpers.sol';
 import { IERC20 }            from 'lib/erc20-helpers/src/interfaces/IERC20.sol';
+import { CCTPForwarder }     from "xchain-helpers/forwarders/CCTPForwarder.sol";
 import { ReserveConfig }     from '../../ProtocolV3TestBase.sol';
 
 import { Domain, DomainHelpers } from "xchain-helpers/testing/Domain.sol";
@@ -173,7 +175,12 @@ contract SparkEthereum_20250123Test is SparkTestBase {
 
         _assertRateLimit(controller.LIMIT_USDS_MINT(), 50_000_000e18, 50_000_000e18 / uint256(1 days));
         _assertRateLimit(controller.LIMIT_USDS_TO_USDC(), 50_000_000e18, 50_000_000e18 / uint256(1 days));
-        _assertRateLimit(controller.LIMIT_USDS_TO_USDC(), 50_000_000e18, 50_000_000e18 / uint256(1 days));
+        _assertRateLimit(controller.LIMIT_USDC_TO_CCTP(), 50_000_000e6, 25_000_000e6 / uint256(1 days));
+        _assertRateLimit(
+            RateLimitHelpers.makeDomainKey(controller.LIMIT_USDC_TO_DOMAIN(), CCTPForwarder.DOMAIN_ID_CIRCLE_BASE),
+            50_000_000e6,
+            25_000_000e6 / uint256(1 days)
+        );
     }
 
     function test_ETHEREUM_SLL_USDCRateLimits() public onChain(ChainIdUtils.Ethereum()) {
