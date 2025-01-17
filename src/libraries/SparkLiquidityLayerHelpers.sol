@@ -149,15 +149,15 @@ library SparkLiquidityLayerHelpers {
 
     function setUSDSMintRateLimit(
         address rateLimits,
-        uint256 depositMax,
-        uint256 depositSlope
+        uint256 maxAmount,
+        uint256 slope
     ) internal {
         RateLimitHelpers.setRateLimitData(
             LIMIT_USDS_MINT,
             rateLimits,
             RateLimitData({
-                maxAmount : depositMax,
-                slope     : depositSlope
+                maxAmount : maxAmount,
+                slope     : slope
             }),
             "USDS mint limit",
             18
@@ -166,34 +166,34 @@ library SparkLiquidityLayerHelpers {
 
     function setUSDSToUSDCRateLimit(
         address rateLimits,
-        uint256 depositMax,
-        uint256 depositSlope
+        uint256 maxUsdcAmount,
+        uint256 slope
     ) internal {
         RateLimitHelpers.setRateLimitData(
             LIMIT_USDS_TO_USDC,
             rateLimits,
             RateLimitData({
-                maxAmount : depositMax,
-                slope     : depositSlope
+                maxAmount : maxUsdcAmount,
+                slope     : slope
             }),
-            "swap USDS to USDC limit",
+            "Swap USDS to USDC limit",
             18
         );
     }
 
     function setUSDCToCCTPRateLimit(
         address rateLimits,
-        uint256 depositMax,
-        uint256 depositSlope
+        uint256 maxUsdcAmount,
+        uint256 slope
     ) internal {
         RateLimitHelpers.setRateLimitData(
             LIMIT_USDC_TO_CCTP,
             rateLimits,
             RateLimitData({
-                maxAmount : depositMax,
-                slope     : depositSlope
+                maxAmount : maxUsdcAmount,
+                slope     : slope
             }),
-            "send USDC to CCTP general limit",
+            "Send USDC to CCTP general limit",
             6
         );
     }
@@ -201,17 +201,17 @@ library SparkLiquidityLayerHelpers {
     function setUSDCToDomainRateLimit(
         address rateLimits,
         uint32  destinationDomain,
-        uint256 depositMax,
-        uint256 depositSlope
+        uint256 maxUsdcAmount,
+        uint256 slope
     ) internal {
         RateLimitHelpers.setRateLimitData(
             RateLimitHelpers.makeDomainKey(LIMIT_USDC_TO_DOMAIN, destinationDomain),
             rateLimits,
             RateLimitData({
-                maxAmount : depositMax,
-                slope     : depositSlope
+                maxAmount : maxUsdcAmount,
+                slope     : slope
             }),
-            "send USDC via CCTP to a specific domain limit",
+            "Send USDC via CCTP to a specific domain limit",
             18
         );
     }

@@ -26,7 +26,7 @@ contract SparkEthereum_20250123 is SparkPayloadEthereum {
 
     address constant public AAVE_PRIME_USDS_ATOKEN = 0x09AA30b182488f769a9824F15E6Ce58591Da4781;
     address constant public SPARKLEND_USDC_ATOKEN  = 0x377C3bd93f2a2984E1E7bE6A5C22c525eD4A4815;
-    // same oracle composed with chi oracle on 2024-10-17.
+    // Same oracle composed with chi oracle on 2024-10-17.
     address constant public FIXED_1USD_ORACLE      = 0x42a03F81dd8A1cEcD746dc262e4d1CD9fD39F777;
     address constant public USDS_IRM               = 0x2DB2f1eE78b4e0ad5AaF44969E2E8f563437f34C;
 
@@ -38,7 +38,7 @@ contract SparkEthereum_20250123 is SparkPayloadEthereum {
             asset:       Ethereum.USDS,
             assetSymbol: 'USDS',
             priceFeed:   FIXED_1USD_ORACLE,
-            // deploying the default one the listing engine uses out of
+            // Deploying the default one the listing engine uses out of
             // convenience, will overwrite it in  _postExecute
             rateStrategyParams:                Rates.RateStrategyParams({
                 optimalUsageRatio:             0,
@@ -59,11 +59,11 @@ contract SparkEthereum_20250123 is SparkPayloadEthereum {
             ltv:                   0,
             liqThreshold:          0,
             liqBonus:              0,
-            reserveFactor:         EngineFlags.KEEP_CURRENT, // overriden in _postExecute
+            reserveFactor:         EngineFlags.KEEP_CURRENT, // Overriden in _postExecute
             supplyCap:             0,
             borrowCap:             0,
             debtCeiling:           0,
-            liqProtocolFee:        0, // overriden in _postExecute
+            liqProtocolFee:        0, // Overriden in _postExecute
             eModeCategory:         0
         });
         return listings;
@@ -81,20 +81,20 @@ contract SparkEthereum_20250123 is SparkPayloadEthereum {
             uint256(50_000_000e18) / 1 days
         );
 
-        // set custom IRM following SSR
+        // Set custom IRM following SSR
         LISTING_ENGINE.POOL_CONFIGURATOR().setReserveInterestRateStrategyAddress(
             Ethereum.USDS,
             USDS_IRM
         );
-        // configure USDS market in ways not allowed by the listing engine
+        // Configure USDS market in ways not allowed by the listing engine
         LISTING_ENGINE.POOL_CONFIGURATOR().setReserveFactor(Ethereum.SUSDS, 0);
         LISTING_ENGINE.POOL_CONFIGURATOR().setLiquidationProtocolFee(Ethereum.USDS, 10_00);
 
-        // seed the newly listed pool
+        // Seed the newly listed pool
         IERC20(Ethereum.USDS).approve(address(LISTING_ENGINE.POOL()), 1e18);
         LISTING_ENGINE.POOL().supply(Ethereum.USDS, 1e18, address(this), 0);
 
-        // set rate limits for the newly listed pool in SLL
+        // Set rate limits for the newly listed pool in SLL
         address sparklendUSDSAtoken = LISTING_ENGINE.POOL().getReserveData(Ethereum.USDS).aTokenAddress;
         _onboardAaveToken(
             sparklendUSDSAtoken,
@@ -102,27 +102,27 @@ contract SparkEthereum_20250123 is SparkPayloadEthereum {
             uint256(75_000_000e18) / 1 days
         );
 
-        // amendment rate limits
+        // Amendment rate limits
         SparkLiquidityLayerHelpers.setUSDSMintRateLimit(
             Ethereum.ALM_RATE_LIMITS,
             50_000_000e18,
-            uint256(50_000_000e18)/ 1 days
+            uint256(50_000_000e18) / 1 days
         );
         SparkLiquidityLayerHelpers.setUSDSToUSDCRateLimit(
             Ethereum.ALM_RATE_LIMITS,
             50_000_000e18,
-            uint256(50_000_000e18)/ 1 days
+            uint256(50_000_000e18) / 1 days
         );
         SparkLiquidityLayerHelpers.setUSDCToCCTPRateLimit(
             Ethereum.ALM_RATE_LIMITS,
             50_000_000e6,
-            uint256(25_000_000e6)/ 1 days
+            uint256(25_000_000e6) / 1 days
         );
         SparkLiquidityLayerHelpers.setUSDCToDomainRateLimit(
             Ethereum.ALM_RATE_LIMITS,
             CCTPForwarder.DOMAIN_ID_CIRCLE_BASE,
             50_000_000e6,
-            uint256(25_000_000e6)/ 1 days
+            uint256(25_000_000e6) / 1 days
         );
     }
 
