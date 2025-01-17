@@ -58,7 +58,7 @@ contract SparkEthereum_20250123Test is SparkTestBase {
 
         uint256 ssrFromSUSDS = ISUSDS(Ethereum.SUSDS).ssr();
         // sanity check: ssr matches reality
-        assertEq(ssrFromSUSDS, 1000000003734875566854894261);
+        assertEq(ssrFromSUSDS, 1.000000003734875566854894261e27);
 
         executeAllPayloadsAndBridges();
         ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
@@ -78,7 +78,7 @@ contract SparkEthereum_20250123Test is SparkTestBase {
             decimals:                 18,
             ltv:                      0,
             liquidationThreshold:     0,
-            liquidationBonus:         0, // TODO: differs from forum post
+            liquidationBonus:         0,
             liquidationProtocolFee:   10_00,
             reserveFactor:            0,
             usageAsCollateralEnabled: false,
