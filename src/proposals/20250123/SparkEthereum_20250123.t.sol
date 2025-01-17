@@ -29,7 +29,7 @@ contract SparkEthereum_20250123Test is SparkTestBase {
 
     address constant public AAVE_PRIME_USDS_ATOKEN = 0x09AA30b182488f769a9824F15E6Ce58591Da4781;
     address constant public SPARKLEND_USDC_ATOKEN  = 0x377C3bd93f2a2984E1E7bE6A5C22c525eD4A4815;
-    // same source used on 2025-01-09
+    // Same source used on 2025-01-09
     address constant public SSR_RATE_SOURCE        = 0x57027B6262083E3aC3c8B2EB99f7e8005f669973;
     address constant public FIXED_1USD_ORACLE      = 0x42a03F81dd8A1cEcD746dc262e4d1CD9fD39F777;
     address constant public USDS_IRM               = 0x2DB2f1eE78b4e0ad5AaF44969E2E8f563437f34C;
@@ -47,7 +47,7 @@ contract SparkEthereum_20250123Test is SparkTestBase {
         deployPayloads();
 
         chainSpellMetadata[ChainIdUtils.Ethereum()].domain.selectFork();
-        // TODO: spell precondition! remove after sending 1 USDS to SPARK_PROXY 
+        // TODO: Spell precondition! Remove after sending 1 USDS to SPARK_PROXY 
         deal(Ethereum.USDS, Ethereum.SPARK_PROXY, 1e18);
     }
 
@@ -57,7 +57,7 @@ contract SparkEthereum_20250123Test is SparkTestBase {
         assertEq(allConfigsBefore.length, 12);
 
         uint256 ssrFromSUSDS = ISUSDS(Ethereum.SUSDS).ssr();
-        // sanity check: ssr matches reality
+        // Sanity check: ssr matches reality
         assertEq(ssrFromSUSDS, 1.000000003734875566854894261e27);
 
         executeAllPayloadsAndBridges();
@@ -159,11 +159,11 @@ contract SparkEthereum_20250123Test is SparkTestBase {
         assertEq(rateLimits.getCurrentRateLimit(depositKey),  150_000_000e18 - depositAmount);
         assertEq(rateLimits.getCurrentRateLimit(withdrawKey), type(uint256).max);
 
-        // slope is 75M/day, the deposit amount of 5M should be replenished in a tenth of a day.
-        // we wait for half of that, and assert half of the rate limit was replenished.
+        // Slope is 75M/day, the deposit amount of 5M should be replenished in a tenth of a day.
+        // Wait for half of that, and assert half of the rate limit was replenished.
         skip(1 days / 20);
         assertApproxEqAbs(rateLimits.getCurrentRateLimit(depositKey),  150_000_000e18 - depositAmount/2, 5000);
-        // wait for 1 more second to avoid rounding issues
+        // Wait for 1 more second to avoid rounding issues
         skip(1 days / 20 + 1);
         assertEq(rateLimits.getCurrentRateLimit(depositKey),  150_000_000e18);
     }
@@ -241,11 +241,11 @@ contract SparkEthereum_20250123Test is SparkTestBase {
         assertEq(rateLimits.getCurrentRateLimit(depositKey),  20_000_000e6 - depositAmount);
         assertEq(rateLimits.getCurrentRateLimit(withdrawKey), type(uint256).max);
 
-        // slope is 10M/day, the deposit amount of 5M should be replenished in half a day.
-        // we wait for half of that, and assert half of the rate limit was replenished.
+        // Slope is 10M/day, the deposit amount of 5M should be replenished in half a day.
+        // Wait for half of that, and assert half of the rate limit was replenished.
         skip(1 days / 4);
         assertApproxEqAbs(rateLimits.getCurrentRateLimit(depositKey),  20_000_000e6 - depositAmount/2, 20000);
-        // wait for 1 more second to avoid rounding issues
+        // Wait for 1 more second to avoid rounding issues
         skip(1 days / 4 + 1);
         assertEq(rateLimits.getCurrentRateLimit(depositKey),  20_000_000e6);
     }
@@ -296,11 +296,11 @@ contract SparkEthereum_20250123Test is SparkTestBase {
         assertEq(rateLimits.getCurrentRateLimit(depositKey),  50_000_000e18 - depositAmount);
         assertEq(rateLimits.getCurrentRateLimit(withdrawKey), type(uint256).max);
 
-        // slope is 50M/day, the deposit amount of 5M should be replenished in a tenth of a day.
-        // we wait for half of that, and assert half of the rate limit was replenished.
+        // Slope is 50M/day, the deposit amount of 5M should be replenished in a tenth of a day.
+        // We wait for half of that, and assert half of the rate limit was replenished.
         skip(1 days / 20);
         assertApproxEqAbs(rateLimits.getCurrentRateLimit(depositKey),  50_000_000e18 - depositAmount/2, 5000);
-        // wait for 1 more second to avoid rounding issues
+        // Wait for 1 more second to avoid rounding issues
         skip(1 days / 20 + 1);
         assertEq(rateLimits.getCurrentRateLimit(depositKey),  50_000_000e18);
     }
