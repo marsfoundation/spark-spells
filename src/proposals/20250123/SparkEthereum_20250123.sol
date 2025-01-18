@@ -6,7 +6,6 @@ import { IERC20 }                         from 'lib/erc20-helpers/src/interfaces
 import { CCTPForwarder }                  from "xchain-helpers/forwarders/CCTPForwarder.sol";
 
 import { Ethereum }          from 'spark-address-registry/Ethereum.sol';
-import { MainnetController } from 'spark-alm-controller/src/MainnetController.sol';
 
 import { SparkLiquidityLayerHelpers }               from "src/libraries/SparkLiquidityLayerHelpers.sol";
 import { SparkPayloadEthereum, Rates, EngineFlags } from "../../SparkPayloadEthereum.sol";
@@ -29,8 +28,6 @@ contract SparkEthereum_20250123 is SparkPayloadEthereum {
     // Same oracle composed with chi oracle on 2024-10-17.
     address constant public FIXED_1USD_ORACLE      = 0x42a03F81dd8A1cEcD746dc262e4d1CD9fD39F777;
     address constant public USDS_IRM               = 0x2DB2f1eE78b4e0ad5AaF44969E2E8f563437f34C;
-
-    MainnetController controller = MainnetController(Ethereum.ALM_CONTROLLER);
 
     function newListings() public pure override returns (IEngine.Listing[] memory) {
         IEngine.Listing[] memory listings = new IEngine.Listing[](1);
