@@ -40,15 +40,13 @@ contract SparkEthereum_20250123Test is SparkTestBase {
 
     function setUp() public {
         setupDomains({
-            mainnetForkBlock: 21633687,
+            mainnetForkBlock: 21651750,
             baseForkBlock:    25036049,
             gnosisForkBlock:  38037888
         });
         deployPayloads();
 
         chainSpellMetadata[ChainIdUtils.Ethereum()].domain.selectFork();
-        // TODO: Spell precondition! Remove after sending 1 USDS to SPARK_PROXY 
-        deal(Ethereum.USDS, Ethereum.SPARK_PROXY, 1e18);
     }
 
     function test_ETHEREUM_Sparklend_USDSOnboarding() public onChain(ChainIdUtils.Ethereum()) {
