@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.25;
+import "forge-std/console.sol";
 
 import { Ethereum }              from 'spark-address-registry/Ethereum.sol';
 import { Base }                  from 'spark-address-registry/Base.sol';
@@ -10,6 +11,9 @@ import { RateLimitHelpers }      from 'spark-alm-controller/src/RateLimitHelpers
 import { IERC20 }                from 'lib/erc20-helpers/src/interfaces/IERC20.sol';
 import { CCTPForwarder }         from "xchain-helpers/forwarders/CCTPForwarder.sol";
 import { Domain, DomainHelpers } from "xchain-helpers/testing/Domain.sol";
+import { Errors }                from 'sparklend-v1-core/contracts/protocol/libraries/helpers/Errors.sol';
+import { ReserveConfiguration }  from 'sparklend-v1-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
+import { DataTypes }             from 'sparklend-v1-core/contracts/protocol/libraries/types/DataTypes.sol';
 
 import { SparkTestBase, InterestStrategyValues } from 'src/SparkTestBase.sol';
 import { ChainIdUtils }                          from 'src/libraries/ChainId.sol';
@@ -22,6 +26,10 @@ interface IRMLike {
 
 interface ISUSDS {
     function ssr() external view returns (uint256);
+}
+
+interface IXD {
+    function RESERVE_TREASURY_ADDRESS() external returns (address);
 }
 
 contract SparkEthereum_20250123Test is SparkTestBase {
@@ -115,6 +123,82 @@ contract SparkEthereum_20250123Test is SparkTestBase {
 
     function test_ETHEREUM_Sparklend_SparkProxyCanSeedNewMarket() public onChain(ChainIdUtils.Ethereum()) {
         assertGe(IERC20(Ethereum.USDS).balanceOf(Ethereum.SPARK_PROXY), 1e18);
+    }
+
+    function test_ETHEREUM_Sparklend_USDSOnboardingE2E() external onChain(ChainIdUtils.Ethereum()){
+        loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
+        uint256 depositAmount    = 1_000_000e18; // USDS
+        uint256 collateraAmount  = 200e18;     // Ether == 660_000e18 usds
+        uint256 borrowAmount     = 500_000e18;   // USDS
+        uint256 liquidatorAmount = 1000e18;   // USDS
+        address liquidator       = makeAddr('liquidator');
+
+        deal(Ethereum.USDS, address(this), depositAmount);
+        deal(Ethereum.WETH, address(this), collateraAmount);
+        deal(Ethereum.USDS, liquidator, liquidatorAmount); // amount is not relevant
+        IERC20(Ethereum.USDS).approve(address(pool), type(uint256).max);
+        IERC20(Ethereum.WETH).approve(address(pool), type(uint256).max);
+        vm.prank(liquidator);
+        IERC20(Ethereum.USDS).approve(address(pool), type(uint256).max);
+
+        vm.expectRevert(bytes('Contract 0x0000000000000000000000000000000000000000 does not exist and is not marked as persistent, see `vm.makePersistent()`'));
+        pool.deposit(Ethereum.USDS, depositAmount, address(this), 0);
+
+        executeAllPayloadsAndBridges();
+
+        assertEq(pool.getReserveData(Ethereum.USDS).accruedToTreasury, 0);
+        // seeded by spell
+        assertEq(IERC20(pool.getReserveData(Ethereum.USDS).aTokenAddress).totalSupply(), 1e18);
+
+        pool.deposit(Ethereum.USDS, depositAmount, address(this), 0);
+        assertEq(
+            IERC20(pool.getReserveData(Ethereum.USDS).aTokenAddress).totalSupply(),
+            depositAmount + 1e18
+        );
+
+        // ensure it can NOT be set as collateral
+        vm.expectRevert(bytes(Errors.USER_IN_ISOLATION_MODE_OR_LTV_ZERO));
+        pool.setUserUseReserveAsCollateral(Ethereum.USDS, true);
+
+        // add some other collateral
+        pool.deposit(Ethereum.WETH, collateraAmount, address(this), 0);
+        pool.setUserUseReserveAsCollateral(Ethereum.WETH, true);
+
+        // can NOT be borrowed in stable mode
+        vm.expectRevert(bytes(Errors.STABLE_BORROWING_NOT_ENABLED));
+        pool.borrow(Ethereum.USDS, borrowAmount, 1, 0, address(this));
+
+        (,,,,, uint healthFactor) = pool.getUserAccountData(address(this)); 
+        assertEq(healthFactor, type(uint256).max);
+        // can be borrowed in variable mode
+        pool.borrow(Ethereum.USDS, borrowAmount, 2, 0, address(this));
+        assertEq(IERC20(Ethereum.USDS).balanceOf(address(this)), borrowAmount);
+        (,,,,, healthFactor) = pool.getUserAccountData(address(this)); 
+        assertEq(healthFactor, 1.098626021244240000e18);
+
+        // at current fork block, this returns 330911452182, 3.3k with 8 decimals.
+        vm.mockCall(
+            0x8105f69D9C41644c6A0803fDA7D03Aa70996cFD9, // oracle used for ETH
+            abi.encodeWithSignature("getAssetPrice(address)", Ethereum.WETH),
+            abi.encode(uint256(1_000e8)) // hard-code price to 1ETH == 1000 USDS
+        );
+        (,,,,, healthFactor) = pool.getUserAccountData(address(this)); 
+        assertEq(healthFactor, 0.332000000000000000e18);
+
+        assertEq(IERC20(Ethereum.USDS).balanceOf(Ethereum.TREASURY), 0);
+        assertEq(IERC20(Ethereum.WETH).balanceOf(Ethereum.TREASURY), 0);
+        assertEq(IXD(pool.getReserveData(Ethereum.WETH).aTokenAddress).RESERVE_TREASURY_ADDRESS(), Ethereum.TREASURY);
+        assertEq(IXD(pool.getReserveData(Ethereum.USDS).aTokenAddress).RESERVE_TREASURY_ADDRESS(), Ethereum.TREASURY);
+        vm.prank(liquidator);
+        pool.liquidationCall(Ethereum.WETH, Ethereum.USDS, address(this), liquidatorAmount, false);
+        // liquidator received 1 ETH collateral + 0.045 liquidation bonus for ETH
+        assertEq(IERC20(Ethereum.WETH).balanceOf(liquidator), 1.045e18);
+        // treasury receives 0 fees, regardless of debt token (USDS) settings,
+        // since collateral (ETH) liquidationProtocolFee is used
+        assertEq(IERC20(Ethereum.USDS).balanceOf(Ethereum.TREASURY), 0);
+        assertEq(IERC20(Ethereum.WETH).balanceOf(Ethereum.TREASURY), 0);
+        console.log(pool.getConfiguration(Ethereum.WETH).data & 0xFFFFFFFFFFFFFFFFFFFFFF0000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF);
+        console.log(ReserveConfiguration.getLiquidationProtocolFee(DataTypes.ReserveConfigurationMap(pool.getConfiguration(Ethereum.WETH).data) ));
     }
 
     function test_ETHEREUM_SLL_USDSRateLimits() public onChain(ChainIdUtils.Ethereum()) {
