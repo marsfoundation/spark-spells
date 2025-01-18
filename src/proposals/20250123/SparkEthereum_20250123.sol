@@ -111,11 +111,6 @@ contract SparkEthereum_20250123 is SparkPayloadEthereum {
             50_000_000e6,
             uint256(50_000_000e6) / 1 days
         );
-        SparkLiquidityLayerHelpers.setUSDCToCCTPRateLimit(
-            Ethereum.ALM_RATE_LIMITS,
-            50_000_000e6,
-            uint256(25_000_000e6) / 1 days
-        );
         SparkLiquidityLayerHelpers.setUSDCToDomainRateLimit(
             Ethereum.ALM_RATE_LIMITS,
             CCTPForwarder.DOMAIN_ID_CIRCLE_BASE,

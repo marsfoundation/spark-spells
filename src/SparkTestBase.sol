@@ -779,22 +779,45 @@ abstract contract SparkEthereumTests is SparklendTests {
 
 // TODO: expand on this on https://github.com/marsfoundation/spark-spells/issues/65
 abstract contract AdvancedLiquidityManagementTests is SpellRunner {
-   function _assertRateLimit(
-       bytes32 key,
-        uint256 maxAmount,
-        uint256 slope
-    ) internal {
+
+    function _getRateLimitData(bytes32 key) internal view returns(IRateLimits.RateLimitData memory rateLimit){
         ChainId currentChain = ChainIdUtils.fromUint(block.chainid);
         IRateLimits rateLimitsContract;
         if(currentChain == ChainIdUtils.Ethereum()) rateLimitsContract = IRateLimits(Ethereum.ALM_RATE_LIMITS);
         else if(currentChain == ChainIdUtils.Base()) rateLimitsContract = IRateLimits(Base.ALM_RATE_LIMITS);
         else require(false, "ALM/executing on unknown chain");
 
-        IRateLimits.RateLimitData memory rateLimit = rateLimitsContract.getRateLimitData(key);
+        return rateLimitsContract.getRateLimitData(key);
+    }
+
+   function _assertRateLimit(
+       bytes32 key,
+        uint256 maxAmount,
+        uint256 slope
+    ) internal {
+        _assertRateLimit(key, maxAmount, slope, maxAmount, block.timestamp);
+    }
+
+   function _assertUnlimitedRateLimit(
+       bytes32 key
+    ) internal {
+        IRateLimits.RateLimitData memory rateLimit = _getRateLimitData(key);
+        assertEq(rateLimit.maxAmount,   type(uint256).max);
+        assertEq(rateLimit.slope,       0);
+    }
+
+   function _assertRateLimit(
+       bytes32 key,
+        uint256 maxAmount,
+        uint256 slope,
+        uint256 lastAmount,
+        uint256 lastUpdated
+    ) internal {
+        IRateLimits.RateLimitData memory rateLimit = _getRateLimitData(key);
         assertEq(rateLimit.maxAmount,   maxAmount);
         assertEq(rateLimit.slope,       slope);
-        assertEq(rateLimit.lastAmount,  maxAmount);
-        assertEq(rateLimit.lastUpdated, block.timestamp);
+        assertEq(rateLimit.lastAmount,  lastAmount);
+        assertEq(rateLimit.lastUpdated, lastUpdated);
     }
 }
 

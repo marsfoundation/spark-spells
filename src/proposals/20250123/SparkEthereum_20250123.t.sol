@@ -168,11 +168,20 @@ contract SparkEthereum_20250123Test is SparkTestBase {
 
     function test_ETHEREUM_SLL_AmendmentRateLimits() public onChain(ChainIdUtils.Ethereum()) {
         MainnetController controller = MainnetController(Ethereum.ALM_CONTROLLER);
+        _assertRateLimit(
+            RateLimitHelpers.makeDomainKey(controller.LIMIT_USDC_TO_DOMAIN(), CCTPForwarder.DOMAIN_ID_CIRCLE_BASE),
+            4_000_000e6,
+            2_000_000e6 / uint256(1 days),
+            376_388.876880e6,
+            1737122807
+        );
+        _assertUnlimitedRateLimit(controller.LIMIT_USDC_TO_CCTP());
+
         executeAllPayloadsAndBridges();
 
         _assertRateLimit(controller.LIMIT_USDS_MINT(), 50_000_000e18, 50_000_000e18 / uint256(1 days));
         _assertRateLimit(controller.LIMIT_USDS_TO_USDC(), 50_000_000e6, 50_000_000e6 / uint256(1 days));
-        _assertRateLimit(controller.LIMIT_USDC_TO_CCTP(), 50_000_000e6, 25_000_000e6 / uint256(1 days));
+        _assertUnlimitedRateLimit(controller.LIMIT_USDC_TO_CCTP());
         _assertRateLimit(
             RateLimitHelpers.makeDomainKey(controller.LIMIT_USDC_TO_DOMAIN(), CCTPForwarder.DOMAIN_ID_CIRCLE_BASE),
             50_000_000e6,
@@ -182,10 +191,18 @@ contract SparkEthereum_20250123Test is SparkTestBase {
 
     function test_BASE_SLL_AmendmentRateLimits() public onChain(ChainIdUtils.Base()) {
         ForeignController controller = ForeignController(Base.ALM_CONTROLLER);
+        _assertRateLimit(
+            RateLimitHelpers.makeDomainKey(controller.LIMIT_USDC_TO_DOMAIN(), CCTPForwarder.DOMAIN_ID_CIRCLE_ETHEREUM),
+            4_000_000e6,
+            2_000_000e6 / uint256(1 days),
+            3_582_233.729890e6,
+            1736837373
+        );
+        _assertUnlimitedRateLimit(controller.LIMIT_USDC_TO_CCTP());
 
         executeAllPayloadsAndBridges();
 
-        _assertRateLimit(controller.LIMIT_USDC_TO_CCTP(), 50_000_000e6, 25_000_000e6 / uint256(1 days));
+        _assertUnlimitedRateLimit(controller.LIMIT_USDC_TO_CCTP());
         _assertRateLimit(
             RateLimitHelpers.makeDomainKey(controller.LIMIT_USDC_TO_DOMAIN(), CCTPForwarder.DOMAIN_ID_CIRCLE_ETHEREUM),
             50_000_000e6,
