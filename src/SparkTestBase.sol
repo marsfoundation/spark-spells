@@ -792,8 +792,8 @@ abstract contract AdvancedLiquidityManagementTests is SpellRunner {
 
    function _assertRateLimit(
        bytes32 key,
-        uint256 maxAmount,
-        uint256 slope
+       uint256 maxAmount,
+       uint256 slope
     ) internal {
         _assertRateLimit(key, maxAmount, slope, maxAmount, block.timestamp);
     }
@@ -808,10 +808,10 @@ abstract contract AdvancedLiquidityManagementTests is SpellRunner {
 
    function _assertRateLimit(
        bytes32 key,
-        uint256 maxAmount,
-        uint256 slope,
-        uint256 lastAmount,
-        uint256 lastUpdated
+       uint256 maxAmount,
+       uint256 slope,
+       uint256 lastAmount,
+       uint256 lastUpdated
     ) internal {
         IRateLimits.RateLimitData memory rateLimit = _getRateLimitData(key);
         assertEq(rateLimit.maxAmount,   maxAmount);

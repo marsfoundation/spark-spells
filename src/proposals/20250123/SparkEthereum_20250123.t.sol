@@ -255,6 +255,20 @@ contract SparkEthereum_20250123Test is SparkTestBase {
     function test_ETHEREUM_SLL_AmendmentRateLimits() public onChain(ChainIdUtils.Ethereum()) {
         MainnetController controller = MainnetController(Ethereum.ALM_CONTROLLER);
         _assertRateLimit(
+            controller.LIMIT_USDS_MINT(),
+            4_000_000e18,
+            2_000_000e18 / uint256(1 days),
+            1_616_520.094183111111088528e18,
+            1737122807
+        );
+        _assertRateLimit(
+            controller.LIMIT_USDS_TO_USDC(),
+            4_000_000e6,
+            2_000_000e6 / uint256(1 days),
+            1_616_520.071600e6,
+            1737122807
+        );
+        _assertRateLimit(
             RateLimitHelpers.makeDomainKey(controller.LIMIT_USDC_TO_DOMAIN(), CCTPForwarder.DOMAIN_ID_CIRCLE_BASE),
             4_000_000e6,
             2_000_000e6 / uint256(1 days),
