@@ -20,10 +20,14 @@ library SparkLiquidityLayerHelpers {
     // This is the same on all chains
     address private constant MORPHO = 0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb;
 
-    bytes32 private constant LIMIT_4626_DEPOSIT  = keccak256("LIMIT_4626_DEPOSIT");
-    bytes32 private constant LIMIT_4626_WITHDRAW = keccak256("LIMIT_4626_WITHDRAW");
-    bytes32 private constant LIMIT_AAVE_DEPOSIT  = keccak256("LIMIT_AAVE_DEPOSIT");
-    bytes32 private constant LIMIT_AAVE_WITHDRAW = keccak256("LIMIT_AAVE_WITHDRAW");
+    bytes32 private constant LIMIT_4626_DEPOSIT   = keccak256("LIMIT_4626_DEPOSIT");
+    bytes32 private constant LIMIT_4626_WITHDRAW  = keccak256("LIMIT_4626_WITHDRAW");
+    bytes32 private constant LIMIT_AAVE_DEPOSIT   = keccak256("LIMIT_AAVE_DEPOSIT");
+    bytes32 private constant LIMIT_AAVE_WITHDRAW  = keccak256("LIMIT_AAVE_WITHDRAW");
+    bytes32 private constant LIMIT_USDS_MINT      = keccak256("LIMIT_USDS_MINT");
+    bytes32 private constant LIMIT_USDS_TO_USDC   = keccak256("LIMIT_USDS_TO_USDC");
+    bytes32 private constant LIMIT_USDC_TO_CCTP   = keccak256("LIMIT_USDC_TO_CCTP");
+    bytes32 private constant LIMIT_USDC_TO_DOMAIN = keccak256("LIMIT_USDC_TO_DOMAIN");
 
     /**
      * @notice Onboard an Aave token
@@ -143,4 +147,72 @@ library SparkLiquidityLayerHelpers {
         IMetaMorpho(vault).setSupplyQueue(supplyQueue);
     }
 
+    function setUSDSMintRateLimit(
+        address rateLimits,
+        uint256 maxAmount,
+        uint256 slope
+    ) internal {
+        RateLimitHelpers.setRateLimitData(
+            LIMIT_USDS_MINT,
+            rateLimits,
+            RateLimitData({
+                maxAmount : maxAmount,
+                slope     : slope
+            }),
+            "USDS mint limit",
+            18
+        );
+    }
+
+    function setUSDSToUSDCRateLimit(
+        address rateLimits,
+        uint256 maxUsdcAmount,
+        uint256 slope
+    ) internal {
+        RateLimitHelpers.setRateLimitData(
+            LIMIT_USDS_TO_USDC,
+            rateLimits,
+            RateLimitData({
+                maxAmount : maxUsdcAmount,
+                slope     : slope
+            }),
+            "Swap USDS to USDC limit",
+            6
+        );
+    }
+
+    function setUSDCToCCTPRateLimit(
+        address rateLimits,
+        uint256 maxUsdcAmount,
+        uint256 slope
+    ) internal {
+        RateLimitHelpers.setRateLimitData(
+            LIMIT_USDC_TO_CCTP,
+            rateLimits,
+            RateLimitData({
+                maxAmount : maxUsdcAmount,
+                slope     : slope
+            }),
+            "Send USDC to CCTP general limit",
+            6
+        );
+    }
+
+    function setUSDCToDomainRateLimit(
+        address rateLimits,
+        uint32  destinationDomain,
+        uint256 maxUsdcAmount,
+        uint256 slope
+    ) internal {
+        RateLimitHelpers.setRateLimitData(
+            RateLimitHelpers.makeDomainKey(LIMIT_USDC_TO_DOMAIN, destinationDomain),
+            rateLimits,
+            RateLimitData({
+                maxAmount : maxUsdcAmount,
+                slope     : slope
+            }),
+            "Send USDC via CCTP to a specific domain limit",
+            6
+        );
+    }
 }
