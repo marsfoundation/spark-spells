@@ -13,7 +13,7 @@ import { SparkPayloadEthereum, Rates, EngineFlags } from "../../SparkPayloadEthe
 
 /**
  * @title  Jan 23, 2025 Spark Ethereum Proposal
- * @notice Sparklend: Onboard SUSDS
+ * @notice Sparklend: Onboard USDS
            Spark Liquidity Layer: Onboard Aave Prime USDS, Sparklend USDS and Sparklend USDC. Update CCTP limits
  * @author Wonderland
  * Forum:  http://forum.sky.money/t/jan-23-2025-proposed-changes-to-spark-for-upcoming-spell/25825
@@ -59,11 +59,11 @@ contract SparkEthereum_20250123 is SparkPayloadEthereum {
             ltv:                   0,
             liqThreshold:          0,
             liqBonus:              0,
-            reserveFactor:         EngineFlags.KEEP_CURRENT, // Overriden in _postExecute
+            reserveFactor:         1, // Overriden in _postExecute
             supplyCap:             0,
             borrowCap:             0,
             debtCeiling:           0,
-            liqProtocolFee:        0, // Overriden in _postExecute
+            liqProtocolFee:        10_00, // Overriden in _postExecute
             eModeCategory:         0
         });
         return listings;
@@ -87,7 +87,7 @@ contract SparkEthereum_20250123 is SparkPayloadEthereum {
             USDS_IRM
         );
         // Configure USDS market in ways not allowed by the listing engine
-        LISTING_ENGINE.POOL_CONFIGURATOR().setReserveFactor(Ethereum.SUSDS, 0);
+        LISTING_ENGINE.POOL_CONFIGURATOR().setReserveFactor(Ethereum.USDS, 0);
         LISTING_ENGINE.POOL_CONFIGURATOR().setLiquidationProtocolFee(Ethereum.USDS, 10_00);
 
         // Seed the newly listed pool
