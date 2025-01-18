@@ -85,7 +85,7 @@ contract SparkEthereum_20250123Test is SparkTestBase {
             ltv:                      0,
             liquidationThreshold:     0,
             liquidationBonus:         0,
-            liquidationProtocolFee:   10_00,
+            liquidationProtocolFee:   0,
             reserveFactor:            0,
             usageAsCollateralEnabled: false,
             borrowingEnabled:         true,

@@ -61,7 +61,7 @@ contract SparkEthereum_20250123 is SparkPayloadEthereum {
             supplyCap:             0,
             borrowCap:             0,
             debtCeiling:           0,
-            liqProtocolFee:        10_00, // Overriden in _postExecute
+            liqProtocolFee:        0,
             eModeCategory:         0
         });
         return listings;
@@ -86,7 +86,6 @@ contract SparkEthereum_20250123 is SparkPayloadEthereum {
         );
         // Configure USDS market in ways not allowed by the listing engine
         LISTING_ENGINE.POOL_CONFIGURATOR().setReserveFactor(Ethereum.USDS, 0);
-        LISTING_ENGINE.POOL_CONFIGURATOR().setLiquidationProtocolFee(Ethereum.USDS, 10_00);
 
         // Seed the newly listed pool
         IERC20(Ethereum.USDS).approve(address(LISTING_ENGINE.POOL()), 1e18);
