@@ -25,7 +25,6 @@ import { SparkPayloadEthereum, Rates, EngineFlags } from "../../SparkPayloadEthe
 contract SparkEthereum_20250123 is SparkPayloadEthereum {
 
     address constant public AAVE_PRIME_USDS_ATOKEN = 0x09AA30b182488f769a9824F15E6Ce58591Da4781;
-    address constant public SPARKLEND_USDC_ATOKEN  = 0x377C3bd93f2a2984E1E7bE6A5C22c525eD4A4815;
     // Same oracle composed with chi oracle on 2024-10-17.
     address constant public FIXED_1USD_ORACLE      = 0x42a03F81dd8A1cEcD746dc262e4d1CD9fD39F777;
     address constant public USDS_IRM               = 0x2DB2f1eE78b4e0ad5AaF44969E2E8f563437f34C;
@@ -69,7 +68,7 @@ contract SparkEthereum_20250123 is SparkPayloadEthereum {
 
     function _postExecute() internal override {
         _onboardAaveToken(
-            SPARKLEND_USDC_ATOKEN,
+            Ethereum.USDC_ATOKEN,
             20_000_000e6,
             uint256(10_000_000e6) / 1 days
         );

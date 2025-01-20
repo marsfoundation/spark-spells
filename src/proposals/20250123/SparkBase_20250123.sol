@@ -16,7 +16,7 @@ import { SparkPayloadBase }           from "../../SparkPayloadBase.sol";
  */
 contract SparkBase_20250123 is SparkPayloadBase {
 
-    function execute() public {
+    function execute() external {
         SparkLiquidityLayerHelpers.setUSDCToDomainRateLimit(
             Base.ALM_RATE_LIMITS,
             CCTPForwarder.DOMAIN_ID_CIRCLE_ETHEREUM,
