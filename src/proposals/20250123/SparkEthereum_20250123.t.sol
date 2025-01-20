@@ -49,10 +49,12 @@ contract SparkEthereum_20250123Test is SparkTestBase {
     function setUp() public {
         setupDomains({
             mainnetForkBlock: 21651750,
-            baseForkBlock:    25036049,
+            baseForkBlock:    25304922,
             gnosisForkBlock:  38037888
         });
         deployPayloads();
+
+        chainSpellMetadata[ChainIdUtils.Base()].payload = 0x6c87D984689CeD0bB367A58722aC74013F82267d;
 
         chainSpellMetadata[ChainIdUtils.Ethereum()].domain.selectFork();
     }
@@ -295,8 +297,8 @@ contract SparkEthereum_20250123Test is SparkTestBase {
             RateLimitHelpers.makeDomainKey(controller.LIMIT_USDC_TO_DOMAIN(), CCTPForwarder.DOMAIN_ID_CIRCLE_ETHEREUM),
             4_000_000e6,
             2_000_000e6 / uint256(1 days),
-            3_582_233.729890e6,
-            1736837373
+            2_835_239.175168e6,
+            1737042687
         );
         _assertUnlimitedRateLimit(controller.LIMIT_USDC_TO_CCTP());
 
