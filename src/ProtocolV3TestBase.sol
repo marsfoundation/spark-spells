@@ -258,9 +258,10 @@ contract ProtocolV3TestBase is CommonTestBase {
     _e2eTestBorrowRepayWithdraw(pool, collateralSupplier, collateralConfig, borrowConfig, maxBorrowAmount);
     vm.revertTo(snapshot);
 
-    // Test 3: Ensure user cannot borrow with stable rates
+    // Test 3: Ensure user cannot borrow with stable rates (Use 95% of max
+    // borrow because of warping in test)
 
-    _e2eTestStableBorrowDisabled(pool, collateralSupplier, borrowConfig, maxBorrowAmount);
+    _e2eTestStableBorrowDisabled(pool, collateralSupplier, borrowConfig, maxBorrowAmount * uint256(95) / 100);
     vm.revertTo(snapshot);
 
     // Test 4: Test liquidation
