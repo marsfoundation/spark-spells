@@ -48,15 +48,13 @@ contract SparkEthereum_20250123Test is SparkTestBase {
 
     function setUp() public {
         setupDomains({
-            mainnetForkBlock: 21651750,
+            mainnetForkBlock: 21667793,
             baseForkBlock:    25304922,
             gnosisForkBlock:  38037888
         });
-        deployPayloads();
 
-        chainSpellMetadata[ChainIdUtils.Base()].payload = 0x6c87D984689CeD0bB367A58722aC74013F82267d;
-
-        chainSpellMetadata[ChainIdUtils.Ethereum()].domain.selectFork();
+        chainSpellMetadata[ChainIdUtils.Base()].payload     = 0x6c87D984689CeD0bB367A58722aC74013F82267d;
+        chainSpellMetadata[ChainIdUtils.Ethereum()].payload = 0xFe447da54AdD21a8503eb81d328c5D60fE90eC26;
     }
 
     function test_ETHEREUM_Sparklend_USDSOnboarding() public onChain(ChainIdUtils.Ethereum()) {
@@ -181,7 +179,7 @@ contract SparkEthereum_20250123Test is SparkTestBase {
         pool.borrow(Ethereum.USDS, borrowAmount, 2, 0, address(this));
         assertEq(usds.balanceOf(address(this)), borrowAmount);
         (,,,,, healthFactor) = pool.getUserAccountData(address(this)); 
-        assertEq(healthFactor, 1.098626021244240000e18);
+        assertEq(healthFactor, 1.103366570082160000e18);
 
         // At current fork block, this returns 330911452182, 3.3k with 8 decimals.
         vm.mockCall(
@@ -193,7 +191,7 @@ contract SparkEthereum_20250123Test is SparkTestBase {
         assertEq(healthFactor, 0.332000000000000000e18);
 
         assertEq(aUSDS.balanceOf(Ethereum.TREASURY), 0);
-        assertEq(aWETH.balanceOf(Ethereum.TREASURY), 73.635960519566877739e18);
+        assertEq(aWETH.balanceOf(Ethereum.TREASURY), 73.652209201826865110e18);
         assertEq(ReserveConfiguration.getLiquidationProtocolFee(DataTypes.ReserveConfigurationMap(pool.getConfiguration(Ethereum.WETH).data) ), 10_00);
         vm.prank(liquidator);
         pool.liquidationCall(Ethereum.WETH, Ethereum.USDS, address(this), liquidatorAmount, false);
@@ -202,7 +200,7 @@ contract SparkEthereum_20250123Test is SparkTestBase {
         // Treasury receives no USDS fees, regardless of debt token (USDS) settings,
         // and collateral (ETH) liquidationProtocolFee is used
         assertEq(aUSDS.balanceOf(Ethereum.TREASURY), 0);
-        assertEq(aWETH.balanceOf(Ethereum.TREASURY), 73.640960519566877738e18);
+        assertEq(aWETH.balanceOf(Ethereum.TREASURY), 73.657209201826865111e18);
     }
 
     function test_ETHEREUM_SLL_USDSRateLimits() public onChain(ChainIdUtils.Ethereum()) {
@@ -260,22 +258,22 @@ contract SparkEthereum_20250123Test is SparkTestBase {
             controller.LIMIT_USDS_MINT(),
             4_000_000e18,
             2_000_000e18 / uint256(1 days),
-            1_616_520.094183111111088528e18,
-            1737122807
+            2_162_007.122236555555496208e18,
+            1737370967
         );
         _assertRateLimit(
             controller.LIMIT_USDS_TO_USDC(),
             4_000_000e6,
             2_000_000e6 / uint256(1 days),
-            1_616_520.071600e6,
-            1737122807
+            2_162_007.062889e6,
+            1737370967
         );
         _assertRateLimit(
             RateLimitHelpers.makeDomainKey(controller.LIMIT_USDC_TO_DOMAIN(), CCTPForwarder.DOMAIN_ID_CIRCLE_BASE),
             4_000_000e6,
             2_000_000e6 / uint256(1 days),
-            376_388.876880e6,
-            1737122807
+            921_875.868169e6,
+            1737370967
         );
         _assertUnlimitedRateLimit(controller.LIMIT_USDC_TO_CCTP());
 
