@@ -12,7 +12,7 @@ import { SparkPayloadBase }           from "../../SparkPayloadBase.sol";
  * @notice Spark Liquidity Layer: update CCTP limits
  * @author Wonderland
  * Forum:  http://forum.sky.money/t/jan-23-2025-proposed-changes-to-spark-for-upcoming-spell-2/25837
- * Vote:   TODO: vote for cctp limits
+ * Vote:   https://vote.makerdao.com/polling/QmexceBK
  */
 contract SparkBase_20250123 is SparkPayloadBase {
 
