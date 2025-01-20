@@ -780,7 +780,7 @@ abstract contract SparkEthereumTests is SparklendTests {
 // TODO: expand on this on https://github.com/marsfoundation/spark-spells/issues/65
 abstract contract AdvancedLiquidityManagementTests is SpellRunner {
 
-    function _getRateLimitData(bytes32 key) internal view returns(IRateLimits.RateLimitData memory rateLimit){
+    function _getRateLimitData(bytes32 key) internal view returns(IRateLimits.RateLimitData memory rateLimit) {
         ChainId currentChain = ChainIdUtils.fromUint(block.chainid);
         IRateLimits rateLimitsContract;
         if(currentChain == ChainIdUtils.Ethereum()) rateLimitsContract = IRateLimits(Ethereum.ALM_RATE_LIMITS);
@@ -802,8 +802,8 @@ abstract contract AdvancedLiquidityManagementTests is SpellRunner {
        bytes32 key
     ) internal {
         IRateLimits.RateLimitData memory rateLimit = _getRateLimitData(key);
-        assertEq(rateLimit.maxAmount,   type(uint256).max);
-        assertEq(rateLimit.slope,       0);
+        assertEq(rateLimit.maxAmount, type(uint256).max);
+        assertEq(rateLimit.slope,     0);
     }
 
    function _assertRateLimit(

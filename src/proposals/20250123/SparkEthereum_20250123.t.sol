@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.25;
-import "forge-std/console.sol";
 
 import { Ethereum }              from 'spark-address-registry/Ethereum.sol';
 import { Base }                  from 'spark-address-registry/Base.sol';
@@ -127,11 +126,11 @@ contract SparkEthereum_20250123Test is SparkTestBase {
 
     function test_ETHEREUM_Sparklend_USDSOnboardingE2E() external onChain(ChainIdUtils.Ethereum()){
         loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
-        uint256 depositAmount    = 1_000_000e18; // USDS
-        uint256 collateraAmount  = 200e18;     // Ether == 660_000e18 usds
-        uint256 borrowAmount     = 500_000e18;   // USDS
-        uint256 liquidatorAmount = 1000e18;   // USDS
-        address liquidator       = makeAddr('liquidator');
+        uint256 depositAmount        = 1_000_000e18; // USDS
+        uint256 collateraAmount      = 200e18;     // Ether == 660_000e18 usds
+        uint256 borrowAmount         = 500_000e18;   // USDS
+        uint256 liquidatedCollateral = 1000e18;   // USDS
+        address liquidator           = makeAddr('liquidator');
 
         IERC20 usds  = IERC20(Ethereum.USDS);
         IERC20 weth  = IERC20(Ethereum.WETH);
@@ -139,7 +138,7 @@ contract SparkEthereum_20250123Test is SparkTestBase {
 
         deal(Ethereum.USDS, address(this), depositAmount);
         deal(Ethereum.WETH, address(this), collateraAmount);
-        deal(Ethereum.USDS, liquidator, liquidatorAmount); // amount is not relevant
+        deal(Ethereum.USDS, liquidator, liquidatedCollateral); // amount is not relevant
         usds.approve(address(pool), type(uint256).max);
         weth.approve(address(pool), type(uint256).max);
         vm.prank(liquidator);
@@ -194,7 +193,7 @@ contract SparkEthereum_20250123Test is SparkTestBase {
         assertEq(aWETH.balanceOf(Ethereum.TREASURY), 73.652209201826865110e18);
         assertEq(ReserveConfiguration.getLiquidationProtocolFee(DataTypes.ReserveConfigurationMap(pool.getConfiguration(Ethereum.WETH).data) ), 10_00);
         vm.prank(liquidator);
-        pool.liquidationCall(Ethereum.WETH, Ethereum.USDS, address(this), liquidatorAmount, false);
+        pool.liquidationCall(Ethereum.WETH, Ethereum.USDS, address(this), liquidatedCollateral, false);
         // Liquidator received 1 ETH collateral + 0.045 liquidation bonus for ETH
         assertEq(weth.balanceOf(liquidator), 1.045e18);
         // Treasury receives no USDS fees, regardless of debt token (USDS) settings,
@@ -243,13 +242,13 @@ contract SparkEthereum_20250123Test is SparkTestBase {
         assertEq(rateLimits.getCurrentRateLimit(depositKey),  150_000_000e18 - depositAmount);
         assertEq(rateLimits.getCurrentRateLimit(withdrawKey), type(uint256).max);
 
-        // Slope is 75M/day, the deposit amount of 5M should be replenished in a tenth of a day.
+        // Slope is 75M/day, the deposit amount of 7.5M should be replenished in a tenth of a day.
         // Wait for half of that, and assert half of the rate limit was replenished.
         skip(1 days / 20);
-        assertApproxEqAbs(rateLimits.getCurrentRateLimit(depositKey),  150_000_000e18 - depositAmount/2, 5000);
+        assertApproxEqAbs(rateLimits.getCurrentRateLimit(depositKey), 150_000_000e18 - depositAmount/2, 5000);
         // Wait for 1 more second to avoid rounding issues
         skip(1 days / 20 + 1);
-        assertEq(rateLimits.getCurrentRateLimit(depositKey),  150_000_000e18);
+        assertEq(rateLimits.getCurrentRateLimit(depositKey), 150_000_000e18);
     }
 
     function test_ETHEREUM_SLL_AmendmentRateLimits() public onChain(ChainIdUtils.Ethereum()) {
@@ -414,9 +413,9 @@ contract SparkEthereum_20250123Test is SparkTestBase {
         // Slope is 50M/day, the deposit amount of 5M should be replenished in a tenth of a day.
         // We wait for half of that, and assert half of the rate limit was replenished.
         skip(1 days / 20);
-        assertApproxEqAbs(rateLimits.getCurrentRateLimit(depositKey),  50_000_000e18 - depositAmount/2, 5000);
+        assertApproxEqAbs(rateLimits.getCurrentRateLimit(depositKey), 50_000_000e18 - depositAmount/2, 5000);
         // Wait for 1 more second to avoid rounding issues
         skip(1 days / 20 + 1);
-        assertEq(rateLimits.getCurrentRateLimit(depositKey),  50_000_000e18);
+        assertEq(rateLimits.getCurrentRateLimit(depositKey), 50_000_000e18);
     }
 }

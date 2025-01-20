@@ -29,7 +29,7 @@ contract SparkEthereum_20250123 is SparkPayloadEthereum {
     address constant public FIXED_1USD_ORACLE      = 0x42a03F81dd8A1cEcD746dc262e4d1CD9fD39F777;
     address constant public USDS_IRM               = 0x2DB2f1eE78b4e0ad5AaF44969E2E8f563437f34C;
 
-    constructor(){
+    constructor() {
         PAYLOAD_BASE = 0x6c87D984689CeD0bB367A58722aC74013F82267d;
     }
 
