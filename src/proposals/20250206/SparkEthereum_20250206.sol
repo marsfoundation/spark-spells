@@ -11,12 +11,21 @@ import { SparkPayloadEthereum } from "../../SparkPayloadEthereum.sol";
  * Vote:   TODO
  */
 contract SparkEthereum_20250206 is SparkPayloadEthereum {
+    address public immutable FLUID_SUSDS_VAULT      = 0x2BBE31d63E6813E3AC858C04dae43FB2a72B0D11;
+    uint256 public immutable FLUID_SUDS_MAX_DEPOSIT = 50_000_000e18;
+    uint256 public immutable FLUID_SUDS_MAX_SLOPE   = 50_000_000e18 / uint256(1 days);
 
     constructor() {
         // TODO: set to Base address when deployed
         PAYLOAD_BASE = address(0);
     }
 
-    function _postExecute() internal override { }
+    function _postExecute() internal override {
+        _onboardERC4626Vault(
+            FLUID_SUSDS_VAULT,
+            FLUID_SUDS_MAX_DEPOSIT,
+            FLUID_SUDS_MAX_SLOPE
+        );
+    }
 
 }
