@@ -7,13 +7,13 @@ import { SparkPayloadEthereum } from "../../SparkPayloadEthereum.sol";
  * @title  Feb 06, 2025 Spark Ethereum Proposal
  * @notice Spark Liquidity Layer: Onboard Fluid sUSDS
  * @author Wonderland
- * Forum:  TODO
+ * Forum:  https://forum.sky.money/t/feb-6-2025-proposed-changes-to-spark-for-upcoming-spell-actual/25888
  * Vote:   TODO
  */
 contract SparkEthereum_20250206 is SparkPayloadEthereum {
     address public immutable FLUID_SUSDS_VAULT      = 0x2BBE31d63E6813E3AC858C04dae43FB2a72B0D11;
-    uint256 public immutable FLUID_SUDS_MAX_DEPOSIT = 50_000_000e18;
-    uint256 public immutable FLUID_SUDS_MAX_SLOPE   = 50_000_000e18 / uint256(1 days);
+    uint256 public immutable FLUID_SUDS_MAX_DEPOSIT = 10_000_000e18;
+    uint256 public immutable FLUID_SUDS_MAX_SLOPE   = 5_000_000e18 / uint256(1 days);
 
     constructor() {
         // TODO: set to Base address when deployed
