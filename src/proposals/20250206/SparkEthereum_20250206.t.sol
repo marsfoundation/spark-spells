@@ -43,6 +43,22 @@ contract SparkEthereum_20250206Test is SparkTestBase {
         executeAllPayloadsAndBridges();
     }
 
+    function test_ETHEREUM_Sparklend_WBTCLiquidationThreshold() public onChain(ChainIdUtils.Ethereum()) {
+        loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
+
+        ReserveConfig[] memory allConfigsBefore = createConfigurationSnapshot('', pool);
+        ReserveConfig memory wbtcConfig         = _findReserveConfigBySymbol(allConfigsBefore, 'WBTC');
+
+        assertEq(wbtcConfig.liquidationThreshold, 55_00);
+
+        executeAllPayloadsAndBridges();
+
+        ReserveConfig[] memory allConfigsAfter = createConfigurationSnapshot('', pool);
+        wbtcConfig.liquidationThreshold        = 50_00;
+
+        _validateReserveConfig(wbtcConfig, allConfigsAfter);
+    }
+
     function test_BASE_SLL_FluidsUSDSOnboardingSideEffects() public onChain(ChainIdUtils.Base()) {
         executeAllPayloadsAndBridges();
     }
