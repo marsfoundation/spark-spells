@@ -27,7 +27,7 @@ contract SparkEthereum_20250206Test is SparkTestBase {
 
     function setUp() public {
         setupDomains({
-            mainnetForkBlock: 21667793,
+            mainnetForkBlock: 21717490,
             baseForkBlock:    25304922,
             gnosisForkBlock:  38037888
         });
