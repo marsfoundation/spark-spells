@@ -9,7 +9,9 @@ import { SparkPayloadEthereum, IEngine, EngineFlags } from "../../SparkPayloadEt
  * @notice Spark Liquidity Layer: Onboard Fluid sUSDS
  * @author Wonderland
  * Forum:  https://forum.sky.money/t/feb-6-2025-proposed-changes-to-spark-for-upcoming-spell-actual/25888
- * Vote:   TODO
+ * Vote:   https://vote.makerdao.com/polling/QmWCe4JD -- onboard fluid sUSDS
+ *         https://vote.makerdao.com/polling/QmbSANrr -- adjust WBTC parameters
+ *         https://vote.makerdao.com/polling/QmRKhzad -- update ETH and BTC pricefeeds
  */
 contract SparkEthereum_20250206 is SparkPayloadEthereum {
     address public immutable FLUID_SUSDS_VAULT      = 0x2BBE31d63E6813E3AC858C04dae43FB2a72B0D11;

@@ -10,8 +10,8 @@ import { SparkPayloadBase } from "../../SparkPayloadBase.sol";
  * @notice Spark Liquidity Layer: onboard Fluid sUSDS, increase Morpho Vault Timelock
  * @author Wonderland
  * Forum:  https://forum.sky.money/t/feb-6-2025-proposed-changes-to-spark-for-upcoming-spell-actual/25888
- * Vote:   TODO - increase Morpho Vault Timelock
- *         TODO - onboard Fluid sUSDS
+ * Vote:   https://etherscan.io/address/0xD3A9FE267852281a1e6307a1C37CDfD76d39b133 - increase Morpho Vault Timelock
+ *         https://vote.makerdao.com/polling/QmTfntSm - onboard Fluid sUSDS
  */
 contract SparkBase_20250206 is SparkPayloadBase {
 
