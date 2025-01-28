@@ -365,7 +365,6 @@ contract SparkEthereum_20250206Test is SparkTestBase {
         assertEq(rateLimits.getCurrentRateLimit(depositKey), 10_000_000e18);
     }
 
-    // TODO: question, is the timeout local to the USDC asset or global to the vault? 
     function test_BASE_IncreaseMorphoTimeout() public onChain(ChainIdUtils.Base()) {
         assertEq(IMetaMorpho(Base.MORPHO_VAULT_SUSDC).timelock(), 0);
         executeAllPayloadsAndBridges();
