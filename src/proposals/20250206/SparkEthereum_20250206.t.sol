@@ -16,6 +16,13 @@ import { SparkTestBase } from 'src/SparkTestBase.sol';
 import { ChainIdUtils }  from 'src/libraries/ChainId.sol';
 import { ReserveConfig } from '../../ProtocolV3TestBase.sol';
 
+interface IPriceAggregatorLike {
+    function chronicle()   external returns(address);
+    function redstone()    external returns(address);
+    function chainlink()   external returns(address);
+    function uniswapPool() external returns(address);
+}
+
 contract SparkEthereum_20250206Test is SparkTestBase {
     using DomainHelpers for Domain;
 
@@ -123,6 +130,10 @@ contract SparkEthereum_20250206Test is SparkTestBase {
 
         assertEq(oracle.getSourceOfAsset(Ethereum.WETH), PREVIOUS_WETH_PRICEFEED);
 
+        assertEq(IPriceAggregatorLike(PREVIOUS_WETH_PRICEFEED).chainlink(),   WETH_CHAINLINK_SOURCE);
+        assertEq(IPriceAggregatorLike(PREVIOUS_WETH_PRICEFEED).chronicle(),   WETH_CHRONICLE_SOURCE);
+        assertEq(IPriceAggregatorLike(PREVIOUS_WETH_PRICEFEED).uniswapPool(), WETH_UNISWAP_SOURCE);
+
         uint256 WETHPrice = oracle.getAssetPrice(Ethereum.WETH);
         // sanity checks on pre-existing price
         assertEq(WETHPrice,   3_081.90250000e8);
@@ -141,6 +152,10 @@ contract SparkEthereum_20250206Test is SparkTestBase {
         assertEq(oracle.getSourceOfAsset(Ethereum.WETH), NEW_WETH_PRICEFEED);
         assertEq(WETHPriceAfter,  3_078.82000000e8);
 
+        assertEq(IPriceAggregatorLike(NEW_WETH_PRICEFEED).chainlink(), WETH_CHAINLINK_SOURCE);
+        assertEq(IPriceAggregatorLike(NEW_WETH_PRICEFEED).chronicle(), WETH_CHRONICLE_SOURCE);
+        assertEq(IPriceAggregatorLike(NEW_WETH_PRICEFEED).redstone(),  WETH_REDSTONE_SOURCE);
+
         _assertNewPricefeedBehaviour({
             asset: Ethereum.WETH,
             chainlinkSource: WETH_CHAINLINK_SOURCE,
@@ -155,6 +170,9 @@ contract SparkEthereum_20250206Test is SparkTestBase {
         IAaveOracle oracle = IAaveOracle(Ethereum.AAVE_ORACLE);
 
         assertEq(oracle.getSourceOfAsset(Ethereum.CBBTC), PREVIOUS_CBBTC_PRICEFEED);
+
+        assertEq(IPriceAggregatorLike(PREVIOUS_CBBTC_PRICEFEED).chainlink(), CBBTC_CHAINLINK_SOURCE);
+        assertEq(IPriceAggregatorLike(PREVIOUS_CBBTC_PRICEFEED).chronicle(), CBBTC_CHRONICLE_SOURCE);
 
         uint256 CBBTCPrice = oracle.getAssetPrice(Ethereum.CBBTC);
         // sanity checks on pre-existing price
@@ -172,6 +190,10 @@ contract SparkEthereum_20250206Test is SparkTestBase {
         uint256 CBBTCPriceAfter  = oracle.getAssetPrice(Ethereum.CBBTC);
         assertEq(oracle.getSourceOfAsset(Ethereum.CBBTC), NEW_CBBTC_PRICEFEED);
         assertEq(CBBTCPriceAfter, 99_389.82364983e8);
+
+        assertEq(IPriceAggregatorLike(NEW_CBBTC_PRICEFEED).chainlink(), CBBTC_CHAINLINK_SOURCE);
+        assertEq(IPriceAggregatorLike(NEW_CBBTC_PRICEFEED).chronicle(), CBBTC_CHRONICLE_SOURCE);
+        assertEq(IPriceAggregatorLike(NEW_CBBTC_PRICEFEED).redstone(),  CBBTC_REDSTONE_SOURCE);
 
         _assertNewPricefeedBehaviour({
             asset: Ethereum.CBBTC,
