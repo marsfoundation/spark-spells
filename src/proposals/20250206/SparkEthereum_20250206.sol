@@ -14,9 +14,9 @@ import { SparkPayloadEthereum, IEngine, EngineFlags } from "../../SparkPayloadEt
  *         https://vote.makerdao.com/polling/QmRKhzad -- update ETH and BTC pricefeeds
  */
 contract SparkEthereum_20250206 is SparkPayloadEthereum {
-    address public immutable FLUID_SUSDS_VAULT      = 0x2BBE31d63E6813E3AC858C04dae43FB2a72B0D11;
-    uint256 public immutable FLUID_SUDS_MAX_DEPOSIT = 10_000_000e18;
-    uint256 public immutable FLUID_SUDS_MAX_SLOPE   = 5_000_000e18 / uint256(1 days);
+    address public immutable FLUID_SUSDS_VAULT       = 0x2BBE31d63E6813E3AC858C04dae43FB2a72B0D11;
+    uint256 public immutable FLUID_SUSDS_MAX_DEPOSIT = 10_000_000e18;
+    uint256 public immutable FLUID_SUSDS_MAX_SLOPE   = 5_000_000e18 / uint256(1 days);
 
     address public immutable wETH_PRICEFEED   = 0x2750e4CB635aF1FCCFB10C0eA54B5b5bfC2759b6;
     address public immutable wstETH_PRICEFEED = 0xE98d51fa014C7Ed68018DbfE6347DE9C3f39Ca39;
@@ -74,8 +74,8 @@ contract SparkEthereum_20250206 is SparkPayloadEthereum {
     function _postExecute() internal override {
         _onboardERC4626Vault(
             FLUID_SUSDS_VAULT,
-            FLUID_SUDS_MAX_DEPOSIT,
-            FLUID_SUDS_MAX_SLOPE
+            FLUID_SUSDS_MAX_DEPOSIT,
+            FLUID_SUSDS_MAX_SLOPE
         );
     }
 
