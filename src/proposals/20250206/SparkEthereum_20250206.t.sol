@@ -114,55 +114,19 @@ contract SparkEthereum_20250206Test is SparkTestBase {
     function test_ETHEREUM_Sparklend_WETH_Pricefeed() public onChain(ChainIdUtils.Ethereum()) {
         loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
         IAaveOracle oracle = IAaveOracle(Ethereum.AAVE_ORACLE);
-        // parameter for mocked uniswap calls
-        uint32[] memory secondsAgo = new uint32[](2);
-        secondsAgo[0] = 3600;
-        secondsAgo[1] = 0;
 
-        assertEq(oracle.getSourceOfAsset(Ethereum.WETH),   PREVIOUS_WETH_PRICEFEED);
+        assertEq(oracle.getSourceOfAsset(Ethereum.WETH), PREVIOUS_WETH_PRICEFEED);
 
         uint256 WETHPrice = oracle.getAssetPrice(Ethereum.WETH);
         // sanity checks on pre-existing price
         assertEq(WETHPrice,   3_081.90250000e8);
 
-        // A normal price query without divergence between Chronicle and Chainlink returns the median between the two, without calling uniswap
-        vm.mockCall(WETH_CHAINLINK_SOURCE, abi.encodeWithSignature("latestRoundData()"),abi.encode(
-            129127208515966867300 ,
-            1_000e8 , // price -- mocked
-            1738000480 ,
-            1738000499 ,
-            129127208515966867300
-        ));
-        vm.expectCall(WETH_CHAINLINK_SOURCE, abi.encodeWithSignature("latestRoundData()"));
-        vm.mockCall(WETH_CHRONICLE_SOURCE,   abi.encodeWithSignature("tryReadWithAge()"),abi.encode(
-            true,      // same as from real call
-            1_002e18,   // price -- mocked
-            1737996515 // same as from real call
-        ));
-        vm.expectCall(WETH_CHRONICLE_SOURCE,   abi.encodeWithSignature("tryReadWithAge()"));
-        vm.mockCallRevert(WETH_UNISWAP_SOURCE, abi.encodeWithSignature("observe(uint32[])", secondsAgo), bytes("uniswap should not be called"));
-        assertEq(oracle.getAssetPrice(Ethereum.WETH), 1_001e8);
-        vm.clearMockedCalls();
-
-        // A price query with serious divergence between Chronicle and Chainlink returns median with the uniswap TWAP as a tiebreaker
-        vm.mockCall(WETH_CHAINLINK_SOURCE, abi.encodeWithSignature("latestRoundData()"),abi.encode(
-            129127208515966867300, // same as from real call
-            100e8,                 // price -- mocked
-            1738000480,            // same as from real call
-            1738000499,            // same as from real call
-            129127208515966867300  // same as from real call
-        ));
-        vm.expectCall(WETH_CHAINLINK_SOURCE, abi.encodeWithSignature("latestRoundData()"));
-        vm.mockCall(WETH_CHRONICLE_SOURCE,   abi.encodeWithSignature("tryReadWithAge()"),abi.encode(
-            true,      // same as from real call
-            10_002e18, // price -- mocked
-            1737996515 // same as from real call
-        ));
-        vm.expectCall(WETH_CHRONICLE_SOURCE, abi.encodeWithSignature("tryReadWithAge()"));
-        // not mocking this since mocked values above guarantee the uniswap pricefeed is the middle one
-        vm.expectCall(WETH_UNISWAP_SOURCE,   abi.encodeWithSignature("observe(uint32[])", secondsAgo));
-        assertEq(oracle.getAssetPrice(Ethereum.WETH), 3_085.28998500e8);
-        vm.clearMockedCalls();
+        _assertPreviousPricefeedBehaviour({
+            asset: Ethereum.WETH,
+            chainlinkSource: WETH_CHAINLINK_SOURCE,
+            chronicleSource: WETH_CHRONICLE_SOURCE,
+            uniswapPool: WETH_UNISWAP_SOURCE
+        });
 
         executeAllPayloadsAndBridges();
 
@@ -171,58 +135,13 @@ contract SparkEthereum_20250206Test is SparkTestBase {
         assertEq(oracle.getSourceOfAsset(Ethereum.WETH), NEW_WETH_PRICEFEED);
         assertEq(WETHPriceAfter,  3_078.82000000e8);
 
-        // A normal price query without divergence returns the Chronicle, Redstone and Chainlink median, without calling uniswap
-        vm.mockCall(WETH_REDSTONE_SOURCE, abi.encodeWithSignature("latestRoundData()"),abi.encode(
-            1,          // same as real call
-            1_003e8,    // price -- mocked
-            1738000379, // same as real call
-            1738000379, // same as real call
-            1           // same as real call
-        ));
-        vm.expectCall(WETH_CHAINLINK_SOURCE, abi.encodeWithSignature("latestRoundData()"));
-        vm.mockCall(WETH_CHAINLINK_SOURCE,   abi.encodeWithSignature("latestRoundData()"),abi.encode(
-            129127208515966867300 ,
-            1_000e8 , // price -- mocked
-            1738000480 ,
-            1738000499 ,
-            129127208515966867300
-        ));
-        vm.expectCall(WETH_CHAINLINK_SOURCE, abi.encodeWithSignature("latestRoundData()"));
-        vm.mockCall(WETH_CHRONICLE_SOURCE,   abi.encodeWithSignature("tryReadWithAge()"),abi.encode(
-            true,      // same as from real call
-            1_002e18,  // price -- mocked
-            1737996515 // same as from real call
-        ));
-        vm.expectCall(WETH_CHRONICLE_SOURCE,   abi.encodeWithSignature("tryReadWithAge()"));
-        vm.mockCallRevert(WETH_UNISWAP_SOURCE, abi.encodeWithSignature("observe(uint32[])", secondsAgo), bytes("uniswap should not be called"));
-        assertEq(oracle.getAssetPrice(Ethereum.WETH), 1_002e8);
-        vm.clearMockedCalls();
-
-        // A price query with serious divergence between Chronicle and Chainlink still returns the three source median, without calling uniswap
-        vm.mockCall(WETH_REDSTONE_SOURCE, abi.encodeWithSignature("latestRoundData()"),abi.encode(
-            1,          // same as real call
-            3e8,        // price -- mocked
-            1738000379, // same as real call
-            1738000379, // same as real call
-            1           // same as real call
-        ));
-        vm.expectCall(WETH_CHAINLINK_SOURCE, abi.encodeWithSignature("latestRoundData()"));
-        vm.mockCall(WETH_CHAINLINK_SOURCE,   abi.encodeWithSignature("latestRoundData()"),abi.encode(
-            129127208515966867300 ,
-            1_000e8 , // price -- mocked
-            1738000480 ,
-            1738000499 ,
-            129127208515966867300
-        ));
-        vm.expectCall(WETH_CHAINLINK_SOURCE, abi.encodeWithSignature("latestRoundData()"));
-        vm.mockCall(WETH_CHRONICLE_SOURCE,   abi.encodeWithSignature("tryReadWithAge()"),abi.encode(
-            true,      // same as from real call
-            99_000e18, // price -- mocked
-            1737996515 // same as from real call
-        ));
-        vm.expectCall(WETH_CHRONICLE_SOURCE,   abi.encodeWithSignature("tryReadWithAge()"));
-        vm.mockCallRevert(WETH_UNISWAP_SOURCE, abi.encodeWithSignature("observe(uint32[])", secondsAgo), bytes("uniswap should not be called"));
-        assertEq(oracle.getAssetPrice(Ethereum.WETH), 1_000e8);
+        _assertNewPricefeedBehaviour({
+            asset: Ethereum.WETH,
+            chainlinkSource: WETH_CHAINLINK_SOURCE,
+            chronicleSource: WETH_CHRONICLE_SOURCE,
+            uniswapPool: WETH_UNISWAP_SOURCE,
+            redstoneSource: WETH_REDSTONE_SOURCE
+        });
     }
 
     function test_BASE_SLL_FluidsUSDSOnboarding() public onChain(ChainIdUtils.Base()) {
@@ -282,6 +201,126 @@ contract SparkEthereum_20250206Test is SparkTestBase {
         assertEq(IMetaMorpho(Base.MORPHO_VAULT_SUSDC).timelock(), 0);
         executeAllPayloadsAndBridges();
         assertEq(IMetaMorpho(Base.MORPHO_VAULT_SUSDC).timelock(), 86400);
+    }
+
+    function _assertNewPricefeedBehaviour(
+        address asset,
+        address chainlinkSource,
+        address chronicleSource,
+        address uniswapPool,
+        address redstoneSource
+    ) internal {
+        IAaveOracle oracle = IAaveOracle(Ethereum.AAVE_ORACLE);
+        // parameter for mocked uniswap calls
+        uint32[] memory secondsAgo = new uint32[](2);
+        secondsAgo[0] = 3600;
+        secondsAgo[1] = 0;
+
+        // A normal price query without divergence returns the Chronicle, Redstone and Chainlink median, without calling uniswap
+        vm.mockCall(redstoneSource, abi.encodeWithSignature("latestRoundData()"),abi.encode(
+            1,          // same as real call
+            1_003e8,    // price -- mocked
+            1738000379, // same as real call
+            1738000379, // same as real call
+            1           // same as real call
+        ));
+        vm.expectCall(redstoneSource, abi.encodeWithSignature("latestRoundData()"));
+        vm.mockCall(chainlinkSource,   abi.encodeWithSignature("latestRoundData()"),abi.encode(
+            129127208515966867300 ,
+            1_000e8 , // price -- mocked
+            1738000480 ,
+            1738000499 ,
+            129127208515966867300
+        ));
+        vm.expectCall(chainlinkSource, abi.encodeWithSignature("latestRoundData()"));
+        vm.mockCall(chronicleSource,   abi.encodeWithSignature("tryReadWithAge()"),abi.encode(
+            true,      // same as from real call
+            1_002e18,  // price -- mocked
+            1737996515 // same as from real call
+        ));
+        vm.expectCall(chronicleSource, abi.encodeWithSignature("tryReadWithAge()"));
+        vm.mockCallRevert(uniswapPool, abi.encodeWithSignature("observe(uint32[])", secondsAgo), bytes("uniswap should not be called"));
+        assertEq(oracle.getAssetPrice(asset), 1_002e8);
+        vm.clearMockedCalls();
+
+        // A price query with serious divergence between Chronicle and Chainlink still returns the three source median, without calling uniswap
+        vm.mockCall(redstoneSource, abi.encodeWithSignature("latestRoundData()"),abi.encode(
+            1,          // same as real call
+            3e8,        // price -- mocked
+            1738000379, // same as real call
+            1738000379, // same as real call
+            1           // same as real call
+        ));
+        vm.expectCall(redstoneSource, abi.encodeWithSignature("latestRoundData()"));
+        vm.mockCall(chainlinkSource,   abi.encodeWithSignature("latestRoundData()"),abi.encode(
+            129127208515966867300 ,
+            1_000e8 , // price -- mocked
+            1738000480 ,
+            1738000499 ,
+            129127208515966867300
+        ));
+        vm.expectCall(chainlinkSource, abi.encodeWithSignature("latestRoundData()"));
+        vm.mockCall(chronicleSource,   abi.encodeWithSignature("tryReadWithAge()"),abi.encode(
+            true,      // same as from real call
+            99_000e18, // price -- mocked
+            1737996515 // same as from real call
+        ));
+        vm.expectCall(chronicleSource, abi.encodeWithSignature("tryReadWithAge()"));
+        vm.mockCallRevert(uniswapPool, abi.encodeWithSignature("observe(uint32[])", secondsAgo), bytes("uniswap should not be called"));
+        assertEq(oracle.getAssetPrice(asset), 1_000e8);
+        vm.clearMockedCalls();
+    }
+
+    function _assertPreviousPricefeedBehaviour(
+        address asset,
+        address chainlinkSource,
+        address chronicleSource,
+        address uniswapPool
+    ) internal {
+        IAaveOracle oracle = IAaveOracle(Ethereum.AAVE_ORACLE);
+        // parameter for mocked uniswap calls
+        uint32[] memory secondsAgo = new uint32[](2);
+        secondsAgo[0] = 3600;
+        secondsAgo[1] = 0;
+
+        // A normal price query without divergence between Chronicle and Chainlink returns the median between the two, without calling uniswap
+        vm.mockCall(chainlinkSource, abi.encodeWithSignature("latestRoundData()"),abi.encode(
+            129127208515966867300 ,
+            1_000e8 , // price -- mocked
+            1738000480 ,
+            1738000499 ,
+            129127208515966867300
+        ));
+        vm.expectCall(chainlinkSource, abi.encodeWithSignature("latestRoundData()"));
+        vm.mockCall(chronicleSource,   abi.encodeWithSignature("tryReadWithAge()"),abi.encode(
+            true,      // same as from real call
+            1_002e18,   // price -- mocked
+            1737996515 // same as from real call
+        ));
+        vm.expectCall(chronicleSource,   abi.encodeWithSignature("tryReadWithAge()"));
+        vm.mockCallRevert(uniswapPool,   abi.encodeWithSignature("observe(uint32[])", secondsAgo), bytes("uniswap should not be called"));
+        assertEq(oracle.getAssetPrice(asset), 1_001e8);
+        vm.clearMockedCalls();
+
+        // A price query with serious divergence between Chronicle and Chainlink returns median with the uniswap TWAP as a tiebreaker
+        vm.mockCall(chainlinkSource, abi.encodeWithSignature("latestRoundData()"),abi.encode(
+            129127208515966867300, // same as from real call
+            100e8,                 // price -- mocked
+            1738000480,            // same as from real call
+            1738000499,            // same as from real call
+            129127208515966867300  // same as from real call
+        ));
+        vm.expectCall(chainlinkSource, abi.encodeWithSignature("latestRoundData()"));
+        vm.mockCall(chronicleSource,   abi.encodeWithSignature("tryReadWithAge()"),abi.encode(
+            true,      // same as from real call
+            10_002e18, // price -- mocked
+            1737996515 // same as from real call
+        ));
+        vm.expectCall(chronicleSource, abi.encodeWithSignature("tryReadWithAge()"));
+        // not mocking this since mocked values above guarantee the uniswap pricefeed is the middle one
+        vm.expectCall(uniswapPool,     abi.encodeWithSignature("observe(uint32[])", secondsAgo));
+        assertEq(oracle.getAssetPrice(asset), 3_085.28998500e8);
+        vm.clearMockedCalls();
     }
 
 }
