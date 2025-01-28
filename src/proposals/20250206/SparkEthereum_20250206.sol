@@ -21,6 +21,7 @@ contract SparkEthereum_20250206 is SparkPayloadEthereum {
     address public immutable wETH_PRICEFEED   = 0x2750e4CB635aF1FCCFB10C0eA54B5b5bfC2759b6;
     address public immutable wstETH_PRICEFEED = 0xE98d51fa014C7Ed68018DbfE6347DE9C3f39Ca39;
     address public immutable cbBTC_PRICEFEED  = 0x4219aA1A99f3fe90C2ACB97fCbc1204f6485B537;
+    address public immutable weETH_PRICEFEED  = 0xBE21C54Dff3b2F1708970d185aa5b0eEB70556f1;
 
     constructor() {
         // TODO: set to Base address when deployed
@@ -45,7 +46,7 @@ contract SparkEthereum_20250206 is SparkPayloadEthereum {
     }
 
     function priceFeedsUpdates() public view override returns (IEngine.PriceFeedUpdate[] memory) {
-        IEngine.PriceFeedUpdate[] memory updates = new IEngine.PriceFeedUpdate[](3);
+        IEngine.PriceFeedUpdate[] memory updates = new IEngine.PriceFeedUpdate[](4);
         updates[0] = IEngine.PriceFeedUpdate({
             asset:     Ethereum.WETH,
             priceFeed: wETH_PRICEFEED
@@ -57,6 +58,10 @@ contract SparkEthereum_20250206 is SparkPayloadEthereum {
         updates[2] = IEngine.PriceFeedUpdate({
             asset:     Ethereum.WSTETH,
             priceFeed: wstETH_PRICEFEED
+        });
+        updates[3] = IEngine.PriceFeedUpdate({
+            asset:     Ethereum.WEETH,
+            priceFeed: weETH_PRICEFEED
         });
         return updates;
     }
