@@ -172,7 +172,7 @@ contract SparkEthereum_20250206Test is SparkTestBase {
 
         uint256 WETHPrice = oracle.getAssetPrice(Ethereum.WETH);
         // sanity checks on pre-existing price
-        assertEq(WETHPrice,   3_081.90250000e8);
+        assertEq(WETHPrice,   3_147.20000000e8);
 
         _assertPreviousETHPricefeedBehaviour({
             asset: Ethereum.WETH,
@@ -186,7 +186,7 @@ contract SparkEthereum_20250206Test is SparkTestBase {
         // sanity check on new price
         uint256 WETHPriceAfter  = oracle.getAssetPrice(Ethereum.WETH);
         assertEq(oracle.getSourceOfAsset(Ethereum.WETH), NEW_WETH_PRICEFEED);
-        assertEq(WETHPriceAfter,  3_078.82000000e8);
+        assertEq(WETHPriceAfter,  3_148.81000000e8);
 
         assertEq(IPriceAggregatorLike(NEW_WETH_PRICEFEED).chainlink(), WETH_CHAINLINK_SOURCE);
         assertEq(IPriceAggregatorLike(NEW_WETH_PRICEFEED).chronicle(), WETH_CHRONICLE_SOURCE);
@@ -215,14 +215,14 @@ contract SparkEthereum_20250206Test is SparkTestBase {
 
         uint256 WSTETHPrice = oracle.getAssetPrice(Ethereum.WSTETH);
         // sanity checks on pre-existing price
-        assertEq(WSTETHPrice,   3_741.84575521e8);
+        assertEq(WSTETHPrice,   3_751.64370785e8);
 
         executeAllPayloadsAndBridges();
 
         // sanity check on new price
         uint256 WSTETHPriceAfter  = oracle.getAssetPrice(Ethereum.WSTETH);
         assertEq(oracle.getSourceOfAsset(Ethereum.WSTETH), NEW_WSTETH_PRICEFEED);
-        assertEq(WSTETHPriceAfter,  3_734.90294702e8);
+        assertEq(WSTETHPriceAfter,  3_753.56292060e8);
     }
 
     function test_ETHEREUM_Sparklend_weETH_Pricefeed() public onChain(ChainIdUtils.Ethereum()) {
@@ -239,14 +239,14 @@ contract SparkEthereum_20250206Test is SparkTestBase {
 
         uint256 WEETHPrice = oracle.getAssetPrice(Ethereum.WEETH);
         // sanity checks on pre-existing price
-        assertEq(WEETHPrice,   3_323.32404946e8);
+        assertEq(WEETHPrice,   3_332.02611089e8);
 
         executeAllPayloadsAndBridges();
 
         // sanity check on new price
         uint256 WEETHPriceAfter  = oracle.getAssetPrice(Ethereum.WEETH);
         assertEq(oracle.getSourceOfAsset(Ethereum.WEETH), NEW_WEETH_PRICEFEED);
-        assertEq(WEETHPriceAfter,  3_317.15778743e8);
+        assertEq(WEETHPriceAfter,  3_333.73066162e8);
     }
 
     function test_ETHEREUM_Sparklend_rETH_Pricefeed() public onChain(ChainIdUtils.Ethereum()) {
@@ -284,7 +284,7 @@ contract SparkEthereum_20250206Test is SparkTestBase {
 
         uint256 CBBTCPrice = oracle.getAssetPrice(Ethereum.CBBTC);
         // sanity checks on pre-existing price
-        assertEq(CBBTCPrice,   99_685.25000000e8);
+        assertEq(CBBTCPrice,   102_128.25500000e8);
 
         _assertPreviousBTCPricefeedBehaviour({
             asset: Ethereum.CBBTC,
@@ -297,7 +297,7 @@ contract SparkEthereum_20250206Test is SparkTestBase {
         // sanity check on new price
         uint256 CBBTCPriceAfter  = oracle.getAssetPrice(Ethereum.CBBTC);
         assertEq(oracle.getSourceOfAsset(Ethereum.CBBTC), NEW_CBBTC_PRICEFEED);
-        assertEq(CBBTCPriceAfter, 99_389.82364983e8);
+        assertEq(CBBTCPriceAfter, 102_309.03644509e8);
 
         assertEq(IPriceAggregatorLike(NEW_CBBTC_PRICEFEED).chainlink(), CBBTC_CHAINLINK_SOURCE);
         assertEq(IPriceAggregatorLike(NEW_CBBTC_PRICEFEED).chronicle(), CBBTC_CHRONICLE_SOURCE);
@@ -387,25 +387,25 @@ contract SparkEthereum_20250206Test is SparkTestBase {
 
         // A normal price query without divergence returns the Chronicle, Redstone and Chainlink median, without calling uniswap
         vm.mockCall(redstoneSource, abi.encodeWithSignature("latestRoundData()"),abi.encode(
-            1,          // same as real call
-            1_003e8,    // price -- mocked
-            1738000379, // same as real call
-            1738000379, // same as real call
-            1           // same as real call
+            1,               // same as real call
+            1_003e8,         // price -- mocked
+            block.timestamp, // age, mocked to now to avoid stale price errors 
+            block.timestamp, // same as real call
+            1                // same as real call
         ));
         vm.expectCall(redstoneSource, abi.encodeWithSignature("latestRoundData()"));
         vm.mockCall(chainlinkSource,   abi.encodeWithSignature("latestRoundData()"),abi.encode(
-            129127208515966867300 ,
-            1_000e8 , // price -- mocked
-            1738000480 ,
-            1738000499 ,
+            129127208515966867300,
+            1_000e8,         // price -- mocked
+            block.timestamp, // age, mocked to now to avoid stale price errors
+            block.timestamp, // age, mocked to now to avoid stale price errors
             129127208515966867300
         ));
         vm.expectCall(chainlinkSource, abi.encodeWithSignature("latestRoundData()"));
         vm.mockCall(chronicleSource,   abi.encodeWithSignature("tryReadWithAge()"),abi.encode(
-            true,      // same as from real call
-            1_002e18,  // price -- mocked
-            1737996515 // same as from real call
+            true,           // same as from real call
+            1_002e18,       // price -- mocked
+            block.timestamp // age, mocked to now to avoid stale price errors
         ));
         vm.expectCall(chronicleSource, abi.encodeWithSignature("tryReadWithAge()"));
         vm.mockCallRevert(uniswapPool, abi.encodeWithSignature("observe(uint32[])", secondsAgo), bytes("uniswap should not be called"));
@@ -414,25 +414,25 @@ contract SparkEthereum_20250206Test is SparkTestBase {
 
         // A price query with serious divergence between Chronicle and Chainlink still returns the three source median, without calling uniswap
         vm.mockCall(redstoneSource, abi.encodeWithSignature("latestRoundData()"),abi.encode(
-            1,          // same as real call
-            3e8,        // price -- mocked
-            1738000379, // same as real call
-            1738000379, // same as real call
-            1           // same as real call
+            1,               // same as real call
+            3e8,             // price -- mocked
+            block.timestamp, // age, mocked to now to avoid stale price errors
+            block.timestamp, // age, mocked to now to avoid stale price errors
+            1                // same as real call
         ));
         vm.expectCall(redstoneSource, abi.encodeWithSignature("latestRoundData()"));
         vm.mockCall(chainlinkSource,   abi.encodeWithSignature("latestRoundData()"),abi.encode(
-            129127208515966867300 ,
-            1_000e8 , // price -- mocked
-            1738000480 ,
-            1738000499 ,
+            129127208515966867300,
+            1_000e8,               // price -- mocked
+            block.timestamp,       // age, mocked to now to avoid stale price errors ,
+            block.timestamp,       // age, mocked to now to avoid stale price errors ,
             129127208515966867300
         ));
         vm.expectCall(chainlinkSource, abi.encodeWithSignature("latestRoundData()"));
         vm.mockCall(chronicleSource,   abi.encodeWithSignature("tryReadWithAge()"),abi.encode(
-            true,      // same as from real call
-            99_000e18, // price -- mocked
-            1737996515 // same as from real call
+            true,           // same as from real call
+            99_000e18,      // price -- mocked
+            block.timestamp // age, mocked to now to avoid stale price errors // same as from real call
         ));
         vm.expectCall(chronicleSource, abi.encodeWithSignature("tryReadWithAge()"));
         vm.mockCallRevert(uniswapPool, abi.encodeWithSignature("observe(uint32[])", secondsAgo), bytes("uniswap should not be called"));
@@ -472,16 +472,16 @@ contract SparkEthereum_20250206Test is SparkTestBase {
         // A normal price query without divergence between Chronicle and Chainlink returns the median between the two, without calling uniswap
         vm.mockCall(chainlinkSource, abi.encodeWithSignature("latestRoundData()"),abi.encode(
             129127208515966867300 ,
-            1_000e8 , // price -- mocked
-            1738000480 ,
-            1738000499 ,
+            1_000e8,         // price -- mocked
+            block.timestamp, // age, mocked to now to avoid stale price errors // same as from real call
+            block.timestamp, // age, mocked to now to avoid stale price errors // same as from real call
             129127208515966867300
         ));
         vm.expectCall(chainlinkSource, abi.encodeWithSignature("latestRoundData()"));
         vm.mockCall(chronicleSource,   abi.encodeWithSignature("tryReadWithAge()"),abi.encode(
-            true,      // same as from real call
-            1_002e18,   // price -- mocked
-            1737996515 // same as from real call
+            true,           // same as from real call
+            1_002e18,       // price -- mocked
+            block.timestamp // age, mocked to now to avoid stale price errors // same as from real call
         ));
         vm.expectCall(chronicleSource,   abi.encodeWithSignature("tryReadWithAge()"));
         vm.mockCallRevert(uniswapPool,   abi.encodeWithSignature("observe(uint32[])", secondsAgo), bytes("uniswap should not be called"));
@@ -492,20 +492,22 @@ contract SparkEthereum_20250206Test is SparkTestBase {
         vm.mockCall(chainlinkSource, abi.encodeWithSignature("latestRoundData()"),abi.encode(
             129127208515966867300, // same as from real call
             100e8,                 // price -- mocked
-            1738000480,            // same as from real call
-            1738000499,            // same as from real call
+            block.timestamp,       // age, mocked to now to avoid stale price errors
+            block.timestamp,       // age, mocked to now to avoid stale price errors
             129127208515966867300  // same as from real call
         ));
         vm.expectCall(chainlinkSource, abi.encodeWithSignature("latestRoundData()"));
         vm.mockCall(chronicleSource,   abi.encodeWithSignature("tryReadWithAge()"),abi.encode(
-            true,      // same as from real call
-            10_002e18, // price -- mocked
-            1737996515 // same as from real call
+            true,           // same as from real call
+            10_002e18,      // price -- mocked
+            block.timestamp // age, mocked to now to avoid stale price errors
         ));
         vm.expectCall(chronicleSource, abi.encodeWithSignature("tryReadWithAge()"));
-        // not mocking this since mocked values above guarantee the uniswap pricefeed is the middle one
+        // hard-coded value from arbitrary invocation, resolves to price below
+        vm.mockCall(uniswapPool,       abi.encodeWithSignature("observe(uint32[])", secondsAgo), bytes( hex'000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000154f13d8762f0000000000000000000000000000000000000000000000000000154f3ddc23db00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000001ef2d176aa46749b778f6ecad0000000000000000000000000000000000000001ef2d47ebfdebcc9a40a211ad'
+        ));
         vm.expectCall(uniswapPool,     abi.encodeWithSignature("observe(uint32[])", secondsAgo));
-        assertEq(oracle.getAssetPrice(asset), 3_085.28998500e8);
+        assertEq(oracle.getAssetPrice(asset), 3_139.75501600e8);
         vm.clearMockedCalls();
     }
 
