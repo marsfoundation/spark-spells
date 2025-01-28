@@ -16,16 +16,16 @@ import { SparkPayloadBase } from "../../SparkPayloadBase.sol";
 contract SparkBase_20250206 is SparkPayloadBase {
 
     address public immutable FLUID_SUSDS_VAULT      = 0xf62e339f21d8018940f188F6987Bcdf02A849619;
-    uint256 public immutable FLUID_SUDS_MAX_DEPOSIT = 10_000_000e18;
-    uint256 public immutable FLUID_SUDS_MAX_SLOPE   = 5_000_000e18 / uint256(1 days);
+    uint256 public immutable FLUID_SUSDS_MAX_DEPOSIT = 10_000_000e18;
+    uint256 public immutable FLUID_SUSDS_MAX_SLOPE   = 5_000_000e18 / uint256(1 days);
 
     uint256 public immutable NEW_TIMELOCK = 1 days;
 
     function execute() external { 
         _onboardERC4626Vault(
             FLUID_SUSDS_VAULT,
-            FLUID_SUDS_MAX_DEPOSIT,
-            FLUID_SUDS_MAX_SLOPE
+            FLUID_SUSDS_MAX_DEPOSIT,
+            FLUID_SUSDS_MAX_SLOPE
         );
         IMetaMorpho(Base.MORPHO_VAULT_SUSDC).submitTimelock(NEW_TIMELOCK);
     }
