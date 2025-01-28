@@ -23,18 +23,27 @@ interface IPriceAggregatorLike {
     function uniswapPool() external returns(address);
 }
 
+interface IwstETHOracleLike {
+    function steth()   external returns(address);
+    function ethSource()    external returns(address);
+}
+
 contract SparkEthereum_20250206Test is SparkTestBase {
     using DomainHelpers for Domain;
 
     address public immutable MAINNET_FLUID_SUSDS_VAULT = 0x2BBE31d63E6813E3AC858C04dae43FB2a72B0D11;
     address public immutable BASE_FLUID_SUSDS_VAULT    = 0xf62e339f21d8018940f188F6987Bcdf02A849619;
 
-    address public immutable PREVIOUS_WETH_PRICEFEED = 0xf07ca0e66A798547E4CB3899EC592e1E99Ef6Cb3;
-    address public immutable NEW_WETH_PRICEFEED      = 0x2750e4CB635aF1FCCFB10C0eA54B5b5bfC2759b6;
-    address public immutable WETH_CHAINLINK_SOURCE   = 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
-    address public immutable WETH_CHRONICLE_SOURCE   = 0x46ef0071b1E2fF6B42d36e5A177EA43Ae5917f4E;
-    address public immutable WETH_REDSTONE_SOURCE    = 0x67F6838e58859d612E4ddF04dA396d6DABB66Dc4;
-    address public immutable WETH_UNISWAP_SOURCE     = 0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640;
+    // ETH/USD pricefeed previously used as the eth price source for wstETH
+    address public immutable AGGOR_ETH_USD_2       = 0x00480CD3ed33de45555410BA71b2F932A14b1Cf2;
+    // ETH/USD pricefeed previously used for WETH
+    address public immutable AGGOR_ETH_USD_1       = 0xf07ca0e66A798547E4CB3899EC592e1E99Ef6Cb3;
+    // Chronicle_Aggor_ETH_USD, newly deployed
+    address public immutable NEW_WETH_PRICEFEED    = 0x2750e4CB635aF1FCCFB10C0eA54B5b5bfC2759b6;
+    address public immutable WETH_CHAINLINK_SOURCE = 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
+    address public immutable WETH_CHRONICLE_SOURCE = 0x46ef0071b1E2fF6B42d36e5A177EA43Ae5917f4E;
+    address public immutable WETH_REDSTONE_SOURCE  = 0x67F6838e58859d612E4ddF04dA396d6DABB66Dc4;
+    address public immutable WETH_UNISWAP_SOURCE   = 0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640;
 
     address public immutable PREVIOUS_CBBTC_PRICEFEED = 0xb9ED698c9569c5abea716D1E64c089610a3768B6;
     address public immutable NEW_CBBTC_PRICEFEED      = 0x4219aA1A99f3fe90C2ACB97fCbc1204f6485B537;
@@ -42,13 +51,19 @@ contract SparkEthereum_20250206Test is SparkTestBase {
     address public immutable CBBTC_CHRONICLE_SOURCE   = 0x24C392CDbF32Cf911B258981a66d5541d85269ce;
     address public immutable CBBTC_REDSTONE_SOURCE    = 0xAB7f623fb2F6fea6601D4350FA0E2290663C28Fc;
 
+    address public immutable PREVIOUS_WSTETH_PRICEFEED = 0xf77e132799DBB0d83A4fB7df10DA04849340311A;
+    // deployed by Wonderland, pointing to STETH address below and NEW_WETH_PRICEFEED
+    address public immutable NEW_WSTETH_PRICEFEED      = 0xE98d51fa014C7Ed68018DbfE6347DE9C3f39Ca39;
+    address public immutable STETH                     = 0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84;
+
+
     constructor() {
         id = '20250206';
     }
 
     function setUp() public {
         setupDomains({
-            mainnetForkBlock: 21717490,
+            mainnetForkBlock: 21725037,
             baseForkBlock:    25607987,
             gnosisForkBlock:  38037888
         });
@@ -128,11 +143,11 @@ contract SparkEthereum_20250206Test is SparkTestBase {
         loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
         IAaveOracle oracle = IAaveOracle(Ethereum.AAVE_ORACLE);
 
-        assertEq(oracle.getSourceOfAsset(Ethereum.WETH), PREVIOUS_WETH_PRICEFEED);
+        assertEq(oracle.getSourceOfAsset(Ethereum.WETH), AGGOR_ETH_USD_1);
 
-        assertEq(IPriceAggregatorLike(PREVIOUS_WETH_PRICEFEED).chainlink(),   WETH_CHAINLINK_SOURCE);
-        assertEq(IPriceAggregatorLike(PREVIOUS_WETH_PRICEFEED).chronicle(),   WETH_CHRONICLE_SOURCE);
-        assertEq(IPriceAggregatorLike(PREVIOUS_WETH_PRICEFEED).uniswapPool(), WETH_UNISWAP_SOURCE);
+        assertEq(IPriceAggregatorLike(AGGOR_ETH_USD_1).chainlink(),   WETH_CHAINLINK_SOURCE);
+        assertEq(IPriceAggregatorLike(AGGOR_ETH_USD_1).chronicle(),   WETH_CHRONICLE_SOURCE);
+        assertEq(IPriceAggregatorLike(AGGOR_ETH_USD_1).uniswapPool(), WETH_UNISWAP_SOURCE);
 
         uint256 WETHPrice = oracle.getAssetPrice(Ethereum.WETH);
         // sanity checks on pre-existing price
@@ -163,6 +178,30 @@ contract SparkEthereum_20250206Test is SparkTestBase {
             uniswapPool: WETH_UNISWAP_SOURCE,
             redstoneSource: WETH_REDSTONE_SOURCE
         });
+    }
+
+    function test_ETHEREUM_Sparklend_wstETH_Pricefeed() public onChain(ChainIdUtils.Ethereum()) {
+        loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
+        IAaveOracle oracle = IAaveOracle(Ethereum.AAVE_ORACLE);
+
+        assertEq(oracle.getSourceOfAsset(Ethereum.WSTETH), PREVIOUS_WSTETH_PRICEFEED);
+
+        assertEq(IwstETHOracleLike(PREVIOUS_WSTETH_PRICEFEED).steth(),     STETH);
+        assertEq(IwstETHOracleLike(PREVIOUS_WSTETH_PRICEFEED).ethSource(), AGGOR_ETH_USD_2);
+
+        assertEq(IwstETHOracleLike(NEW_WSTETH_PRICEFEED).steth(),     STETH);
+        assertEq(IwstETHOracleLike(NEW_WSTETH_PRICEFEED).ethSource(), NEW_WETH_PRICEFEED);
+
+        uint256 WSTETHPrice = oracle.getAssetPrice(Ethereum.WSTETH);
+        // sanity checks on pre-existing price
+        assertEq(WSTETHPrice,   3_741.84575521e8);
+
+        executeAllPayloadsAndBridges();
+
+        // sanity check on new price
+        uint256 WSTETHPriceAfter  = oracle.getAssetPrice(Ethereum.WSTETH);
+        assertEq(oracle.getSourceOfAsset(Ethereum.WSTETH), NEW_WSTETH_PRICEFEED);
+        assertEq(WSTETHPriceAfter,  3_734.90294702e8);
     }
 
     function test_ETHEREUM_Sparklend_cbBTC_Pricefeed() public onChain(ChainIdUtils.Ethereum()) {
