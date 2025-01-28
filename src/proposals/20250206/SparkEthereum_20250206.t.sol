@@ -9,6 +9,7 @@ import { IRateLimits }           from 'spark-alm-controller/src/interfaces/IRate
 import { RateLimitHelpers }      from 'spark-alm-controller/src/RateLimitHelpers.sol';
 import { Domain, DomainHelpers } from "xchain-helpers/testing/Domain.sol";
 import { DataTypes }             from 'sparklend-v1-core/contracts/protocol/libraries/types/DataTypes.sol';
+import { IAaveOracle }           from 'sparklend-v1-core/contracts/interfaces/IAaveOracle.sol';
 
 import { SparkTestBase } from 'src/SparkTestBase.sol';
 import { ChainIdUtils }  from 'src/libraries/ChainId.sol';
@@ -19,6 +20,13 @@ contract SparkEthereum_20250206Test is SparkTestBase {
 
     address public immutable MAINNET_FLUID_SUSDS_VAULT = 0x2BBE31d63E6813E3AC858C04dae43FB2a72B0D11;
     address public immutable BASE_FLUID_SUSDS_VAULT    = 0xf62e339f21d8018940f188F6987Bcdf02A849619;
+
+    address public immutable PREVIOUS_WETH_PRICEFEED = 0xf07ca0e66A798547E4CB3899EC592e1E99Ef6Cb3;
+    address public immutable NEW_WETH_PRICEFEED      = 0x2750e4CB635aF1FCCFB10C0eA54B5b5bfC2759b6;
+    address public immutable WETH_CHAINLINK_SOURCE   = 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
+    address public immutable WETH_CHRONICLE_SOURCE   = 0x46ef0071b1E2fF6B42d36e5A177EA43Ae5917f4E;
+    address public immutable WETH_REDSTONE_SOURCE    = 0x67F6838e58859d612E4ddF04dA396d6DABB66Dc4;
+    address public immutable WETH_UNISWAP_SOURCE     = 0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640;
 
     constructor() {
         id = '20250206';
@@ -100,6 +108,120 @@ contract SparkEthereum_20250206Test is SparkTestBase {
         wbtcConfig.liquidationThreshold        = 50_00;
 
         _validateReserveConfig(wbtcConfig, allConfigsAfter);
+    }
+
+    function test_ETHEREUM_Sparklend_WETH_Pricefeed() public onChain(ChainIdUtils.Ethereum()) {
+        loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
+        IAaveOracle oracle = IAaveOracle(Ethereum.AAVE_ORACLE);
+        // parameter for mocked uniswap calls
+        uint32[] memory secondsAgo = new uint32[](2);
+        secondsAgo[0] = 3600;
+        secondsAgo[1] = 0;
+
+        assertEq(oracle.getSourceOfAsset(Ethereum.WETH),   PREVIOUS_WETH_PRICEFEED);
+
+        uint256 WETHPrice = oracle.getAssetPrice(Ethereum.WETH);
+        // sanity checks on pre-existing price
+        assertEq(WETHPrice,   3_081.90250000e8);
+
+        // A normal price query without divergence between Chronicle and Chainlink returns the median between the two, without calling uniswap
+        vm.mockCall(WETH_CHAINLINK_SOURCE, abi.encodeWithSignature("latestRoundData()"),abi.encode(
+            129127208515966867300 ,
+            1_000e8 , // price -- mocked
+            1738000480 ,
+            1738000499 ,
+            129127208515966867300
+        ));
+        vm.expectCall(WETH_CHAINLINK_SOURCE, abi.encodeWithSignature("latestRoundData()"));
+        vm.mockCall(WETH_CHRONICLE_SOURCE,   abi.encodeWithSignature("tryReadWithAge()"),abi.encode(
+            true,      // same as from real call
+            1_002e18,   // price -- mocked
+            1737996515 // same as from real call
+        ));
+        vm.expectCall(WETH_CHRONICLE_SOURCE,   abi.encodeWithSignature("tryReadWithAge()"));
+        vm.mockCallRevert(WETH_UNISWAP_SOURCE, abi.encodeWithSignature("observe(uint32[])", secondsAgo), bytes("uniswap should not be called"));
+        assertEq(oracle.getAssetPrice(Ethereum.WETH), 1_001e8);
+        vm.clearMockedCalls();
+
+        // A price query with serious divergence between Chronicle and Chainlink returns median with the uniswap TWAP as a tiebreaker
+        vm.mockCall(WETH_CHAINLINK_SOURCE, abi.encodeWithSignature("latestRoundData()"),abi.encode(
+            129127208515966867300, // same as from real call
+            100e8,                 // price -- mocked
+            1738000480,            // same as from real call
+            1738000499,            // same as from real call
+            129127208515966867300  // same as from real call
+        ));
+        vm.expectCall(WETH_CHAINLINK_SOURCE, abi.encodeWithSignature("latestRoundData()"));
+        vm.mockCall(WETH_CHRONICLE_SOURCE,   abi.encodeWithSignature("tryReadWithAge()"),abi.encode(
+            true,      // same as from real call
+            10_002e18, // price -- mocked
+            1737996515 // same as from real call
+        ));
+        vm.expectCall(WETH_CHRONICLE_SOURCE, abi.encodeWithSignature("tryReadWithAge()"));
+        // not mocking this since mocked values above guarantee the uniswap pricefeed is the middle one
+        vm.expectCall(WETH_UNISWAP_SOURCE,   abi.encodeWithSignature("observe(uint32[])", secondsAgo));
+        assertEq(oracle.getAssetPrice(Ethereum.WETH), 3_085.28998500e8);
+        vm.clearMockedCalls();
+
+        executeAllPayloadsAndBridges();
+
+        // sanity check on new price
+        uint256 WETHPriceAfter  = oracle.getAssetPrice(Ethereum.WETH);
+        assertEq(oracle.getSourceOfAsset(Ethereum.WETH), NEW_WETH_PRICEFEED);
+        assertEq(WETHPriceAfter,  3_078.82000000e8);
+
+        // A normal price query without divergence returns the Chronicle, Redstone and Chainlink median, without calling uniswap
+        vm.mockCall(WETH_REDSTONE_SOURCE, abi.encodeWithSignature("latestRoundData()"),abi.encode(
+            1,          // same as real call
+            1_003e8,    // price -- mocked
+            1738000379, // same as real call
+            1738000379, // same as real call
+            1           // same as real call
+        ));
+        vm.expectCall(WETH_CHAINLINK_SOURCE, abi.encodeWithSignature("latestRoundData()"));
+        vm.mockCall(WETH_CHAINLINK_SOURCE,   abi.encodeWithSignature("latestRoundData()"),abi.encode(
+            129127208515966867300 ,
+            1_000e8 , // price -- mocked
+            1738000480 ,
+            1738000499 ,
+            129127208515966867300
+        ));
+        vm.expectCall(WETH_CHAINLINK_SOURCE, abi.encodeWithSignature("latestRoundData()"));
+        vm.mockCall(WETH_CHRONICLE_SOURCE,   abi.encodeWithSignature("tryReadWithAge()"),abi.encode(
+            true,      // same as from real call
+            1_002e18,  // price -- mocked
+            1737996515 // same as from real call
+        ));
+        vm.expectCall(WETH_CHRONICLE_SOURCE,   abi.encodeWithSignature("tryReadWithAge()"));
+        vm.mockCallRevert(WETH_UNISWAP_SOURCE, abi.encodeWithSignature("observe(uint32[])", secondsAgo), bytes("uniswap should not be called"));
+        assertEq(oracle.getAssetPrice(Ethereum.WETH), 1_002e8);
+        vm.clearMockedCalls();
+
+        // A price query with serious divergence between Chronicle and Chainlink still returns the three source median, without calling uniswap
+        vm.mockCall(WETH_REDSTONE_SOURCE, abi.encodeWithSignature("latestRoundData()"),abi.encode(
+            1,          // same as real call
+            3e8,        // price -- mocked
+            1738000379, // same as real call
+            1738000379, // same as real call
+            1           // same as real call
+        ));
+        vm.expectCall(WETH_CHAINLINK_SOURCE, abi.encodeWithSignature("latestRoundData()"));
+        vm.mockCall(WETH_CHAINLINK_SOURCE,   abi.encodeWithSignature("latestRoundData()"),abi.encode(
+            129127208515966867300 ,
+            1_000e8 , // price -- mocked
+            1738000480 ,
+            1738000499 ,
+            129127208515966867300
+        ));
+        vm.expectCall(WETH_CHAINLINK_SOURCE, abi.encodeWithSignature("latestRoundData()"));
+        vm.mockCall(WETH_CHRONICLE_SOURCE,   abi.encodeWithSignature("tryReadWithAge()"),abi.encode(
+            true,      // same as from real call
+            99_000e18, // price -- mocked
+            1737996515 // same as from real call
+        ));
+        vm.expectCall(WETH_CHRONICLE_SOURCE,   abi.encodeWithSignature("tryReadWithAge()"));
+        vm.mockCallRevert(WETH_UNISWAP_SOURCE, abi.encodeWithSignature("observe(uint32[])", secondsAgo), bytes("uniswap should not be called"));
+        assertEq(oracle.getAssetPrice(Ethereum.WETH), 1_000e8);
     }
 
     function test_BASE_SLL_FluidsUSDSOnboardingSideEffects() public onChain(ChainIdUtils.Base()) {
