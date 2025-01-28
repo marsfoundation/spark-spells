@@ -29,6 +29,12 @@ contract SparkEthereum_20250206Test is SparkTestBase {
     address public immutable WETH_REDSTONE_SOURCE    = 0x67F6838e58859d612E4ddF04dA396d6DABB66Dc4;
     address public immutable WETH_UNISWAP_SOURCE     = 0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640;
 
+    address public immutable PREVIOUS_CBBTC_PRICEFEED = 0xb9ED698c9569c5abea716D1E64c089610a3768B6;
+    address public immutable NEW_CBBTC_PRICEFEED      = 0x4219aA1A99f3fe90C2ACB97fCbc1204f6485B537;
+    address public immutable CBBTC_CHAINLINK_SOURCE   = 0xF4030086522a5bEEa4988F8cA5B36dbC97BeE88c;
+    address public immutable CBBTC_CHRONICLE_SOURCE   = 0x24C392CDbF32Cf911B258981a66d5541d85269ce;
+    address public immutable CBBTC_REDSTONE_SOURCE    = 0xAB7f623fb2F6fea6601D4350FA0E2290663C28Fc;
+
     constructor() {
         id = '20250206';
     }
@@ -121,7 +127,7 @@ contract SparkEthereum_20250206Test is SparkTestBase {
         // sanity checks on pre-existing price
         assertEq(WETHPrice,   3_081.90250000e8);
 
-        _assertPreviousPricefeedBehaviour({
+        _assertPreviousETHPricefeedBehaviour({
             asset: Ethereum.WETH,
             chainlinkSource: WETH_CHAINLINK_SOURCE,
             chronicleSource: WETH_CHRONICLE_SOURCE,
@@ -143,6 +149,39 @@ contract SparkEthereum_20250206Test is SparkTestBase {
             redstoneSource: WETH_REDSTONE_SOURCE
         });
     }
+
+    function test_ETHEREUM_Sparklend_cbBTC_Pricefeed() public onChain(ChainIdUtils.Ethereum()) {
+        loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
+        IAaveOracle oracle = IAaveOracle(Ethereum.AAVE_ORACLE);
+
+        assertEq(oracle.getSourceOfAsset(Ethereum.CBBTC), PREVIOUS_CBBTC_PRICEFEED);
+
+        uint256 CBBTCPrice = oracle.getAssetPrice(Ethereum.CBBTC);
+        // sanity checks on pre-existing price
+        assertEq(CBBTCPrice,   99_685.25000000e8);
+
+        _assertPreviousBTCPricefeedBehaviour({
+            asset: Ethereum.CBBTC,
+            chainlinkSource: CBBTC_CHAINLINK_SOURCE,
+            chronicleSource: CBBTC_CHRONICLE_SOURCE
+        });
+
+        executeAllPayloadsAndBridges();
+
+        // sanity check on new price
+        uint256 CBBTCPriceAfter  = oracle.getAssetPrice(Ethereum.CBBTC);
+        assertEq(oracle.getSourceOfAsset(Ethereum.CBBTC), NEW_CBBTC_PRICEFEED);
+        assertEq(CBBTCPriceAfter, 99_389.82364983e8);
+
+        _assertNewPricefeedBehaviour({
+            asset: Ethereum.CBBTC,
+            chainlinkSource: CBBTC_CHAINLINK_SOURCE,
+            chronicleSource: CBBTC_CHRONICLE_SOURCE,
+            uniswapPool: address(0), // not relevant since previous feed didnt use it
+            redstoneSource: CBBTC_REDSTONE_SOURCE
+        });
+    }
+
 
     function test_BASE_SLL_FluidsUSDSOnboarding() public onChain(ChainIdUtils.Base()) {
         ForeignController controller = ForeignController(Base.ALM_CONTROLLER);
@@ -271,7 +310,24 @@ contract SparkEthereum_20250206Test is SparkTestBase {
         vm.clearMockedCalls();
     }
 
-    function _assertPreviousPricefeedBehaviour(
+    function _assertPreviousBTCPricefeedBehaviour(
+        address asset,
+        address chainlinkSource,
+        address chronicleSource
+    ) internal {
+        IAaveOracle oracle = IAaveOracle(Ethereum.AAVE_ORACLE);
+
+        // Price queries are forwarded to chronicle
+        vm.mockCallRevert(chainlinkSource, abi.encodeWithSignature("latestRoundData()"), bytes('chainlink should not be called'));
+        vm.mockCall(chronicleSource,   abi.encodeWithSignature("latestAnswer()"), abi.encode(
+            1_000e18   // price -- mocked
+        ));
+        vm.expectCall(chronicleSource,   abi.encodeWithSignature("latestAnswer()"));
+        assertEq(oracle.getAssetPrice(asset), 1_000e8);
+        vm.clearMockedCalls();
+    }
+
+    function _assertPreviousETHPricefeedBehaviour(
         address asset,
         address chainlinkSource,
         address chronicleSource,
