@@ -48,7 +48,7 @@ contract SparkEthereum_20250206Test is SparkTestBase {
     address public immutable AGGOR_ETH_USD_1       = 0xf07ca0e66A798547E4CB3899EC592e1E99Ef6Cb3;
     // ETH/USD pricefeed previously used as the eth price source for wstETH
     address public immutable AGGOR_ETH_USD_2       = 0x00480CD3ed33de45555410BA71b2F932A14b1Cf2;
-    // ETH/USD pricefeed previously used as the eth price source for wstETH
+    // ETH/USD pricefeed previously used as the eth price source for rETH
     address public immutable AGGOR_ETH_USD_3       = 0x69115a2826Eb47FE9DFD1d5CA8D8642697c8b68A;
     // ETH/USD pricefeed previously used as the eth price source for weETH
     address public immutable AGGOR_ETH_USD_4       = 0xb20A1374EfCaFa32F701Ab14316fA2E5b3400eD5;
@@ -472,11 +472,11 @@ contract SparkEthereum_20250206Test is SparkTestBase {
 
         // A normal price query without divergence between Chronicle and Chainlink returns the median between the two, without calling uniswap
         vm.mockCall(chainlinkSource, abi.encodeWithSignature("latestRoundData()"),abi.encode(
-            129127208515966867300 , // roundId from real call
-            1_000e8,         // price -- mocked
-            block.timestamp, // age, mocked to now to avoid stale price errors // same as from real call
-            block.timestamp, // age, mocked to now to avoid stale price errors // same as from real call
-            129127208515966867300 // roundId from real call
+            129127208515966867300, // roundId from real call
+            1_000e8,               // price -- mocked
+            block.timestamp,       // age, mocked to now to avoid stale price errors // same as from real call
+            block.timestamp,       // age, mocked to now to avoid stale price errors // same as from real call
+            129127208515966867300  // roundId from real call
         ));
         vm.expectCall(chainlinkSource, abi.encodeWithSignature("latestRoundData()"));
         vm.mockCall(chronicleSource,   abi.encodeWithSignature("tryReadWithAge()"),abi.encode(
