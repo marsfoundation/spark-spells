@@ -10,6 +10,7 @@ import { RateLimitHelpers }      from 'spark-alm-controller/src/RateLimitHelpers
 import { Domain, DomainHelpers } from "xchain-helpers/testing/Domain.sol";
 import { DataTypes }             from 'sparklend-v1-core/contracts/protocol/libraries/types/DataTypes.sol';
 import { IAaveOracle }           from 'sparklend-v1-core/contracts/interfaces/IAaveOracle.sol';
+import { IMetaMorpho }           from 'lib/metamorpho/src/interfaces/IMetaMorpho.sol';
 
 import { SparkTestBase } from 'src/SparkTestBase.sol';
 import { ChainIdUtils }  from 'src/libraries/ChainId.sol';
@@ -224,7 +225,7 @@ contract SparkEthereum_20250206Test is SparkTestBase {
         assertEq(oracle.getAssetPrice(Ethereum.WETH), 1_000e8);
     }
 
-    function test_BASE_SLL_FluidsUSDSOnboardingSideEffects() public onChain(ChainIdUtils.Base()) {
+    function test_BASE_SLL_FluidsUSDSOnboarding() public onChain(ChainIdUtils.Base()) {
         ForeignController controller = ForeignController(Base.ALM_CONTROLLER);
         IRateLimits rateLimits       = IRateLimits(Base.ALM_RATE_LIMITS);
         uint256 depositAmount        = 1_000_000e18;
@@ -278,7 +279,9 @@ contract SparkEthereum_20250206Test is SparkTestBase {
 
     // TODO: question, is the timeout local to the USDC asset or global to the vault? 
     function test_BASE_IncreaseMorphoTimeout() public onChain(ChainIdUtils.Base()) {
+        assertEq(IMetaMorpho(Base.MORPHO_VAULT_SUSDC).timelock(), 0);
         executeAllPayloadsAndBridges();
+        assertEq(IMetaMorpho(Base.MORPHO_VAULT_SUSDC).timelock(), 86400);
     }
 
 }
