@@ -15,7 +15,7 @@ import { SparkPayloadBase } from "../../SparkPayloadBase.sol";
  */
 contract SparkBase_20250206 is SparkPayloadBase {
 
-    address public immutable FLUID_SUSDS_VAULT      = 0xf62e339f21d8018940f188F6987Bcdf02A849619;
+    address public immutable FLUID_SUSDS_VAULT       = 0xf62e339f21d8018940f188F6987Bcdf02A849619;
     uint256 public immutable FLUID_SUSDS_MAX_DEPOSIT = 10_000_000e18;
     uint256 public immutable FLUID_SUSDS_MAX_SLOPE   = 5_000_000e18 / uint256(1 days);
 

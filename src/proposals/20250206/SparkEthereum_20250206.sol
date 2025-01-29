@@ -6,7 +6,8 @@ import { SparkPayloadEthereum, IEngine, EngineFlags } from "../../SparkPayloadEt
 
 /**
  * @title  Feb 06, 2025 Spark Ethereum Proposal
- * @notice Spark Liquidity Layer: Onboard Fluid sUSDS
+ * @notice Spark Liquidity Layer: Onboard Fluid sUSDS, adjust WBTC params,
+ *                                update BTC, ETH, and ETH derivatives pricefeeds
  * @author Wonderland
  * Forum:  https://forum.sky.money/t/feb-6-2025-proposed-changes-to-spark-for-upcoming-spell-actual/25888
  * Vote:   https://vote.makerdao.com/polling/QmWCe4JD -- onboard fluid sUSDS
