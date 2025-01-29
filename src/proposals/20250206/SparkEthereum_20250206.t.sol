@@ -8,7 +8,6 @@ import { ForeignController }     from 'spark-alm-controller/src/ForeignControlle
 import { IRateLimits }           from 'spark-alm-controller/src/interfaces/IRateLimits.sol';
 import { RateLimitHelpers }      from 'spark-alm-controller/src/RateLimitHelpers.sol';
 import { Domain, DomainHelpers } from "xchain-helpers/testing/Domain.sol";
-import { DataTypes }             from 'sparklend-v1-core/contracts/protocol/libraries/types/DataTypes.sol';
 import { IAaveOracle }           from 'sparklend-v1-core/contracts/interfaces/IAaveOracle.sol';
 import { IMetaMorpho }           from 'lib/metamorpho/src/interfaces/IMetaMorpho.sol';
 
@@ -21,6 +20,9 @@ interface IPriceAggregatorLike {
     function redstone()    external returns(address);
     function chainlink()   external returns(address);
     function uniswapPool() external returns(address);
+    function getAgeThreshold() external returns(uint256);
+    function ageThreshold() external returns(uint256);
+    function decimals() external returns(uint8);
 }
 
 interface IwstETHOracleLike {
@@ -79,6 +81,9 @@ contract SparkEthereum_20250206Test is SparkTestBase {
     address public immutable PREVIOUS_RETH_PRICEFEED = 0x11af58f13419fD3ce4d3A90372200c80Bc62f140;
     // deployed by Wonderland, pointing to RETH address in registry and NEW_WETH_PRICEFEED
     address public immutable NEW_RETH_PRICEFEED      = 0xFDdf8D19D092839A26b31365c927cA236B5086cf;
+
+    uint256 public immutable ORACLE_AGE_THRESHOLD = 25 hours;
+    uint8 public immutable ORACLE_DECIMALS        = 8;
 
     constructor() {
         id = '20250206';
@@ -172,6 +177,9 @@ contract SparkEthereum_20250206Test is SparkTestBase {
         assertEq(IPriceAggregatorLike(AGGOR_ETH_USD_1).chronicle(),   WETH_CHRONICLE_SOURCE);
         assertEq(IPriceAggregatorLike(AGGOR_ETH_USD_1).uniswapPool(), WETH_UNISWAP_SOURCE);
 
+        assertEq(IPriceAggregatorLike(AGGOR_ETH_USD_1).ageThreshold(), ORACLE_AGE_THRESHOLD);
+        assertEq(IPriceAggregatorLike(AGGOR_ETH_USD_1).decimals(),     ORACLE_DECIMALS);
+
         uint256 WETHPrice = oracle.getAssetPrice(Ethereum.WETH);
         // sanity checks on pre-existing price
         assertEq(WETHPrice,   3_147.20000000e8);
@@ -189,6 +197,9 @@ contract SparkEthereum_20250206Test is SparkTestBase {
         uint256 WETHPriceAfter  = oracle.getAssetPrice(Ethereum.WETH);
         assertEq(oracle.getSourceOfAsset(Ethereum.WETH), NEW_WETH_PRICEFEED);
         assertEq(WETHPriceAfter,                         3_148.81000000e8);
+
+        assertEq(IPriceAggregatorLike(NEW_WETH_PRICEFEED).getAgeThreshold(), ORACLE_AGE_THRESHOLD);
+        assertEq(IPriceAggregatorLike(NEW_WETH_PRICEFEED).decimals(),        ORACLE_DECIMALS);
 
         assertEq(IPriceAggregatorLike(NEW_WETH_PRICEFEED).chainlink(), WETH_CHAINLINK_SOURCE);
         assertEq(IPriceAggregatorLike(NEW_WETH_PRICEFEED).chronicle(), WETH_CHRONICLE_SOURCE);
@@ -284,6 +295,10 @@ contract SparkEthereum_20250206Test is SparkTestBase {
         assertEq(IPriceAggregatorLike(PREVIOUS_CBBTC_PRICEFEED).chainlink(), CBBTC_CHAINLINK_SOURCE);
         assertEq(IPriceAggregatorLike(PREVIOUS_CBBTC_PRICEFEED).chronicle(), CBBTC_CHRONICLE_SOURCE);
 
+        // can't assert on age threshold since previous oracle didn't implement
+        // it, only forwarding the chronicle value with chainlink's decimals
+        assertEq(IPriceAggregatorLike(PREVIOUS_CBBTC_PRICEFEED).decimals(), ORACLE_DECIMALS);
+
         uint256 CBBTCPrice = oracle.getAssetPrice(Ethereum.CBBTC);
         // sanity checks on pre-existing price
         assertEq(CBBTCPrice,   102_128.25500000e8);
@@ -304,6 +319,9 @@ contract SparkEthereum_20250206Test is SparkTestBase {
         assertEq(IPriceAggregatorLike(NEW_CBBTC_PRICEFEED).chainlink(), CBBTC_CHAINLINK_SOURCE);
         assertEq(IPriceAggregatorLike(NEW_CBBTC_PRICEFEED).chronicle(), CBBTC_CHRONICLE_SOURCE);
         assertEq(IPriceAggregatorLike(NEW_CBBTC_PRICEFEED).redstone(),  CBBTC_REDSTONE_SOURCE);
+
+        assertEq(IPriceAggregatorLike(NEW_CBBTC_PRICEFEED).getAgeThreshold(), ORACLE_AGE_THRESHOLD);
+        assertEq(IPriceAggregatorLike(NEW_CBBTC_PRICEFEED).decimals(),        ORACLE_DECIMALS);
 
         _assertNewPricefeedBehaviour({
             asset:           Ethereum.CBBTC,
