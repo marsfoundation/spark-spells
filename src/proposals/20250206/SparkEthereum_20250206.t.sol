@@ -92,11 +92,12 @@ contract SparkEthereum_20250206Test is SparkTestBase {
     function setUp() public {
         setupDomains({
             mainnetForkBlock: 21725315,
-            baseForkBlock:    25607987,
+            baseForkBlock:    25693427,
             gnosisForkBlock:  38037888
         });
-
         deployPayloads();
+
+        chainSpellMetadata[ChainIdUtils.Base()].payload = 0x2DB2f1eE78b4e0ad5AaF44969E2E8f563437f34C;
     }
 
     function test_ETHEREUM_SLL_FluidsUSDSOnboarding() public onChain(ChainIdUtils.Ethereum()) {

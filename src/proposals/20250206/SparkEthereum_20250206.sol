@@ -26,8 +26,7 @@ contract SparkEthereum_20250206 is SparkPayloadEthereum {
     address public immutable rETH_PRICEFEED   = 0xFDdf8D19D092839A26b31365c927cA236B5086cf;
 
     constructor() {
-        // TODO: set to Base address when deployed
-        PAYLOAD_BASE = address(0);
+        PAYLOAD_BASE = 0x2DB2f1eE78b4e0ad5AaF44969E2E8f563437f34C;
     }
 
     function collateralsUpdates() public pure override returns (IEngine.CollateralUpdate[] memory) {
