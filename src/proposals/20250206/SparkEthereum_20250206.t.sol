@@ -91,13 +91,13 @@ contract SparkEthereum_20250206Test is SparkTestBase {
 
     function setUp() public {
         setupDomains({
-            mainnetForkBlock: 21725315,
+            mainnetForkBlock: 21732103,
             baseForkBlock:    25693427,
             gnosisForkBlock:  38037888
         });
-        deployPayloads();
 
-        chainSpellMetadata[ChainIdUtils.Base()].payload = 0x2DB2f1eE78b4e0ad5AaF44969E2E8f563437f34C;
+        chainSpellMetadata[ChainIdUtils.Base()].payload     = 0x2DB2f1eE78b4e0ad5AaF44969E2E8f563437f34C;
+        chainSpellMetadata[ChainIdUtils.Ethereum()].payload = 0xD5c59b7c1DD8D2663b4c826574ed968B2C8329C0;
     }
 
     function test_ETHEREUM_SLL_FluidsUSDSOnboarding() public onChain(ChainIdUtils.Ethereum()) {
@@ -183,7 +183,7 @@ contract SparkEthereum_20250206Test is SparkTestBase {
 
         uint256 WETHPrice = oracle.getAssetPrice(Ethereum.WETH);
         // sanity checks on pre-existing price
-        assertEq(WETHPrice,   3_147.20000000e8);
+        assertEq(WETHPrice, 3_104.38063228e8);
 
         _assertPreviousETHPricefeedBehaviour({
             asset:           Ethereum.WETH,
@@ -197,7 +197,7 @@ contract SparkEthereum_20250206Test is SparkTestBase {
         // sanity check on new price
         uint256 WETHPriceAfter  = oracle.getAssetPrice(Ethereum.WETH);
         assertEq(oracle.getSourceOfAsset(Ethereum.WETH), NEW_WETH_PRICEFEED);
-        assertEq(WETHPriceAfter,                         3_148.81000000e8);
+        assertEq(WETHPriceAfter,                         3_110.43126457e8);
 
         assertEq(IPriceAggregatorLike(NEW_WETH_PRICEFEED).getAgeThreshold(), ORACLE_AGE_THRESHOLD);
         assertEq(IPriceAggregatorLike(NEW_WETH_PRICEFEED).decimals(),        ORACLE_DECIMALS);
@@ -229,14 +229,14 @@ contract SparkEthereum_20250206Test is SparkTestBase {
 
         uint256 WSTETHPrice = oracle.getAssetPrice(Ethereum.WSTETH);
         // sanity checks on pre-existing price
-        assertEq(WSTETHPrice,   3_751.64370785e8);
+        assertEq(WSTETHPrice,   3_700.88418905e8);
 
         executeAllPayloadsAndBridges();
 
         // sanity check on new price
         uint256 WSTETHPriceAfter  = oracle.getAssetPrice(Ethereum.WSTETH);
         assertEq(oracle.getSourceOfAsset(Ethereum.WSTETH), NEW_WSTETH_PRICEFEED);
-        assertEq(WSTETHPriceAfter,                         3_753.56292060e8);
+        assertEq(WSTETHPriceAfter,                         3708.09744413e8);
     }
 
     function test_ETHEREUM_Sparklend_weETH_Pricefeed() public onChain(ChainIdUtils.Ethereum()) {
@@ -253,14 +253,14 @@ contract SparkEthereum_20250206Test is SparkTestBase {
 
         // sanity checks on pre-existing price
         uint256 WEETHPrice = oracle.getAssetPrice(Ethereum.WEETH);
-        assertEq(WEETHPrice,   3_332.02611089e8);
+        assertEq(WEETHPrice,   3_286.96662440e8);
 
         executeAllPayloadsAndBridges();
 
         // sanity check on new price
         uint256 WEETHPriceAfter  = oracle.getAssetPrice(Ethereum.WEETH);
         assertEq(oracle.getSourceOfAsset(Ethereum.WEETH), NEW_WEETH_PRICEFEED);
-        assertEq(WEETHPriceAfter,                         3_333.73066162e8);
+        assertEq(WEETHPriceAfter,                         3_293.37312822e8);
     }
 
     function test_ETHEREUM_Sparklend_rETH_Pricefeed() public onChain(ChainIdUtils.Ethereum()) {
@@ -277,14 +277,14 @@ contract SparkEthereum_20250206Test is SparkTestBase {
 
         // sanity checks on pre-existing price
         uint256 RETHPrice = oracle.getAssetPrice(Ethereum.RETH);
-        assertEq(RETHPrice,   3_547.62944497e8);
+        assertEq(RETHPrice, 349960533012);
 
         executeAllPayloadsAndBridges();
 
         // sanity check on new price
         uint256 RETHPriceAfter  = oracle.getAssetPrice(Ethereum.RETH);
         assertEq(oracle.getSourceOfAsset(Ethereum.RETH), NEW_RETH_PRICEFEED);
-        assertEq(RETHPriceAfter,                         3_549.44429100e8);
+        assertEq(RETHPriceAfter,                         3_506.42628010e8);
     }
 
     function test_ETHEREUM_Sparklend_cbBTC_Pricefeed() public onChain(ChainIdUtils.Ethereum()) {
@@ -302,7 +302,7 @@ contract SparkEthereum_20250206Test is SparkTestBase {
 
         uint256 CBBTCPrice = oracle.getAssetPrice(Ethereum.CBBTC);
         // sanity checks on pre-existing price
-        assertEq(CBBTCPrice,   102_128.25500000e8);
+        assertEq(CBBTCPrice,   102_238.70000000e8);
 
         _assertPreviousBTCPricefeedBehaviour({
             asset:           Ethereum.CBBTC,
@@ -315,7 +315,7 @@ contract SparkEthereum_20250206Test is SparkTestBase {
         // sanity check on new price
         uint256 CBBTCPriceAfter  = oracle.getAssetPrice(Ethereum.CBBTC);
         assertEq(oracle.getSourceOfAsset(Ethereum.CBBTC), NEW_CBBTC_PRICEFEED);
-        assertEq(CBBTCPriceAfter,                         102_309.03644509e8);
+        assertEq(CBBTCPriceAfter,                         102_733.52699733e8);
 
         assertEq(IPriceAggregatorLike(NEW_CBBTC_PRICEFEED).chainlink(), CBBTC_CHAINLINK_SOURCE);
         assertEq(IPriceAggregatorLike(NEW_CBBTC_PRICEFEED).chronicle(), CBBTC_CHRONICLE_SOURCE);
