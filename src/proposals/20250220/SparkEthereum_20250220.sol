@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.25;
 
-import { Ethereum }             from 'spark-address-registry/Ethereum.sol';
-import { SparkPayloadEthereum } from "../../SparkPayloadEthereum.sol";
+import { SparkPayloadEthereum, Ethereum } from "../../SparkPayloadEthereum.sol";
 
 /**
  * @title  Feb 20, 2025 Spark Ethereum Proposal

@@ -14,7 +14,8 @@ import { IncentivizedERC20 }                     from 'sparklend-v1-core/contrac
 import { ReserveConfiguration }                  from 'sparklend-v1-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
 import { WadRayMath }                            from "sparklend-v1-core/contracts/protocol/libraries/math/WadRayMath.sol";
 
-import { Base } from 'spark-address-registry/Base.sol';
+import { Arbitrum } from 'spark-address-registry/Arbitrum.sol';
+import { Base }     from 'spark-address-registry/Base.sol';
 
 import { ISparkLendFreezerMom } from 'sparklend-freezer/interfaces/ISparkLendFreezerMom.sol';
 
