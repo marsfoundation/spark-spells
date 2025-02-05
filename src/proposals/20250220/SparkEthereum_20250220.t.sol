@@ -28,7 +28,7 @@ contract SparkEthereum_20250220Test is SparkTestBase {
             mainnetForkBlock:     21732103,
             baseForkBlock:        25693427,
             gnosisForkBlock:      38037888,
-            arbitrumOneForkBlock: 38037888
+            arbitrumOneForkBlock: 303037117
         });
 
         deployPayloads();
