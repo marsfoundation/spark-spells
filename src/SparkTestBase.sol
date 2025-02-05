@@ -28,6 +28,7 @@ import { IRateLimits } from "spark-alm-controller/src/interfaces/IRateLimits.sol
 import { Domain, DomainHelpers } from "xchain-helpers/testing/Domain.sol";
 import { OptimismBridgeTesting } from "xchain-helpers/testing/bridges/OptimismBridgeTesting.sol";
 import { AMBBridgeTesting }      from "xchain-helpers/testing/bridges/AMBBridgeTesting.sol";
+import { ArbitrumBridgeTesting } from "xchain-helpers/testing/bridges/ArbitrumBridgeTesting.sol";
 import { CCTPBridgeTesting }     from "xchain-helpers/testing/bridges/CCTPBridgeTesting.sol";
 import { Bridge }                from "xchain-helpers/testing/Bridge.sol";
 
@@ -56,7 +57,8 @@ abstract contract SpellRunner is Test {
     enum BridgeType {
         OPTIMISM,
         CCTP,
-        GNOSIS
+        GNOSIS,
+        ARBITRUM
     }
 
     struct ChainSpellMetadata{
@@ -86,15 +88,32 @@ abstract contract SpellRunner is Test {
     }
 
     /// @dev to be called in setUp
-    function setupDomains(uint256 mainnetForkBlock, uint256 baseForkBlock, uint256 gnosisForkBlock) internal {
-        chainSpellMetadata[ChainIdUtils.Ethereum()].domain = getChain("mainnet").createFork(mainnetForkBlock);
-        chainSpellMetadata[ChainIdUtils.Base()].domain     = getChain("base").createFork(baseForkBlock);
-        chainSpellMetadata[ChainIdUtils.Gnosis()].domain   = getChain("gnosis_chain").createFork(gnosisForkBlock);
+    function setupDomains(uint256 mainnetForkBlock, uint256 baseForkBlock, uint256 gnosisForkBlock, uint256 arbitrumOneForkBlock) internal {
+        chainSpellMetadata[ChainIdUtils.Ethereum()].domain    = getChain("mainnet").createFork(mainnetForkBlock);
+        chainSpellMetadata[ChainIdUtils.Base()].domain        = getChain("base").createFork(baseForkBlock);
+        chainSpellMetadata[ChainIdUtils.Gnosis()].domain      = getChain("gnosis_chain").createFork(gnosisForkBlock);
+        chainSpellMetadata[ChainIdUtils.ArbitrumOne()].domain = getChain("arbitrum_one").createFork(arbitrumOneForkBlock);
 
-        chainSpellMetadata[ChainIdUtils.Ethereum()].executor = IExecutor(Ethereum.SPARK_PROXY);
-        chainSpellMetadata[ChainIdUtils.Base()].executor     = IExecutor(Base.SPARK_EXECUTOR);
-        chainSpellMetadata[ChainIdUtils.Gnosis()].executor   = IExecutor(Gnosis.AMB_EXECUTOR);
+        chainSpellMetadata[ChainIdUtils.Ethereum()].executor    = IExecutor(Ethereum.SPARK_PROXY);
+        chainSpellMetadata[ChainIdUtils.Base()].executor        = IExecutor(Base.SPARK_EXECUTOR);
+        chainSpellMetadata[ChainIdUtils.Gnosis()].executor      = IExecutor(Gnosis.AMB_EXECUTOR);
+        chainSpellMetadata[ChainIdUtils.ArbitrumOne()].executor = IExecutor(Arbitrum.SPARK_EXECUTOR);
 
+        // Arbitrum One
+        chainSpellMetadata[ChainIdUtils.ArbitrumOne()].bridges.push(
+            ArbitrumBridgeTesting.createNativeBridge(
+                chainSpellMetadata[ChainIdUtils.Ethereum()].domain,
+                chainSpellMetadata[ChainIdUtils.ArbitrumOne()].domain
+        ));
+        chainSpellMetadata[ChainIdUtils.ArbitrumOne()].bridgeTypes.push(BridgeType.ARBITRUM);
+        chainSpellMetadata[ChainIdUtils.ArbitrumOne()].bridges.push(
+            CCTPBridgeTesting.createCircleBridge(
+                chainSpellMetadata[ChainIdUtils.Ethereum()].domain,
+                chainSpellMetadata[ChainIdUtils.ArbitrumOne()].domain
+        ));
+        chainSpellMetadata[ChainIdUtils.ArbitrumOne()].bridgeTypes.push(BridgeType.CCTP);
+
+        // Base
         chainSpellMetadata[ChainIdUtils.Base()].bridges.push(
             OptimismBridgeTesting.createNativeBridge(
                 chainSpellMetadata[ChainIdUtils.Ethereum()].domain,
@@ -108,6 +127,7 @@ abstract contract SpellRunner is Test {
         ));
         chainSpellMetadata[ChainIdUtils.Base()].bridgeTypes.push(BridgeType.CCTP);
 
+        // Gnosis
         chainSpellMetadata[ChainIdUtils.Gnosis()].bridges.push(
             AMBBridgeTesting.createGnosisBridge(
                 chainSpellMetadata[ChainIdUtils.Ethereum()].domain,
@@ -121,6 +141,7 @@ abstract contract SpellRunner is Test {
         allChains.push(ChainIdUtils.Ethereum());
         allChains.push(ChainIdUtils.Base());
         allChains.push(ChainIdUtils.Gnosis());
+        allChains.push(ChainIdUtils.ArbitrumOne());
     }
 
     function spellIdentifier(ChainId chainId) private view returns(string memory){
@@ -174,6 +195,8 @@ abstract contract SpellRunner is Test {
             CCTPBridgeTesting.relayMessagesToSource(bridge, false);
         } else if (bridgeType == BridgeType.GNOSIS) {
             AMBBridgeTesting.relayMessagesToDestination(bridge, false);
+        } else if (bridgeType == BridgeType.ARBITRUM) {
+            ArbitrumBridgeTesting.relayMessagesToDestination(bridge, false);
         }
     }
 
@@ -215,6 +238,8 @@ abstract contract SpellRunner is Test {
             return spell.PAYLOAD_BASE();
         } else if (chainId == ChainIdUtils.Gnosis()) {
             return spell.PAYLOAD_GNOSIS();
+        } else if (chainId == ChainIdUtils.ArbitrumOne()) {
+            return spell.PAYLOAD_ARBITRUM();
         } else {
             revert("Unsupported chainId");
         }
@@ -248,6 +273,10 @@ abstract contract CommonSpellAssertions is SpellRunner {
 
     function test_GNOSIS_PayloadBytecodeMatches() public {
         _assertPayloadBytecodeMatches(ChainIdUtils.Gnosis());
+    }
+
+    function test_ARBITRUM_ONE_PayloadBytecodeMatches() public {
+        _assertPayloadBytecodeMatches(ChainIdUtils.ArbitrumOne());
     }
 
     function _assertPayloadBytecodeMatches(ChainId chainId) private onChain(chainId) {
@@ -336,6 +365,11 @@ abstract contract SparklendTests is ProtocolV3TestBase, SpellRunner {
     function test_GNOSIS_SpellExecutionDiff() public {
         vm.skip(chainSpellMetadata[ChainIdUtils.Gnosis()].payload == address(0));
         _runSpellExecutionDiff(ChainIdUtils.Gnosis());
+    }
+
+    function test_ARBITRUM_ONE_SpellExecutionDiff() public {
+        vm.skip(chainSpellMetadata[ChainIdUtils.ArbitrumOne()].payload == address(0));
+        _runSpellExecutionDiff(ChainIdUtils.ArbitrumOne());
     }
 
     function _runSpellExecutionDiff(ChainId chainId) onChain(chainId) private {
