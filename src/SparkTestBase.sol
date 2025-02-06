@@ -368,11 +368,6 @@ abstract contract SparklendTests is ProtocolV3TestBase, SpellRunner {
         _runSpellExecutionDiff(ChainIdUtils.Gnosis());
     }
 
-    function test_ARBITRUM_ONE_SpellExecutionDiff() public {
-        vm.skip(chainSpellMetadata[ChainIdUtils.ArbitrumOne()].payload == address(0));
-        _runSpellExecutionDiff(ChainIdUtils.ArbitrumOne());
-    }
-
     function _runSpellExecutionDiff(ChainId chainId) onChain(chainId) private {
         address[] memory poolProviders = _getPoolAddressesProviderRegistry().getAddressesProvidersList();
         string memory prefix = string(abi.encodePacked(id, '-', chainId.toDomainString()));

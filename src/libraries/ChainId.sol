@@ -28,7 +28,7 @@ library ChainIdUtils {
         if (ChainId.unwrap(id) == 1) return "Ethereum";
         else if (ChainId.unwrap(id) == 100) return "Gnosis";
         else if (ChainId.unwrap(id) == 8453) return "Base";
-        else if (ChainId.unwrap(id) == 42161) return "Arbitrum One";
+        else if (ChainId.unwrap(id) == 42161) return "ArbitrumOne";
         require(false, "ChainIdUtils/invalid-chain-id");
     }
 
