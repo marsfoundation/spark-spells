@@ -32,6 +32,7 @@ import { AMBBridgeTesting }      from "xchain-helpers/testing/bridges/AMBBridgeT
 import { ArbitrumBridgeTesting } from "xchain-helpers/testing/bridges/ArbitrumBridgeTesting.sol";
 import { CCTPBridgeTesting }     from "xchain-helpers/testing/bridges/CCTPBridgeTesting.sol";
 import { Bridge }                from "xchain-helpers/testing/Bridge.sol";
+import { RecordedLogs }          from "xchain-helpers/testing/utils/RecordedLogs.sol";
 
 import { ChainIdUtils, ChainId } from "./libraries/ChainId.sol";
 import { SparkPayloadEthereum }  from "./SparkPayloadEthereum.sol";
@@ -259,6 +260,20 @@ abstract contract SpellRunner is Test {
         ));
         require(success, "FAILED TO EXECUTE PAYLOAD");
     }
+
+    function _clearLogs() internal {
+        RecordedLogs.clearLogs();
+
+        // Need to also reset all bridge indicies
+        for (uint256 i = 0; i < allChains.length; i++) {
+            ChainId chainId = ChainIdUtils.fromDomain(chainSpellMetadata[allChains[i]].domain);
+            for (uint256 j = 0; j < chainSpellMetadata[chainId].bridges.length ; j++){
+                chainSpellMetadata[chainId].bridges[j].lastSourceLogIndex = 0;
+                chainSpellMetadata[chainId].bridges[j].lastDestinationLogIndex = 0;
+            }
+        }
+    }
+
 }
 
 /// @dev assertions that make sense to run on every chain where a spark spell
