@@ -121,7 +121,7 @@ library SparkLiquidityLayerHelpers {
         RateLimitHelpers.setRateLimitData(
             RateLimitHelpers.makeDomainKey(
                 LIMIT_USDC_TO_DOMAIN,
-                0  // Ethereum domain id
+                0  // Ethereum domain id (https://developers.circle.com/stablecoins/evm-smart-contracts)
             ),
             rateLimits,
             cctpEthereumDeposit,

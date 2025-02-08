@@ -12,6 +12,11 @@ import { Base }     from 'spark-address-registry/Base.sol';
 import { AllocatorBuffer } from 'dss-allocator/src/AllocatorBuffer.sol';
 import { AllocatorVault }  from 'dss-allocator/src/AllocatorVault.sol';
 
+import { ArbitrumForwarder, ICrossDomainArbitrum } from 'xchain-helpers/forwarders/ArbitrumForwarder.sol';
+
+import { RateLimitHelpers, RateLimitData } from "spark-alm-controller/src/RateLimitHelpers.sol";
+import { MainnetController }               from "spark-alm-controller/src/MainnetController.sol";
+
 interface IOptimismTokenBridge {
     function bridgeERC20To(
         address _localToken,
@@ -32,6 +37,13 @@ interface IArbitrumTokenBridge {
         uint256 gasPriceBid,
         bytes calldata data
     ) external payable returns (bytes memory res);
+    function getOutboundCalldata(
+        address l1Token,
+        address from,
+        address to,
+        uint256 amount,
+        bytes memory data
+    ) external pure returns (bytes memory outboundCalldata);
 }
 
 /**
@@ -56,6 +68,22 @@ contract SparkEthereum_20250220 is SparkPayloadEthereum {
     }
 
     function _postExecute() internal override {
+        // --- Set up Arbitrum One ---
+        RateLimitHelpers.setRateLimitData(
+            RateLimitHelpers.makeDomainKey(
+                MainnetController(Ethereum.ALM_CONTROLLER).LIMIT_USDC_TO_DOMAIN(),
+                3  // Arbitrum domain id (https://developers.circle.com/stablecoins/evm-smart-contracts)
+            ),
+            Ethereum.ALM_RATE_LIMITS,
+            RateLimitData({
+                maxAmount : 50_000_000e6,
+                slope     : 25_000_000e6 / uint256(1 days)
+            }),
+            "usdcToCctpArbitrumOneLimit",
+            6
+        );
+        MainnetController(Ethereum.ALM_CONTROLLER).setMintRecipient(3, bytes32(uint256(uint160(Arbitrum.ALM_PROXY))));
+
         // --- Send USDS and sUSDS to Base and Arbitrum ---
 
         // Mint USDS and sUSDS
@@ -72,13 +100,34 @@ contract SparkEthereum_20250220 is SparkPayloadEthereum {
 
         // Bridge to Arbitrum
         uint256 susdsSharesArbitrum = susdsShares - susdsSharesBase;
-        IERC20(Ethereum.USDS).approve(Ethereum.ARBITRUM_TOKEN_BRIDGE, USDS_ARBITRUM_BRIDGE_AMOUNT);
-        IERC20(Ethereum.SUSDS).approve(Ethereum.BASE_TOKEN_BRIDGE, susdsSharesArbitrum);
-        // TODO check gas price bid is good
-        uint256 gasPrice = 5e9;
+        _sendArbTokens(Ethereum.USDS, USDS_ARBITRUM_BRIDGE_AMOUNT);
+        _sendArbTokens(Ethereum.SUSDS, susdsSharesArbitrum);
+    }
+
+    function _sendArbTokens(address token, uint256 amount) internal {
+        // Gas submission adapted from ArbitrumForwarder.sendMessageL1toL2
+        bytes memory finalizeDepositCalldata = IArbitrumTokenBridge(Ethereum.ARBITRUM_TOKEN_BRIDGE).getOutboundCalldata({
+            l1Token: token,
+            from:    address(this),
+            to:      Arbitrum.ALM_PROXY,
+            amount:  amount,
+            data:    ""
+        });
         uint256 gasLimit = 1_000_000;
-        IArbitrumTokenBridge(Ethereum.ARBITRUM_TOKEN_BRIDGE).outboundTransfer{value:gasLimit*gasPrice}(Ethereum.USDS,  Arbitrum.ALM_PROXY, USDS_ARBITRUM_BRIDGE_AMOUNT, gasLimit, gasLimit, "");
-        IArbitrumTokenBridge(Ethereum.ARBITRUM_TOKEN_BRIDGE).outboundTransfer{value:gasLimit*gasPrice}(Ethereum.SUSDS, Arbitrum.ALM_PROXY, susdsSharesArbitrum,                 gasLimit, gasLimit, "");
+        uint256 baseFee = 5e9;  // TODO Check if these values are good
+        uint256 maxFeePerGas = 10e9;  // TODO Check if these values are good
+        uint256 maxSubmission = ICrossDomainArbitrum(ArbitrumForwarder.L1_CROSS_DOMAIN_ARBITRUM_ONE).calculateRetryableSubmissionFee(finalizeDepositCalldata.length, baseFee);
+        uint256 maxRedemption = gasLimit * maxFeePerGas;
+
+        IERC20(token).approve(Ethereum.ARBITRUM_TOKEN_BRIDGE, amount);
+        IArbitrumTokenBridge(Ethereum.ARBITRUM_TOKEN_BRIDGE).outboundTransfer{value:maxSubmission + maxRedemption}({
+            l1Token:     token, 
+            to:          Arbitrum.ALM_PROXY, 
+            amount:      amount, 
+            maxGas:      gasLimit, 
+            gasPriceBid: maxFeePerGas,
+            data:        abi.encode(maxSubmission, bytes(""))
+        });
     }
 
 }

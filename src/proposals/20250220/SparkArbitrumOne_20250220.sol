@@ -58,15 +58,15 @@ contract SparkArbitrumOne_20250220 is SparkPayloadArbitrumOne {
             susds       : Arbitrum.SUSDS,
             usdcDeposit : RateLimitData({
                 maxAmount : 50_000_000e6,
-                slope     : 50_000_000e6
+                slope     : 50_000_000e6 / uint256(1 days)
             }),
             usdcWithdraw : RateLimitData({
                 maxAmount : 50_000_000e6,
-                slope     : 50_000_000e6
+                slope     : 50_000_000e6 / uint256(1 days)
             }),
             cctpEthereumDeposit : RateLimitData({
                 maxAmount : 50_000_000e6,
-                slope     : 25_000_000e6
+                slope     : 25_000_000e6 / uint256(1 days)
             })
         });
     }
