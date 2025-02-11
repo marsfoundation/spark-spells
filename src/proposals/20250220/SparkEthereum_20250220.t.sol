@@ -87,6 +87,15 @@ contract SparkEthereum_20250220Test is SparkTestBase {
         chainSpellMetadata[ChainIdUtils.Ethereum()].domain.selectFork();
     }
 
+    function test_ETHEREUM_susdsOnboarding() public onChain(ChainIdUtils.Ethereum()) {
+        _assertERC4626Onboarding({
+            vault:                 Ethereum.SUSDS,
+            expectedDepositAmount: 50_000_000e18,
+            depositMax:            type(uint256).max,
+            depositSlope:          0
+        });
+    }
+
     function test_ETHEREUM_ARBITRUM_sparkLiquidityLayerE2E() public onChain(ChainIdUtils.Ethereum()) {
         executeAllPayloadsAndBridges();
 
@@ -123,12 +132,12 @@ contract SparkEthereum_20250220Test is SparkTestBase {
         assertEq(IERC20(Arbitrum.USDC).balanceOf(Arbitrum.ALM_PROXY), usdcAmount);
         assertEq(IERC20(Arbitrum.USDC).balanceOf(Arbitrum.PSM3),      usdcSeed);
 
-        /*vm.startPrank(Arbitrum.ALM_RELAYER);
+        vm.startPrank(Arbitrum.ALM_RELAYER);
         ForeignController(Arbitrum.ALM_CONTROLLER).depositPSM(Arbitrum.USDC, usdcAmount);
         vm.stopPrank();
 
         assertEq(IERC20(Arbitrum.USDC).balanceOf(Arbitrum.ALM_PROXY), 0);
-        assertEq(IERC20(Arbitrum.USDC).balanceOf(Arbitrum.PSM3),      usdcSeed + usdcAmount);*/
+        assertEq(IERC20(Arbitrum.USDC).balanceOf(Arbitrum.PSM3),      usdcSeed + usdcAmount);
     }
 
 }

@@ -48,7 +48,8 @@ interface IArbitrumTokenBridge {
 
 /**
  * @title  Feb 20, 2025 Spark Ethereum Proposal
- * @notice Spark Liquidity Layer: Onboard Arbitrum One, Mint 100m USDS worth of sUSDS into Base
+ * @notice Spark Liquidity Layer: Onboard Arbitrum One, Mint 100m USDS worth of sUSDS into Base,
+                                  Whitelist sUSDS Deposit/Withdraw
  *         SparkLend: Increase weETH supply cap parameters
  * @author Phoenix Labs
  * Forum:  TODO
@@ -68,6 +69,13 @@ contract SparkEthereum_20250220 is SparkPayloadEthereum {
     }
 
     function _postExecute() internal override {
+        // --- sUSDS Deposit/Withdraw Rate Limit ---
+        _onboardERC4626Vault(
+            Ethereum.SUSDS,
+            type(uint256).max,
+            0
+        );
+
         // --- Set up Arbitrum One ---
         RateLimitHelpers.setRateLimitData(
             RateLimitHelpers.makeDomainKey(
