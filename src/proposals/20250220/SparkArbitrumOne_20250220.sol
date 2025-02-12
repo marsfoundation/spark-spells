@@ -17,8 +17,8 @@ import { SparkPayloadArbitrumOne, Arbitrum, SparkLiquidityLayerHelpers } from ".
  * @title  Feb 20, 2025 Spark Arbitrum Proposal
  * @notice Spark Liquidity Layer: Activate Spark Liquidity Layer
  * @author Phoenix Labs
- * Forum:  TODO
- * Vote:   TODO
+ * Forum:  https://forum.sky.money/t/feb-20-2025-proposed-changes-to-spark-for-upcoming-spell/25951
+ * Vote:   https://vote.makerdao.com/polling/QmcicBXG#poll-detail
  */
 contract SparkArbitrumOne_20250220 is SparkPayloadArbitrumOne {
 

@@ -55,8 +55,12 @@ interface IArbitrumTokenBridge {
                                   Whitelist sUSDS Deposit/Withdraw
  *         SparkLend: Increase weETH supply cap parameters
  * @author Phoenix Labs
- * Forum:  TODO
- * Vote:   TODO
+ * Forum:  https://forum.sky.money/t/feb-20-2025-proposed-changes-to-spark-for-upcoming-spell/25951
+ *         https://forum.sky.money/t/feb-20-2025-proposed-changes-to-spark-for-upcoming-spell-2/25961
+ * Vote:   https://vote.makerdao.com/polling/QmcicBXG#poll-detail
+ *         https://vote.makerdao.com/polling/QmWQcu5A#poll-detail
+ *         https://vote.makerdao.com/polling/Qmdr4yqX#poll-detail
+ *         TODO sUSDS vote
  */
 contract SparkEthereum_20250220 is SparkPayloadEthereum {
 

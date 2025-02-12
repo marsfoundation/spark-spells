@@ -874,7 +874,9 @@ abstract contract SparkLiquidityLayerTests is SpellRunner {
        uint256 maxAmount,
        uint256 slope
     ) internal view {
-        _assertRateLimit(key, maxAmount, slope, maxAmount, block.timestamp);
+        IRateLimits.RateLimitData memory rateLimit = _getSparkLiquidityLayerContext().rateLimits.getRateLimitData(key);
+        assertEq(rateLimit.maxAmount, maxAmount);
+        assertEq(rateLimit.slope,     slope);
     }
 
    function _assertUnlimitedRateLimit(
