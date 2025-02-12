@@ -12,10 +12,13 @@ import { Base }     from 'spark-address-registry/Base.sol';
 import { AllocatorBuffer } from 'dss-allocator/src/AllocatorBuffer.sol';
 import { AllocatorVault }  from 'dss-allocator/src/AllocatorVault.sol';
 
+import { CCTPForwarder }                           from 'xchain-helpers/forwarders/CCTPForwarder.sol';
 import { ArbitrumForwarder, ICrossDomainArbitrum } from 'xchain-helpers/forwarders/ArbitrumForwarder.sol';
 
 import { RateLimitHelpers, RateLimitData } from "spark-alm-controller/src/RateLimitHelpers.sol";
 import { MainnetController }               from "spark-alm-controller/src/MainnetController.sol";
+
+import { ICapAutomator } from "lib/sparklend-cap-automator/src/interfaces/ICapAutomator.sol";
 
 interface IOptimismTokenBridge {
     function bridgeERC20To(
@@ -69,6 +72,14 @@ contract SparkEthereum_20250220 is SparkPayloadEthereum {
     }
 
     function _postExecute() internal override {
+        // --- Increase weETH supply cap parameters ---
+        ICapAutomator(Ethereum.CAP_AUTOMATOR).setSupplyCapConfig({
+            asset:            Ethereum.WEETH,
+            max:              500_000,
+            gap:              10_000,
+            increaseCooldown: 12 hours
+        });
+
         // --- sUSDS Deposit/Withdraw Rate Limit ---
         _onboardERC4626Vault(
             Ethereum.SUSDS,
@@ -80,7 +91,7 @@ contract SparkEthereum_20250220 is SparkPayloadEthereum {
         RateLimitHelpers.setRateLimitData(
             RateLimitHelpers.makeDomainKey(
                 MainnetController(Ethereum.ALM_CONTROLLER).LIMIT_USDC_TO_DOMAIN(),
-                3  // Arbitrum domain id (https://developers.circle.com/stablecoins/evm-smart-contracts)
+                CCTPForwarder.DOMAIN_ID_CIRCLE_ARBITRUM_ONE
             ),
             Ethereum.ALM_RATE_LIMITS,
             RateLimitData({
@@ -90,7 +101,10 @@ contract SparkEthereum_20250220 is SparkPayloadEthereum {
             "usdcToCctpArbitrumOneLimit",
             6
         );
-        MainnetController(Ethereum.ALM_CONTROLLER).setMintRecipient(3, bytes32(uint256(uint160(Arbitrum.ALM_PROXY))));
+        MainnetController(Ethereum.ALM_CONTROLLER).setMintRecipient(
+            CCTPForwarder.DOMAIN_ID_CIRCLE_ARBITRUM_ONE,
+            bytes32(uint256(uint160(Arbitrum.ALM_PROXY)))
+        );
 
         // --- Send USDS and sUSDS to Base and Arbitrum ---
 

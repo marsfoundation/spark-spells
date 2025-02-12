@@ -87,6 +87,16 @@ contract SparkEthereum_20250220Test is SparkTestBase {
         chainSpellMetadata[ChainIdUtils.Ethereum()].domain.selectFork();
     }
 
+    function test_ETHEREUM_WEETHChanges() public onChain(ChainIdUtils.Ethereum()) {
+        loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
+        
+        _assertSupplyCapConfig(Ethereum.WEETH, 200_000, 5_000, 12 hours);
+
+        executeAllPayloadsAndBridges();
+
+        _assertSupplyCapConfig(Ethereum.WEETH, 500_000, 10_000, 12 hours);
+    }
+
     function test_ETHEREUM_susdsOnboarding() public onChain(ChainIdUtils.Ethereum()) {
         _assertERC4626Onboarding({
             vault:                 Ethereum.SUSDS,
