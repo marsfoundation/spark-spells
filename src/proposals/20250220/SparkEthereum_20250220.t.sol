@@ -4,22 +4,23 @@ pragma solidity ^0.8.25;
 import { IERC4626 } from "forge-std/interfaces/IERC4626.sol";
 import { IERC20 }   from "forge-std/interfaces/IERC20.sol";
 
-import { Arbitrum }              from 'spark-address-registry/Arbitrum.sol';
-import { Ethereum }              from 'spark-address-registry/Ethereum.sol';
-import { Base }                  from 'spark-address-registry/Base.sol';
+import { Arbitrum } from 'spark-address-registry/Arbitrum.sol';
+import { Base }     from 'spark-address-registry/Base.sol';
+import { Ethereum } from 'spark-address-registry/Ethereum.sol';
+
 import { MainnetController }     from 'spark-alm-controller/src/MainnetController.sol';
 import { ForeignController }     from 'spark-alm-controller/src/ForeignController.sol';
 import { IRateLimits }           from 'spark-alm-controller/src/interfaces/IRateLimits.sol';
+import { IALMProxy }             from 'spark-alm-controller/src/interfaces/IALMProxy.sol';
 import { RateLimitHelpers }      from 'spark-alm-controller/src/RateLimitHelpers.sol';
-import { IAaveOracle }           from 'sparklend-v1-core/contracts/interfaces/IAaveOracle.sol';
-import { IMetaMorpho }           from 'lib/metamorpho/src/interfaces/IMetaMorpho.sol';
+
+import { IPSM3 } from 'spark-psm/src/interfaces/IPSM3.sol';
 
 import { CCTPForwarder }         from "xchain-helpers/forwarders/CCTPForwarder.sol";
 import { Domain, DomainHelpers } from "xchain-helpers/testing/Domain.sol";
 
 import { SparkTestBase } from 'src/SparkTestBase.sol';
 import { ChainIdUtils }  from 'src/libraries/ChainId.sol';
-import { ReserveConfig } from '../../ProtocolV3TestBase.sol';
 
 interface DssAutoLineLike {
     function setIlk(bytes32 ilk, uint256 line, uint256 gap, uint256 ttl) external;
@@ -41,6 +42,8 @@ contract SparkEthereum_20250220Test is SparkTestBase {
 
     address internal constant AUTO_LINE     = 0xC7Bdd1F2B16447dcf3dE045C4a039A60EC2f0ba3;
     bytes32 internal constant ALLOCATOR_ILK = "ALLOCATOR-SPARK-A";
+
+    address internal constant DEPLOYER = 0xd1236a6A111879d9862f8374BA15344b6B233Fbd;
 
     constructor() {
         id = '20250220';
@@ -88,7 +91,7 @@ contract SparkEthereum_20250220Test is SparkTestBase {
         chainSpellMetadata[ChainIdUtils.Ethereum()].domain.selectFork();
     }
 
-    function test_ETHEREUM_WEETHChanges() public onChain(ChainIdUtils.Ethereum()) {
+    function test_ETHEREUM_weethChanges() public onChain(ChainIdUtils.Ethereum()) {
         loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
         
         _assertSupplyCapConfig(Ethereum.WEETH, 200_000, 5_000, 12 hours);
@@ -153,6 +156,89 @@ contract SparkEthereum_20250220Test is SparkTestBase {
         assertEq(MainnetController(Ethereum.ALM_CONTROLLER).mintRecipients(CCTPForwarder.DOMAIN_ID_CIRCLE_ARBITRUM_ONE), bytes32(uint256(uint160(Arbitrum.ALM_PROXY))));
     }
 
+    function test_ARBITRUM_almControllerDeployment() public onChain(ChainIdUtils.ArbitrumOne()) {
+        // Copied from the init library, but no harm checking this here
+        IALMProxy         almProxy   = IALMProxy(Arbitrum.ALM_PROXY);
+        IRateLimits       rateLimits = IRateLimits(Arbitrum.ALM_RATE_LIMITS);
+        ForeignController controller = ForeignController(Arbitrum.ALM_CONTROLLER);
+
+        assertEq(almProxy.hasRole(0x0,   Arbitrum.SPARK_EXECUTOR), true, "incorrect-admin-almProxy");
+        assertEq(rateLimits.hasRole(0x0, Arbitrum.SPARK_EXECUTOR), true, "incorrect-admin-rateLimits");
+        assertEq(controller.hasRole(0x0, Arbitrum.SPARK_EXECUTOR), true, "incorrect-admin-controller");
+
+        assertEq(almProxy.hasRole(0x0,   DEPLOYER), false, "incorrect-admin-almProxy");
+        assertEq(rateLimits.hasRole(0x0, DEPLOYER), false, "incorrect-admin-rateLimits");
+        assertEq(controller.hasRole(0x0, DEPLOYER), false, "incorrect-admin-controller");
+
+        assertEq(address(controller.proxy()),      Arbitrum.ALM_PROXY,            "incorrect-almProxy");
+        assertEq(address(controller.rateLimits()), Arbitrum.ALM_RATE_LIMITS,      "incorrect-rateLimits");
+        assertEq(address(controller.psm()),        Arbitrum.PSM3,                 "incorrect-psm");
+        assertEq(address(controller.usdc()),       Arbitrum.USDC,                 "incorrect-usdc");
+        assertEq(address(controller.cctp()),       Arbitrum.CCTP_TOKEN_MESSENGER, "incorrect-cctp");
+
+        assertEq(controller.active(), true, "controller-not-active");
+    }
+
+    function test_ARBITRUM_psm3Deployment() public onChain(ChainIdUtils.ArbitrumOne()) {
+        // Copied from the init library, but no harm checking this here
+        IPSM3 psm = IPSM3(Arbitrum.PSM3);
+
+        // Verify that the shares are burned (IE owned by the zero address)
+        assertGe(psm.shares(address(0)), 1e18, "psm-totalShares-not-seeded");
+
+        assertEq(address(psm.usdc()),  Arbitrum.USDC,  "psm-incorrect-usdc");
+        assertEq(address(psm.usds()),  Arbitrum.USDS,  "psm-incorrect-usds");
+        assertEq(address(psm.susds()), Arbitrum.SUSDS, "psm-incorrect-susds");
+
+        assertEq(psm.rateProvider(), Arbitrum.SSR_AUTH_ORACLE, "psm-incorrect-rateProvider");
+        assertEq(psm.pocket(),       address(psm),             "psm-incorrect-pocket");
+    }
+
+    function test_ARBITRUM_almControllerConfiguration() public onChain(ChainIdUtils.ArbitrumOne()) {
+        IALMProxy         almProxy   = IALMProxy(Arbitrum.ALM_PROXY);
+        IRateLimits       rateLimits = IRateLimits(Arbitrum.ALM_RATE_LIMITS);
+        ForeignController controller = ForeignController(Arbitrum.ALM_CONTROLLER);
+
+        executeAllPayloadsAndBridges();
+
+        assertEq(almProxy.hasRole(almProxy.CONTROLLER(),     Arbitrum.ALM_CONTROLLER), true, "incorrect-controller-almProxy");
+        assertEq(rateLimits.hasRole(rateLimits.CONTROLLER(), Arbitrum.ALM_CONTROLLER), true, "incorrect-controller-rateLimits");
+        assertEq(controller.hasRole(controller.FREEZER(),    Arbitrum.ALM_FREEZER),    true, "incorrect-freezer-controller");
+        assertEq(controller.hasRole(controller.RELAYER(),    Arbitrum.ALM_RELAYER),    true, "incorrect-relayer-controller");
+
+        _assertRateLimit(
+            RateLimitHelpers.makeAssetKey(controller.LIMIT_PSM_DEPOSIT(), Arbitrum.USDC),
+            50_000_000e6,
+            50_000_000e6 / uint256(1 days)
+        );
+        _assertRateLimit(
+            RateLimitHelpers.makeAssetKey(controller.LIMIT_PSM_WITHDRAW(), Arbitrum.USDC),
+            50_000_000e6,
+            50_000_000e6 / uint256(1 days)
+        );
+        _assertUnlimitedRateLimit(
+            RateLimitHelpers.makeAssetKey(controller.LIMIT_PSM_DEPOSIT(), Arbitrum.USDS)
+        );
+        _assertUnlimitedRateLimit(
+            RateLimitHelpers.makeAssetKey(controller.LIMIT_PSM_WITHDRAW(), Arbitrum.USDS)
+        );
+        _assertUnlimitedRateLimit(
+            RateLimitHelpers.makeAssetKey(controller.LIMIT_PSM_DEPOSIT(), Arbitrum.SUSDS)
+        );
+        _assertUnlimitedRateLimit(
+            RateLimitHelpers.makeAssetKey(controller.LIMIT_PSM_WITHDRAW(), Arbitrum.SUSDS)
+        );
+        _assertUnlimitedRateLimit(
+            controller.LIMIT_USDC_TO_CCTP()
+        );
+        _assertRateLimit(
+            RateLimitHelpers.makeDomainKey(controller.LIMIT_USDC_TO_DOMAIN(), CCTPForwarder.DOMAIN_ID_CIRCLE_ETHEREUM),
+            50_000_000e6,
+            25_000_000e6 / uint256(1 days)
+        );
+
+        assertEq(controller.mintRecipients(CCTPForwarder.DOMAIN_ID_CIRCLE_ETHEREUM), bytes32(uint256(uint160(Ethereum.ALM_PROXY))));
+    }
     function test_ETHEREUM_ARBITRUM_sparkLiquidityLayerE2E() public onChain(ChainIdUtils.Ethereum()) {
         executeAllPayloadsAndBridges();
 
