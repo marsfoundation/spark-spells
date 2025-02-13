@@ -284,8 +284,8 @@ contract SparkEthereum_20250220Test is SparkTestBase {
 
         IPSMLike psm = IPSMLike(Arbitrum.PSM3);
 
-        // Off slightly from mainnet sUSDS (<4e-11%)
-        assertEq(psm.convertToAssetValue(psm.shares(Arbitrum.ALM_PROXY)), 19_999_999.999991434063331924e18);
+        // Matches mainnet exactly
+        assertEq(psm.convertToAssetValue(psm.shares(Arbitrum.ALM_PROXY)), 20_000_000e18);
 
         assertEq(arbUsds.balanceOf(Arbitrum.ALM_PROXY),  90_000_000e18);
         assertEq(arbUsds.balanceOf(Arbitrum.PSM3),       10_000_000e18);
