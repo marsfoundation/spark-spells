@@ -70,9 +70,8 @@ contract SparkEthereum_20250220 is SparkPayloadEthereum {
     uint256 internal constant USDS_ARBITRUM_BRIDGE_AMOUNT  = 100_000_000e18;
 
     constructor() {
-        // TODO actual payloads
-        PAYLOAD_BASE     = address(0);
-        PAYLOAD_ARBITRUM = address(0);
+        PAYLOAD_BASE     = 0x1e59bBDbd97DDa3E72a65061ecEFEF428F5EFB9a;
+        PAYLOAD_ARBITRUM = 0x930e7EFC310F1E62ff3DfC7b60A8FF06d4046887;
     }
 
     function _postExecute() internal override {
@@ -140,8 +139,8 @@ contract SparkEthereum_20250220 is SparkPayloadEthereum {
             data:    ""
         });
         uint256 gasLimit = 1_000_000;
-        uint256 baseFee = 5e9;  // TODO Check if these values are good
-        uint256 maxFeePerGas = 10e9;  // TODO Check if these values are good
+        uint256 baseFee = 25e9;  // TODO Check if these values are good
+        uint256 maxFeePerGas = 50e9;  // TODO Check if these values are good
         uint256 maxSubmission = ICrossDomainArbitrum(ArbitrumForwarder.L1_CROSS_DOMAIN_ARBITRUM_ONE).calculateRetryableSubmissionFee(finalizeDepositCalldata.length, baseFee);
         uint256 maxRedemption = gasLimit * maxFeePerGas;
 

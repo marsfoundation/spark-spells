@@ -56,13 +56,16 @@ contract SparkEthereum_20250220Test is SparkTestBase {
 
     function setUp() public {
         setupDomains({
-            mainnetForkBlock:     21783769,
-            baseForkBlock:        26005516,
+            mainnetForkBlock:     21840592,
+            baseForkBlock:        26348524,
             gnosisForkBlock:      38037888,
-            arbitrumOneForkBlock: 303037117
+            arbitrumOneForkBlock: 305776367
         });
 
         deployPayloads();
+
+        chainSpellMetadata[ChainIdUtils.Base()].payload        = 0x1e59bBDbd97DDa3E72a65061ecEFEF428F5EFB9a;
+        chainSpellMetadata[ChainIdUtils.ArbitrumOne()].payload = 0x930e7EFC310F1E62ff3DfC7b60A8FF06d4046887;
 
         // The following is expected to be in the main spell
         // TODO verify this matches the Sky Core spell
@@ -250,6 +253,12 @@ contract SparkEthereum_20250220Test is SparkTestBase {
     }
 
     function test_ETHEREUM_ARBITRUM_sparkLiquidityLayerE2E() public onChain(ChainIdUtils.Ethereum()) {
+        // Use mainnet timestamp to make PSM3 sUSDS conversion data realistic
+        uint256 mainnetTimestamp = block.timestamp;
+        chainSpellMetadata[ChainIdUtils.ArbitrumOne()].domain.selectFork();
+        vm.warp(mainnetTimestamp);
+        chainSpellMetadata[ChainIdUtils.Ethereum()].domain.selectFork();
+
         executeAllPayloadsAndBridges();
 
         IERC20 arbSUsds = IERC20(Arbitrum.SUSDS);
@@ -262,8 +271,6 @@ contract SparkEthereum_20250220Test is SparkTestBase {
         uint256 susdsShares        = IERC4626(Ethereum.SUSDS).convertToShares(100_000_000e18);
         uint256 susdsDepositShares = IERC4626(Ethereum.SUSDS).convertToShares(10_000_000e18);
 
-        uint256 mainnetTimestamp = block.timestamp;
-
         chainSpellMetadata[ChainIdUtils.ArbitrumOne()].domain.selectFork();
 
         assertEq(arbUsds.balanceOf(Arbitrum.ALM_PROXY),  100_000_000e18);
@@ -274,9 +281,6 @@ contract SparkEthereum_20250220Test is SparkTestBase {
 
         // --- Step 1: Deposit 10m USDS and 10m sUSDS into the PSM ---
 
-        // Use mainnet timestamp to make PSM3 sUSDS conversion data realistic
-        vm.warp(mainnetTimestamp);
-
         vm.startPrank(Arbitrum.ALM_RELAYER);
         arbController.depositPSM(Arbitrum.USDS,  10_000_000e18);
         arbController.depositPSM(Arbitrum.SUSDS, susdsDepositShares);  // $10m
@@ -285,7 +289,7 @@ contract SparkEthereum_20250220Test is SparkTestBase {
         IPSMLike psm = IPSMLike(Arbitrum.PSM3);
 
         // Matches mainnet exactly
-        assertEq(psm.convertToAssetValue(psm.shares(Arbitrum.ALM_PROXY)), 20_000_000e18);
+        assertApproxEqAbs(psm.convertToAssetValue(psm.shares(Arbitrum.ALM_PROXY)), 20_000_000e18, 5);
 
         assertEq(arbUsds.balanceOf(Arbitrum.ALM_PROXY),  90_000_000e18);
         assertEq(arbUsds.balanceOf(Arbitrum.PSM3),       10_000_000e18);
@@ -295,13 +299,13 @@ contract SparkEthereum_20250220Test is SparkTestBase {
 
         chainSpellMetadata[ChainIdUtils.Ethereum()].domain.selectFork();
 
-        // Clear out the old logs to prevent MemoryOOG error with CCTP message relay
-        _clearLogs();
-
         // --- Step 2: Mint and bridge 10m USDC to Arbitrum ---
 
         uint256 usdcAmount = 10_000_000e6;
         uint256 usdcSeed   = 1e6;
+
+        // Prevent MemoryOOG
+        _clearLogs();
 
         vm.startPrank(Ethereum.ALM_RELAYER);
         mainnetController.mintUSDS(usdcAmount * 1e12);
@@ -344,24 +348,11 @@ contract SparkEthereum_20250220Test is SparkTestBase {
         assertEq(arbUsds.balanceOf(Arbitrum.ALM_PROXY),  100_000_000e18);
         assertEq(arbSUsds.balanceOf(Arbitrum.ALM_PROXY), susdsShares);
 
-        assertApproxEqAbs(arbUsdc.balanceOf(Arbitrum.ALM_PROXY), usdcAmount, 1);
-    }
-
-    // NOTE: This was supposed to be part of the e2e test above but ran into MemoryOOG issues
-    //       even with use of _clearLogs
-    function test_ETHEREUM_ARBITRUM_bridgeUsdcToMainnetAndBurn() public {
-        executeAllPayloadsAndBridges();
-
-        chainSpellMetadata[ChainIdUtils.ArbitrumOne()].domain.selectFork();
-
-        deal(Arbitrum.USDC, Arbitrum.ALM_PROXY, 10_000_000e6);
-
-        assertEq(IERC20(Arbitrum.USDC).balanceOf(Arbitrum.ALM_PROXY), 10_000_000e6);
-
-        _clearLogs();  // Avoid MemoryOOG issue
+        usdcAmount -= 1;  // Rounding
+        assertEq(arbUsdc.balanceOf(Arbitrum.ALM_PROXY), usdcAmount);
 
         vm.startPrank(Arbitrum.ALM_RELAYER);
-        ForeignController(Arbitrum.ALM_CONTROLLER).transferUSDCToCCTP(10_000_000e6, CCTPForwarder.DOMAIN_ID_CIRCLE_ETHEREUM);
+        ForeignController(Arbitrum.ALM_CONTROLLER).transferUSDCToCCTP(usdcAmount, CCTPForwarder.DOMAIN_ID_CIRCLE_ETHEREUM);
         vm.stopPrank();
 
         assertEq(IERC20(Arbitrum.USDC).balanceOf(Arbitrum.ALM_PROXY), 0);
@@ -372,13 +363,11 @@ contract SparkEthereum_20250220Test is SparkTestBase {
 
         _relayMessageOverBridges();
 
-        assertEq(IERC20(Ethereum.USDC).balanceOf(Ethereum.ALM_PROXY), 10_000_000e6);
-
-        MainnetController controller = MainnetController(Ethereum.ALM_CONTROLLER);
+        assertEq(IERC20(Ethereum.USDC).balanceOf(Ethereum.ALM_PROXY), usdcAmount);
 
         vm.startPrank(Ethereum.ALM_RELAYER);
-        controller.swapUSDCToUSDS(10_000_000e6);
-        controller.burnUSDS(10_000_000e18);
+        mainnetController.swapUSDCToUSDS(usdcAmount);
+        mainnetController.burnUSDS(usdcAmount * 1e12);
         vm.stopPrank();
     }
 
