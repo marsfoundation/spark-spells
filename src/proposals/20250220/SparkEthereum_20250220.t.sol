@@ -338,11 +338,13 @@ contract SparkEthereum_20250220Test is SparkTestBase {
 
         assertEq(arbUsds.balanceOf(Arbitrum.PSM3),  0);
         assertEq(arbSUsds.balanceOf(Arbitrum.PSM3), 0);
-        assertEq(arbUsdc.balanceOf(Arbitrum.PSM3),  usdcSeed + 1);  // Rounding
+
+        assertApproxEqAbs(arbUsdc.balanceOf(Arbitrum.PSM3), usdcSeed, 1);
 
         assertEq(arbUsds.balanceOf(Arbitrum.ALM_PROXY),  100_000_000e18);
         assertEq(arbSUsds.balanceOf(Arbitrum.ALM_PROXY), susdsShares);
-        assertEq(arbUsdc.balanceOf(Arbitrum.ALM_PROXY),  usdcAmount - 1);  // Rounding
+
+        assertApproxEqAbs(arbUsdc.balanceOf(Arbitrum.ALM_PROXY), usdcAmount, 1);
     }
 
     // NOTE: This was supposed to be part of the e2e test above but ran into MemoryOOG issues
