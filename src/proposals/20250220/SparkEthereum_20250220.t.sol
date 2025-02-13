@@ -36,6 +36,11 @@ interface IAuthLike {
     function rely(address usr) external;
 }
 
+interface IPSMLike {
+    function shares(address account) external view returns (uint256);
+    function convertToAssetValue(uint256 shares) external view returns (uint256);
+}
+
 contract SparkEthereum_20250220Test is SparkTestBase {
 
     using DomainHelpers for Domain;
@@ -93,7 +98,7 @@ contract SparkEthereum_20250220Test is SparkTestBase {
 
     function test_ETHEREUM_weethChanges() public onChain(ChainIdUtils.Ethereum()) {
         loadPoolContext(_getPoolAddressesProviderRegistry().getAddressesProvidersList()[0]);
-        
+
         _assertSupplyCapConfig(Ethereum.WEETH, 200_000, 5_000, 12 hours);
 
         executeAllPayloadsAndBridges();
@@ -123,15 +128,26 @@ contract SparkEthereum_20250220Test is SparkTestBase {
             ForeignController(Base.ALM_CONTROLLER).LIMIT_PSM_DEPOSIT(),
             Base.USDS
         );
+        bytes32 usdsWithdrawKey = RateLimitHelpers.makeAssetKey(
+            ForeignController(Base.ALM_CONTROLLER).LIMIT_PSM_WITHDRAW(),
+            Base.USDS
+        );
         bytes32 susdsDepositKey = RateLimitHelpers.makeAssetKey(
             ForeignController(Base.ALM_CONTROLLER).LIMIT_PSM_DEPOSIT(),
             Base.SUSDS
         );
+        bytes32 susdsWithdrawKey = RateLimitHelpers.makeAssetKey(
+            ForeignController(Base.ALM_CONTROLLER).LIMIT_PSM_WITHDRAW(),
+            Base.SUSDS
+        );
 
-        _assertRateLimit(usdcDepositKey,  4_000_000e6, 2_000_000e6 / uint256(1 days));
-        _assertRateLimit(usdcWithdrawKey, 7_000_000e6, 2_000_000e6 / uint256(1 days));
+        _assertRateLimit(usdcDepositKey,  4_000_000e6,  2_000_000e6  / uint256(1 days));
+        _assertRateLimit(usdcWithdrawKey, 7_000_000e6,  2_000_000e6  / uint256(1 days));
         _assertRateLimit(usdsDepositKey,  5_000_000e18, 2_000_000e18 / uint256(1 days));
         _assertRateLimit(susdsDepositKey, 8_000_000e18, 2_000_000e18 / uint256(1 days));
+
+        _assertUnlimitedRateLimit(usdsWithdrawKey);
+        _assertUnlimitedRateLimit(susdsWithdrawKey);
 
         executeAllPayloadsAndBridges();
 
@@ -139,6 +155,9 @@ contract SparkEthereum_20250220Test is SparkTestBase {
         _assertRateLimit(usdcWithdrawKey, 50_000_000e6, 50_000_000e6 / uint256(1 days));
         _assertUnlimitedRateLimit(usdsDepositKey);
         _assertUnlimitedRateLimit(susdsDepositKey);
+
+        _assertUnlimitedRateLimit(usdsWithdrawKey);
+        _assertUnlimitedRateLimit(susdsWithdrawKey);
     }
 
     function test_ETHEREUM_arbitrumCctpConfiguration() public onChain(ChainIdUtils.Ethereum()) {
@@ -216,21 +235,11 @@ contract SparkEthereum_20250220Test is SparkTestBase {
             50_000_000e6,
             50_000_000e6 / uint256(1 days)
         );
-        _assertUnlimitedRateLimit(
-            RateLimitHelpers.makeAssetKey(controller.LIMIT_PSM_DEPOSIT(), Arbitrum.USDS)
-        );
-        _assertUnlimitedRateLimit(
-            RateLimitHelpers.makeAssetKey(controller.LIMIT_PSM_WITHDRAW(), Arbitrum.USDS)
-        );
-        _assertUnlimitedRateLimit(
-            RateLimitHelpers.makeAssetKey(controller.LIMIT_PSM_DEPOSIT(), Arbitrum.SUSDS)
-        );
-        _assertUnlimitedRateLimit(
-            RateLimitHelpers.makeAssetKey(controller.LIMIT_PSM_WITHDRAW(), Arbitrum.SUSDS)
-        );
-        _assertUnlimitedRateLimit(
-            controller.LIMIT_USDC_TO_CCTP()
-        );
+        _assertUnlimitedRateLimit(RateLimitHelpers.makeAssetKey(controller.LIMIT_PSM_DEPOSIT(),  Arbitrum.USDS));
+        _assertUnlimitedRateLimit(RateLimitHelpers.makeAssetKey(controller.LIMIT_PSM_WITHDRAW(), Arbitrum.USDS));
+        _assertUnlimitedRateLimit(RateLimitHelpers.makeAssetKey(controller.LIMIT_PSM_DEPOSIT(),  Arbitrum.SUSDS));
+        _assertUnlimitedRateLimit(RateLimitHelpers.makeAssetKey(controller.LIMIT_PSM_WITHDRAW(), Arbitrum.SUSDS));
+        _assertUnlimitedRateLimit(controller.LIMIT_USDC_TO_CCTP());
         _assertRateLimit(
             RateLimitHelpers.makeDomainKey(controller.LIMIT_USDC_TO_DOMAIN(), CCTPForwarder.DOMAIN_ID_CIRCLE_ETHEREUM),
             50_000_000e6,
@@ -239,61 +248,168 @@ contract SparkEthereum_20250220Test is SparkTestBase {
 
         assertEq(controller.mintRecipients(CCTPForwarder.DOMAIN_ID_CIRCLE_ETHEREUM), bytes32(uint256(uint160(Ethereum.ALM_PROXY))));
     }
+
     function test_ETHEREUM_ARBITRUM_sparkLiquidityLayerE2E() public onChain(ChainIdUtils.Ethereum()) {
         executeAllPayloadsAndBridges();
+
+        IERC20 arbSUsds = IERC20(Arbitrum.SUSDS);
+        IERC20 arbUsdc  = IERC20(Arbitrum.USDC);
+        IERC20 arbUsds  = IERC20(Arbitrum.USDS);
+
+        MainnetController mainnetController = MainnetController(Ethereum.ALM_CONTROLLER);
+        ForeignController arbController     = ForeignController(Arbitrum.ALM_CONTROLLER);
 
         uint256 susdsShares        = IERC4626(Ethereum.SUSDS).convertToShares(100_000_000e18);
         uint256 susdsDepositShares = IERC4626(Ethereum.SUSDS).convertToShares(10_000_000e18);
 
+        uint256 mainnetTimestamp = block.timestamp;
+
         chainSpellMetadata[ChainIdUtils.ArbitrumOne()].domain.selectFork();
 
-        assertEq(IERC20(Arbitrum.USDS).balanceOf(Arbitrum.ALM_PROXY),  100_000_000e18);
-        assertEq(IERC20(Arbitrum.SUSDS).balanceOf(Arbitrum.ALM_PROXY), susdsShares);
-        assertEq(IERC20(Arbitrum.USDS).balanceOf(Arbitrum.PSM3),  0);
-        assertEq(IERC20(Arbitrum.SUSDS).balanceOf(Arbitrum.PSM3), 0);
+        assertEq(arbUsds.balanceOf(Arbitrum.ALM_PROXY),  100_000_000e18);
+        assertEq(arbUsds.balanceOf(Arbitrum.PSM3),       0);
 
-        // Deposit 10m USDS and 10m sUSDS into the PSM
+        assertEq(arbSUsds.balanceOf(Arbitrum.ALM_PROXY), susdsShares);  // $100m
+        assertEq(arbSUsds.balanceOf(Arbitrum.PSM3),      0);
+
+        // --- Step 1: Deposit 10m USDS and 10m sUSDS into the PSM ---
+
+        // Use mainnet timestamp to make PSM3 sUSDS conversion data realistic
+        vm.warp(mainnetTimestamp);
+
         vm.startPrank(Arbitrum.ALM_RELAYER);
-        ForeignController(Arbitrum.ALM_CONTROLLER).depositPSM(Arbitrum.USDS,  10_000_000e18);
-        ForeignController(Arbitrum.ALM_CONTROLLER).depositPSM(Arbitrum.SUSDS, susdsDepositShares);
+        arbController.depositPSM(Arbitrum.USDS,  10_000_000e18);
+        arbController.depositPSM(Arbitrum.SUSDS, susdsDepositShares);  // $10m
         vm.stopPrank();
 
-        assertEq(IERC20(Arbitrum.USDS).balanceOf(Arbitrum.ALM_PROXY),  90_000_000e18);
-        assertEq(IERC20(Arbitrum.SUSDS).balanceOf(Arbitrum.ALM_PROXY), susdsShares - susdsDepositShares);
-        assertEq(IERC20(Arbitrum.USDS).balanceOf(Arbitrum.PSM3),  10_000_000e18);
-        assertEq(IERC20(Arbitrum.SUSDS).balanceOf(Arbitrum.PSM3), susdsDepositShares);
+        IPSMLike psm = IPSMLike(Arbitrum.PSM3);
+
+        // Matches mainnet exactly
+        assertEq(psm.convertToAssetValue(psm.shares(Arbitrum.ALM_PROXY)), 20_000_000e18);
+
+        assertEq(arbUsds.balanceOf(Arbitrum.ALM_PROXY),  90_000_000e18);
+        assertEq(arbUsds.balanceOf(Arbitrum.PSM3),       10_000_000e18);
+
+        assertEq(arbSUsds.balanceOf(Arbitrum.ALM_PROXY), susdsShares - susdsDepositShares);  // $90m
+        assertEq(arbSUsds.balanceOf(Arbitrum.PSM3),      susdsDepositShares);                // $10m
 
         chainSpellMetadata[ChainIdUtils.Ethereum()].domain.selectFork();
 
         // Clear out the old logs to prevent MemoryOOG error with CCTP message relay
         _clearLogs();
 
-        // Mint and bridge 10m USDC
+        // --- Step 2: Mint and bridge 10m USDC to Arbitrum ---
+
         uint256 usdcAmount = 10_000_000e6;
         uint256 usdcSeed   = 1e6;
 
         vm.startPrank(Ethereum.ALM_RELAYER);
-        MainnetController(Ethereum.ALM_CONTROLLER).mintUSDS(usdcAmount * 1e12);
-        MainnetController(Ethereum.ALM_CONTROLLER).swapUSDSToUSDC(usdcAmount);
-        MainnetController(Ethereum.ALM_CONTROLLER).transferUSDCToCCTP(usdcAmount, CCTPForwarder.DOMAIN_ID_CIRCLE_ARBITRUM_ONE);
+        mainnetController.mintUSDS(usdcAmount * 1e12);
+        mainnetController.swapUSDSToUSDC(usdcAmount);
+        mainnetController.transferUSDCToCCTP(usdcAmount, CCTPForwarder.DOMAIN_ID_CIRCLE_ARBITRUM_ONE);
         vm.stopPrank();
 
         chainSpellMetadata[ChainIdUtils.ArbitrumOne()].domain.selectFork();
 
-        assertEq(IERC20(Arbitrum.USDC).balanceOf(Arbitrum.ALM_PROXY), 0);
-        assertEq(IERC20(Arbitrum.USDC).balanceOf(Arbitrum.PSM3),      usdcSeed);
+        assertEq(arbUsdc.balanceOf(Arbitrum.ALM_PROXY), 0);
+        assertEq(arbUsdc.balanceOf(Arbitrum.PSM3),      usdcSeed);
 
         _relayMessageOverBridges();
 
-        assertEq(IERC20(Arbitrum.USDC).balanceOf(Arbitrum.ALM_PROXY), usdcAmount);
-        assertEq(IERC20(Arbitrum.USDC).balanceOf(Arbitrum.PSM3),      usdcSeed);
+        assertEq(arbUsdc.balanceOf(Arbitrum.ALM_PROXY), usdcAmount);
+        assertEq(arbUsdc.balanceOf(Arbitrum.PSM3),      usdcSeed);
+
+        // --- Step 3: Deposit 10m USDC into PSM3 ---
 
         vm.startPrank(Arbitrum.ALM_RELAYER);
-        ForeignController(Arbitrum.ALM_CONTROLLER).depositPSM(Arbitrum.USDC, usdcAmount);
+        arbController.depositPSM(Arbitrum.USDC, usdcAmount);
+        vm.stopPrank();
+
+        assertEq(arbUsdc.balanceOf(Arbitrum.ALM_PROXY), 0);
+        assertEq(arbUsdc.balanceOf(Arbitrum.PSM3),      usdcSeed + usdcAmount);
+
+        // --- Step 4: Withdraw all assets from PSM3 ---
+
+        vm.startPrank(Arbitrum.ALM_RELAYER);
+        arbController.withdrawPSM(Arbitrum.USDS,  10_000_000e18);
+        arbController.withdrawPSM(Arbitrum.SUSDS, susdsDepositShares);  // $10m
+        arbController.withdrawPSM(Arbitrum.USDC,  usdcAmount);
+        vm.stopPrank();
+
+        assertEq(arbUsds.balanceOf(Arbitrum.PSM3),  0);
+        assertEq(arbSUsds.balanceOf(Arbitrum.PSM3), 0);
+
+        assertApproxEqAbs(arbUsdc.balanceOf(Arbitrum.PSM3), usdcSeed, 1);
+
+        assertEq(arbUsds.balanceOf(Arbitrum.ALM_PROXY),  100_000_000e18);
+        assertEq(arbSUsds.balanceOf(Arbitrum.ALM_PROXY), susdsShares);
+
+        assertApproxEqAbs(arbUsdc.balanceOf(Arbitrum.ALM_PROXY), usdcAmount, 1);
+    }
+
+    // NOTE: This was supposed to be part of the e2e test above but ran into MemoryOOG issues
+    //       even with use of _clearLogs
+    function test_ETHEREUM_ARBITRUM_bridgeUsdcToMainnetAndBurn() public {
+        executeAllPayloadsAndBridges();
+
+        chainSpellMetadata[ChainIdUtils.ArbitrumOne()].domain.selectFork();
+
+        deal(Arbitrum.USDC, Arbitrum.ALM_PROXY, 10_000_000e6);
+
+        assertEq(IERC20(Arbitrum.USDC).balanceOf(Arbitrum.ALM_PROXY), 10_000_000e6);
+
+        _clearLogs();  // Avoid MemoryOOG issue
+
+        vm.startPrank(Arbitrum.ALM_RELAYER);
+        ForeignController(Arbitrum.ALM_CONTROLLER).transferUSDCToCCTP(10_000_000e6, CCTPForwarder.DOMAIN_ID_CIRCLE_ETHEREUM);
         vm.stopPrank();
 
         assertEq(IERC20(Arbitrum.USDC).balanceOf(Arbitrum.ALM_PROXY), 0);
-        assertEq(IERC20(Arbitrum.USDC).balanceOf(Arbitrum.PSM3),      usdcSeed + usdcAmount);
+
+        chainSpellMetadata[ChainIdUtils.Ethereum()].domain.selectFork();
+
+        assertEq(IERC20(Ethereum.USDC).balanceOf(Ethereum.ALM_PROXY), 0);
+
+        _relayMessageOverBridges();
+
+        assertEq(IERC20(Ethereum.USDC).balanceOf(Ethereum.ALM_PROXY), 10_000_000e6);
+
+        MainnetController controller = MainnetController(Ethereum.ALM_CONTROLLER);
+
+        vm.startPrank(Ethereum.ALM_RELAYER);
+        controller.swapUSDCToUSDS(10_000_000e6);
+        controller.burnUSDS(10_000_000e18);
+        vm.stopPrank();
+    }
+
+    function test_ETHEREUM_ARBITRUM_BASE_usdsAndSUsdsDistributions() public {
+        chainSpellMetadata[ChainIdUtils.Base()].domain.selectFork();
+
+        uint256 startingBaseSUsdsShares = IERC4626(Base.SUSDS).balanceOf(Base.ALM_PROXY);
+
+        executeAllPayloadsAndBridges();
+
+        chainSpellMetadata[ChainIdUtils.ArbitrumOne()].domain.selectFork();
+
+        uint256 arbSUsdsShares = IERC4626(Arbitrum.SUSDS).balanceOf(Arbitrum.ALM_PROXY);
+
+        assertEq(IERC20(Arbitrum.USDS).balanceOf(Arbitrum.ALM_PROXY), 100_000_000e18);
+
+        chainSpellMetadata[ChainIdUtils.Base()].domain.selectFork();
+
+        // Cache value of new sUSDS balance transferred on base after spell execution
+        uint256 newBaseSUsdsShares = IERC4626(Base.SUSDS).balanceOf(Base.ALM_PROXY) - startingBaseSUsdsShares;
+
+        chainSpellMetadata[ChainIdUtils.Ethereum()].domain.selectFork();
+
+        assertEq(IERC20(Ethereum.USDS).balanceOf(Ethereum.SPARK_PROXY),  0);
+        assertEq(IERC20(Ethereum.SUSDS).balanceOf(Ethereum.SPARK_PROXY), 0);
+
+        IERC4626 susds = IERC4626(Ethereum.SUSDS);
+
+        // Rounding on conversion
+        assertEq(susds.convertToAssets(arbSUsdsShares),     100_000_000e18 - 1);
+        assertEq(susds.convertToAssets(newBaseSUsdsShares), 100_000_000e18 - 1);
     }
 
 }
