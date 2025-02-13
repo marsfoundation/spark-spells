@@ -36,6 +36,11 @@ interface IAuthLike {
     function rely(address usr) external;
 }
 
+interface IPSMLike {
+    function shares(address account) external view returns (uint256);
+    function convertToAssetValue(uint256 shares) external view returns (uint256);
+}
+
 contract SparkEthereum_20250220Test is SparkTestBase {
 
     using DomainHelpers for Domain;
@@ -254,10 +259,10 @@ contract SparkEthereum_20250220Test is SparkTestBase {
         MainnetController mainnetController = MainnetController(Ethereum.ALM_CONTROLLER);
         ForeignController arbController     = ForeignController(Arbitrum.ALM_CONTROLLER);
 
-        // NOTE: These values are calculated on Ethereum and used in Arbitrum, inherently
-        //       asserting that the sUSDS exchange rates match.
         uint256 susdsShares        = IERC4626(Ethereum.SUSDS).convertToShares(100_000_000e18);
         uint256 susdsDepositShares = IERC4626(Ethereum.SUSDS).convertToShares(10_000_000e18);
+
+        uint256 mainnetTimestamp = block.timestamp;
 
         chainSpellMetadata[ChainIdUtils.ArbitrumOne()].domain.selectFork();
 
@@ -269,10 +274,18 @@ contract SparkEthereum_20250220Test is SparkTestBase {
 
         // --- Step 1: Deposit 10m USDS and 10m sUSDS into the PSM ---
 
+        // Use mainnet timestamp to make PSM3 sUSDS conversion data realistic
+        vm.warp(mainnetTimestamp);
+
         vm.startPrank(Arbitrum.ALM_RELAYER);
         arbController.depositPSM(Arbitrum.USDS,  10_000_000e18);
         arbController.depositPSM(Arbitrum.SUSDS, susdsDepositShares);  // $10m
         vm.stopPrank();
+
+        IPSMLike psm = IPSMLike(Arbitrum.PSM3);
+
+        // Off slightly from mainnet sUSDS (<4e-11%)
+        assertEq(psm.convertToAssetValue(psm.shares(Arbitrum.ALM_PROXY)), 19_999_999.999991434063331924e18);
 
         assertEq(arbUsds.balanceOf(Arbitrum.ALM_PROXY),  90_000_000e18);
         assertEq(arbUsds.balanceOf(Arbitrum.PSM3),       10_000_000e18);
@@ -365,6 +378,36 @@ contract SparkEthereum_20250220Test is SparkTestBase {
         controller.swapUSDCToUSDS(10_000_000e6);
         controller.burnUSDS(10_000_000e18);
         vm.stopPrank();
+    }
+
+    function test_ETHEREUM_ARBITRUM_BASE_usdsAndSUsdsDistributions() public {
+        chainSpellMetadata[ChainIdUtils.Base()].domain.selectFork();
+
+        uint256 startingBaseSUsdsShares = IERC4626(Base.SUSDS).balanceOf(Base.ALM_PROXY);
+
+        executeAllPayloadsAndBridges();
+
+        chainSpellMetadata[ChainIdUtils.ArbitrumOne()].domain.selectFork();
+
+        uint256 arbSUsdsShares = IERC4626(Arbitrum.SUSDS).balanceOf(Arbitrum.ALM_PROXY);
+
+        assertEq(IERC20(Arbitrum.USDS).balanceOf(Arbitrum.ALM_PROXY), 100_000_000e18);
+
+        chainSpellMetadata[ChainIdUtils.Base()].domain.selectFork();
+
+        // Cache value of new sUSDS balance transferred on base after spell execution
+        uint256 newBaseSUsdsShares = IERC4626(Base.SUSDS).balanceOf(Base.ALM_PROXY) - startingBaseSUsdsShares;
+
+        chainSpellMetadata[ChainIdUtils.Ethereum()].domain.selectFork();
+
+        assertEq(IERC20(Ethereum.USDS).balanceOf(Ethereum.SPARK_PROXY),  0);
+        assertEq(IERC20(Ethereum.SUSDS).balanceOf(Ethereum.SPARK_PROXY), 0);
+
+        IERC4626 susds = IERC4626(Ethereum.SUSDS);
+
+        // Rounding on conversion
+        assertEq(susds.convertToAssets(arbSUsdsShares),     100_000_000e18 - 1);
+        assertEq(susds.convertToAssets(newBaseSUsdsShares), 100_000_000e18 - 1);
     }
 
 }
