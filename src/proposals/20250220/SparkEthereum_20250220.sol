@@ -139,8 +139,8 @@ contract SparkEthereum_20250220 is SparkPayloadEthereum {
             data:    ""
         });
         uint256 gasLimit = 1_000_000;
-        uint256 baseFee = 25e9;  // TODO Check if these values are good
-        uint256 maxFeePerGas = 50e9;  // TODO Check if these values are good
+        uint256 baseFee = block.basefee;
+        uint256 maxFeePerGas = 50e9;
         uint256 maxSubmission = ICrossDomainArbitrum(ArbitrumForwarder.L1_CROSS_DOMAIN_ARBITRUM_ONE).calculateRetryableSubmissionFee(finalizeDepositCalldata.length, baseFee);
         uint256 maxRedemption = gasLimit * maxFeePerGas;
 

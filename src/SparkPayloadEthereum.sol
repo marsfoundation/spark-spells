@@ -38,8 +38,8 @@ abstract contract SparkPayloadEthereum is
                 target:        Arbitrum.SPARK_RECEIVER,
                 message:       _encodePayloadQueue(PAYLOAD_ARBITRUM),
                 gasLimit:      1_000_000,
-                maxFeePerGas:  50e9,  // TODO check this value is good
-                baseFee:       25e9   // TODO check this value is good
+                maxFeePerGas:  50e9,
+                baseFee:       block.basefee
             });
         }
         if (PAYLOAD_BASE != address(0)) {
