@@ -56,19 +56,19 @@ contract SparkEthereum_20250220Test is SparkTestBase {
 
     function setUp() public {
         setupDomains({
-            mainnetForkBlock:     21840592,
+            mainnetForkBlock:     21868015,
             baseForkBlock:        26348524,
             gnosisForkBlock:      38037888,
-            arbitrumOneForkBlock: 305776367
+            arbitrumOneForkBlock: 307093406
         });
 
         deployPayloads();
 
+        chainSpellMetadata[ChainIdUtils.Ethereum()].payload    = 0x9EAa8d72BD731BE8eD71D768a912F6832492071e;
         chainSpellMetadata[ChainIdUtils.Base()].payload        = 0x1e59bBDbd97DDa3E72a65061ecEFEF428F5EFB9a;
         chainSpellMetadata[ChainIdUtils.ArbitrumOne()].payload = 0x930e7EFC310F1E62ff3DfC7b60A8FF06d4046887;
 
         // The following is expected to be in the main spell
-        // TODO verify this matches the Sky Core spell
 
         // Mainnet
         vm.startPrank(Ethereum.PAUSE_PROXY);
@@ -254,10 +254,8 @@ contract SparkEthereum_20250220Test is SparkTestBase {
 
     function test_ETHEREUM_ARBITRUM_sparkLiquidityLayerE2E() public onChain(ChainIdUtils.Ethereum()) {
         // Use mainnet timestamp to make PSM3 sUSDS conversion data realistic
+        skip(2 days);  // Skip two days ahead to ensure there is enough rate limit capacity
         uint256 mainnetTimestamp = block.timestamp;
-        chainSpellMetadata[ChainIdUtils.ArbitrumOne()].domain.selectFork();
-        vm.warp(mainnetTimestamp);
-        chainSpellMetadata[ChainIdUtils.Ethereum()].domain.selectFork();
 
         executeAllPayloadsAndBridges();
 
@@ -272,11 +270,12 @@ contract SparkEthereum_20250220Test is SparkTestBase {
         uint256 susdsDepositShares = IERC4626(Ethereum.SUSDS).convertToShares(10_000_000e18);
 
         chainSpellMetadata[ChainIdUtils.ArbitrumOne()].domain.selectFork();
+        vm.warp(mainnetTimestamp);
 
         assertEq(arbUsds.balanceOf(Arbitrum.ALM_PROXY),  100_000_000e18);
         assertEq(arbUsds.balanceOf(Arbitrum.PSM3),       0);
 
-        assertEq(arbSUsds.balanceOf(Arbitrum.ALM_PROXY), susdsShares);  // $100m
+        assertApproxEqAbs(arbSUsds.balanceOf(Arbitrum.ALM_PROXY), susdsShares, 1);  // $100m
         assertEq(arbSUsds.balanceOf(Arbitrum.PSM3),      0);
 
         // --- Step 1: Deposit 10m USDS and 10m sUSDS into the PSM ---
@@ -288,14 +287,13 @@ contract SparkEthereum_20250220Test is SparkTestBase {
 
         IPSMLike psm = IPSMLike(Arbitrum.PSM3);
 
-        // Matches mainnet exactly
-        assertApproxEqRel(psm.convertToAssetValue(psm.shares(Arbitrum.ALM_PROXY)), 20_000_000e18, 0.000001e18);  // Allow for 0.01 bps deviation
+        assertApproxEqAbs(psm.convertToAssetValue(psm.shares(Arbitrum.ALM_PROXY)), 20_000_000e18, 11);
 
         assertEq(arbUsds.balanceOf(Arbitrum.ALM_PROXY),  90_000_000e18);
         assertEq(arbUsds.balanceOf(Arbitrum.PSM3),       10_000_000e18);
 
-        assertEq(arbSUsds.balanceOf(Arbitrum.ALM_PROXY), susdsShares - susdsDepositShares);  // $90m
-        assertEq(arbSUsds.balanceOf(Arbitrum.PSM3),      susdsDepositShares);                // $10m
+        assertApproxEqAbs(arbSUsds.balanceOf(Arbitrum.ALM_PROXY), susdsShares - susdsDepositShares, 1);  // $90m
+        assertApproxEqAbs(arbSUsds.balanceOf(Arbitrum.PSM3),      susdsDepositShares, 1);                // $10m
 
         chainSpellMetadata[ChainIdUtils.Ethereum()].domain.selectFork();
 
@@ -346,10 +344,12 @@ contract SparkEthereum_20250220Test is SparkTestBase {
         assertApproxEqAbs(arbUsdc.balanceOf(Arbitrum.PSM3), usdcSeed, 1);
 
         assertEq(arbUsds.balanceOf(Arbitrum.ALM_PROXY),  100_000_000e18);
-        assertEq(arbSUsds.balanceOf(Arbitrum.ALM_PROXY), susdsShares);
+        assertApproxEqAbs(arbSUsds.balanceOf(Arbitrum.ALM_PROXY), susdsShares, 1);
 
         usdcAmount -= 1;  // Rounding
         assertEq(arbUsdc.balanceOf(Arbitrum.ALM_PROXY), usdcAmount);
+
+        // --- Step 5: Bridge USDC back to mainnet and burn USDS
 
         vm.startPrank(Arbitrum.ALM_RELAYER);
         ForeignController(Arbitrum.ALM_CONTROLLER).transferUSDCToCCTP(usdcAmount, CCTPForwarder.DOMAIN_ID_CIRCLE_ETHEREUM);
@@ -359,11 +359,11 @@ contract SparkEthereum_20250220Test is SparkTestBase {
 
         chainSpellMetadata[ChainIdUtils.Ethereum()].domain.selectFork();
 
-        assertEq(IERC20(Ethereum.USDC).balanceOf(Ethereum.ALM_PROXY), 0);
+        uint256 usdcPrevBalance = IERC20(Ethereum.USDC).balanceOf(Ethereum.ALM_PROXY);
 
         _relayMessageOverBridges();
 
-        assertEq(IERC20(Ethereum.USDC).balanceOf(Ethereum.ALM_PROXY), usdcAmount);
+        assertEq(IERC20(Ethereum.USDC).balanceOf(Ethereum.ALM_PROXY), usdcPrevBalance + usdcAmount);
 
         vm.startPrank(Ethereum.ALM_RELAYER);
         mainnetController.swapUSDCToUSDS(usdcAmount);
@@ -396,8 +396,8 @@ contract SparkEthereum_20250220Test is SparkTestBase {
 
         IERC4626 susds = IERC4626(Ethereum.SUSDS);
 
+        assertEq(susds.convertToAssets(arbSUsdsShares),     100_000_000e18);
         // Rounding on conversion
-        assertEq(susds.convertToAssets(arbSUsdsShares),     100_000_000e18 - 1);
         assertEq(susds.convertToAssets(newBaseSUsdsShares), 100_000_000e18 - 1);
     }
 

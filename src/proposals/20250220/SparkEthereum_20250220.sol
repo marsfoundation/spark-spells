@@ -60,7 +60,7 @@ interface IArbitrumTokenBridge {
  * Vote:   https://vote.makerdao.com/polling/QmcicBXG#poll-detail
  *         https://vote.makerdao.com/polling/QmWQcu5A#poll-detail
  *         https://vote.makerdao.com/polling/Qmdr4yqX#poll-detail
- *         TODO sUSDS vote
+ *         https://vote.makerdao.com/polling/QmWbSTxi#poll-detail
  */
 contract SparkEthereum_20250220 is SparkPayloadEthereum {
 
